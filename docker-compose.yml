@@ -51,6 +51,6 @@ services:
       - UPDATE_INTERVAL=120000
       - MODE=automatic
     volumes:
-      - /volume1/docker/printers:/app/printers
-      - /volume1/docker/logs:/app/logs
+      - /volume1/docker/Spoolman/printers:/app/printers
+      - /volume1/docker/Spoolman/logs:/app/logs
     restart: unless-stopped
