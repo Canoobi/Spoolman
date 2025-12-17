@@ -53,11 +53,14 @@ jobs:
           username: ${{ secrets.NAS_USER }}
           password: ${{ secrets.NAS_SSH_KEY }}
           script: |
-            cd ${{ secrets.REPO_PATH }}
+            cd ${{ secrets.REPO_PATH }}/client
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S npm install
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S npm run build
+            cd ..
             echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose build
 
   start-container:
-    needs: [stop-container, build-image]
+    needs: [ stop-container, build-image ]
     runs-on: ubuntu-latest
     steps:
       - name: start new container

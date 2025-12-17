@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_APIURL: http://192.168.1.99:30168
     image: spoolman:local
     restart: unless-stopped
     volumes:
@@ -11,7 +13,6 @@ services:
       - type: bind
         source: /volume1/docker/Spoolman/data # This is where the data will be stored locally. Could also be set to for example `source: /home/pi/printer_data/spoolman`.
         target: /home/app/.local/share/spoolman # Do NOT modify this line
-      - /volume1/docker/Spoolman:/usr/local/app
     ports:
       - "30168:8000"
     environment:
