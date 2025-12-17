@@ -24,23 +24,6 @@ const SpoolmanFooter: React.FC = () => {
         <div>
           {t("version")} <Version />
         </div>
-        <div>
-          <Button
-            icon={
-              <img
-                src={getBasePath() + "/kofi_s_logo_nolabel.png"}
-                style={{
-                  height: "1.6em",
-                }}
-              />
-            }
-            type="text"
-            href="https://ko-fi.com/donkie"
-            target="_blank"
-          >
-            {t("kofi")}
-          </Button>
-        </div>
       </div>
     </Footer>
   );

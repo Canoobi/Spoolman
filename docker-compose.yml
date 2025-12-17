@@ -1,7 +1,10 @@
 version: '3.8'
 services:
   spoolman:
-    image: ghcr.io/donkie/spoolman:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spoolman:local
     restart: unless-stopped
     volumes:
       # Mount the host machine's ./data directory into the container's /home/app/.local/share/spoolman directory
