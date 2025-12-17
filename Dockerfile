@@ -1,3 +1,17 @@
+FROM node:20-bookworm AS client-builder
+WORKDIR /client
+
+COPY client/package*.json ./
+RUN npm ci
+
+COPY client ./
+
+ARG VITE_APIURL
+ENV VITE_APIURL=${VITE_APIURL}
+
+RUN npm run build
+
+
 FROM python:3.12-bookworm AS python-builder
 
 # Install dependencies
