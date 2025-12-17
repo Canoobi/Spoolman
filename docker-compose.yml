@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_APIURL: /api/v1
     image: spoolman:local
     restart: unless-stopped
     volumes:
@@ -17,3 +15,4 @@ services:
       - "30168:8000"
     environment:
       - TZ=Europe/Berlin # Optional, defaults to UTC
+    container_name: Spoolman

@@ -6,9 +6,6 @@ RUN npm ci
 
 COPY client ./
 
-ARG VITE_APIURL
-ENV VITE_APIURL=${VITE_APIURL}
-
 RUN npm run build
 
 
