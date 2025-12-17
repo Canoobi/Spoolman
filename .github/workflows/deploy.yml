@@ -1,0 +1,71 @@
+name: Deploy to production
+
+on: workflow_dispatch
+
+jobs:
+  check-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check for admin
+        run: |
+          ADMIN_USERS="Canoobi"
+          if [[ ! " $ADMIN_USERS " =~ " ${{ github.actor }} " ]]; then
+            echo "You are not authorized to run this workflow."
+            exit 1
+          fi
+
+  pull-repo:
+    needs: check-admin
+    runs-on: ubuntu-latest
+    steps:
+      - name: pull from Git
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          password: ${{ secrets.NAS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.REPO_PATH }}
+            /opt/bin/git pull
+
+  stop-container:
+    needs: pull-repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: stop container
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          password: ${{ secrets.NAS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.REPO_PATH }}
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose down
+
+  build-image:
+    needs: pull-repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: build docker image
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          password: ${{ secrets.NAS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.REPO_PATH }}
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose build
+
+  start-container:
+    needs: [stop-container, build-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: start new container
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          password: ${{ secrets.NAS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.REPO_PATH }}
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose up -d
