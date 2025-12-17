@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_APIURL: http://192.168.1.99:30168/api/v1
+        VITE_APIURL: /api/v1
     image: spoolman:local
     restart: unless-stopped
     volumes:
