@@ -34,9 +34,9 @@ import {ICostCalculation} from "./model";
 import {useGetSettings} from "../../utils/querySettings";
 import {removeUndefined} from "../../utils/filtering";
 import {getCurrencySymbol, useCurrency, useCurrencyFormatter} from "../../utils/settings";
-import {formatFilamentLabel} from "../spools/functions";
+import {formatLength} from "../../utils/parsing";
 
-const {Title, Paragraph, Text} = Typography;
+const {Title, Paragraph} = Typography;
 
 interface Breakdown {
     material: number;
@@ -133,16 +133,10 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             >();
 
             filaments.forEach((filament) => {
-                const label = formatFilamentLabel(
-                    filament.name ?? `ID ${filament.id}`,
-                    filament.diameter,
-                    filament.vendor?.name,
-                    filament.material ?? undefined,
-                    filament.weight
-                );
-                const key = `${filament.vendor?.name ?? ""}|${filament.name ?? ""}|${filament.material ?? ""}|${
-                    filament.diameter
-                }|${filament.weight ?? ""}`;
+                const materialLabel = (filament.material ?? "Unknown material").trim() || "Unknown material";
+                const diameterLabel = filament.diameter ? formatLength(filament.diameter) : undefined;
+                const key = `${materialLabel.toLowerCase()}|${filament.diameter ?? ""}`;
+                const label = diameterLabel ? `${materialLabel} (${diameterLabel})` : materialLabel;
                 const price = typeof filament.price === "number" ? filament.price : undefined;
 
                 const existing = types.get(key);
