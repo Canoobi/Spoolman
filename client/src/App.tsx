@@ -158,7 +158,7 @@ function App() {
                                     list: "/locations",
                                     meta: {
                                         canDelete: false,
-                                        icon: <TableOutlined/>,
+                                        icon: <img src="/locations.png" width={12} height={15} alt="locations"/>,
                                     },
                                 },
                                 {
