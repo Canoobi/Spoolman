@@ -40,7 +40,7 @@ export const PrinterShow: React.FC<IResourceComponentsProps> = () => {
       <Title level={5}>{t("printer.fields.name")}</Title>
       <TextField value={record?.name} />
       <Title level={5}>{t("printer.fields.power_watts")}</Title>
-      <NumberField value={record?.power_watts ?? undefined} />
+      <NumberField value={record?.power_watts ?? 0} />
       <Title level={5}>{t("printer.fields.depreciation_cost_per_hour")}</Title>
       <TextField value={record?.depreciation_cost_per_hour != null ? `${currencySymbol} ${record?.depreciation_cost_per_hour}/h` : ""} />
       <Title level={5}>{t("printer.fields.comment")}</Title>

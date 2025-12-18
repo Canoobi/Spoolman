@@ -8,6 +8,8 @@ import { SpoolType, useGetExternalDBFilaments } from "../../utils/queryExternalD
 import { getAPIURL } from "../../utils/url";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "./model";
+import type { InputNumberRef } from "rc-input-number";
+
 
 export async function setSpoolArchived(spool: ISpool, archived: boolean) {
   const init: RequestInit = {
@@ -201,7 +203,7 @@ export function useSpoolAdjustModal() {
 
   const [curSpool, setCurSpool] = useState<ISpool | null>(null);
   const [measurementType, setMeasurementType] = useState<MeasurementType>("length");
-  const inputNumberRef = useRef<HTMLInputElement | null>(null);
+  const inputNumberRef = useRef<InputNumberRef | null>(null);
 
   const openSpoolAdjustModal = useCallback((spool: ISpool) => {
     setCurSpool(spool);
