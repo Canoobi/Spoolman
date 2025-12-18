@@ -8,7 +8,7 @@ RUN npm install
 COPY client/ ./
 RUN npm run build
 
-COPY ./dist/ client/dist/
+RUN cp -r dist /usr/local/app/client/dist
 
 FROM python:3.12-bookworm AS python-builder
 
