@@ -90,7 +90,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     }
   }, [settings]);
 
-  const { selectProps: printerSelectProps } = useSelect<IPrinter>({
+  const { selectProps: printerSelectProps, queryResult: printerQuery } = useSelect<IPrinter>({
     resource: "printer",
     optionLabel: "name",
     optionValue: "id",
@@ -98,7 +98,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
       pageSize: 200,
     },
   });
-  const { selectProps: filamentSelectProps } = useSelect<IFilament>({
+  const { selectProps: filamentSelectProps, queryResult: filamentQuery } = useSelect<IFilament>({
     resource: "filament",
     optionLabel: "name",
     optionValue: "id",
@@ -107,14 +107,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
-  const printers = printerSelectProps.options?.map((opt) => ({
-    id: Number(opt.value),
-    name: String(opt.label),
-  })) ?? [];
-  const filaments = filamentSelectProps.options?.map((opt) => ({
-    id: Number(opt.value),
-    name: String(opt.label),
-  })) ?? [];
+  const printers = (printerQuery.data?.data as IPrinter[] | undefined) ?? [];
+  const filaments = (filamentQuery.data?.data as IFilament[] | undefined) ?? [];
 
   const { mutate, isLoading: isSaving } = useCreate<ICostCalculation>();
 
@@ -248,11 +242,11 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
   const currentFilters = (filters as CrudFilters) ?? [];
   const selectedPrinterFilters =
-    (currentFilters.find((filter) => "field" in filter && filter.field === "printer_id") as CrudFilter | undefined)
-      ?.value ?? [];
+    ((currentFilters.find((filter) => "field" in filter && filter.field === "printer_id") as CrudFilter | undefined)
+      ?.value as number[] | undefined) ?? [];
   const selectedFilamentFilters =
-    (currentFilters.find((filter) => "field" in filter && filter.field === "filament_id") as CrudFilter | undefined)
-      ?.value ?? [];
+    ((currentFilters.find((filter) => "field" in filter && filter.field === "filament_id") as CrudFilter | undefined)
+      ?.value as number[] | undefined) ?? [];
 
   const handleFilterChange = (printerIds: number[], filamentIds: number[]) => {
     const newFilters: CrudFilter[] = [];
