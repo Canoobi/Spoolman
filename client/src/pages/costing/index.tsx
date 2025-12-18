@@ -43,6 +43,8 @@ interface Breakdown {
 export const CostingPage: React.FC<IResourceComponentsProps> = () => {
   const t = useTranslate();
   const currency = useCurrency();
+  const settings = useGetSettings();
+  const invalidate = useInvalidate();
   const currencySymbol = useMemo(() => {
     try {
       const raw = settings.data?.currency_symbol?.value;
@@ -56,8 +58,6 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     return getCurrencySymbol(undefined, currency);
   }, [currency, settings.data]);
   const formatter = useCurrencyFormatter();
-  const settings = useGetSettings();
-  const invalidate = useInvalidate();
 
   const [form] = Form.useForm();
   const [message, setMessage] = useState<string | null>(null);
