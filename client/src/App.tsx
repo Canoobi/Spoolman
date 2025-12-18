@@ -116,7 +116,7 @@ function App() {
                   show: "/spool/show/:id",
                   meta: {
                     canDelete: true,
-                    icon: <FileOutlined />,
+                    icon: <img src="/spool.png" width={12} height={15} alt="spool" />,
                   },
                 },
                 {
@@ -148,7 +148,7 @@ function App() {
                   show: "/vendor/show/:id",
                   meta: {
                     canDelete: true,
-                    icon: <UserOutlined />,
+                    icon: <img src="/vendor.png" width={12} height={15} alt="vendor" />,
                   },
                 },
                 {
@@ -159,7 +159,7 @@ function App() {
                   show: "/printer/show/:id",
                   meta: {
                     canDelete: true,
-                    icon: <img src="../printer.png" width={12} height={15} alt="printer" />,
+                    icon: <img src="/printer.png" width={12} height={15} alt="printer" />,
                   },
                 },
                 {
