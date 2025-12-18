@@ -7,7 +7,7 @@ from typing import Optional
 import sqlalchemy
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager, joinedload
+from sqlalchemy.orm import contains_eager, joinedload, selectinload
 
 from spoolman.api.v1.models import CostCalculation, CostEvent, EventType, Filament, Printer
 from spoolman.database import models, printer as printer_db
@@ -86,7 +86,10 @@ async def get_by_id(db: AsyncSession, calculation_id: int) -> models.CostCalcula
     calculation = await db.get(
         models.CostCalculation,
         calculation_id,
-        options=[joinedload(models.CostCalculation.printer), joinedload(models.CostCalculation.filament)],
+        options=[
+            joinedload(models.CostCalculation.printer),
+            joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
+        ],
     )
     if calculation is None:
         raise ItemNotFoundError(f"No cost calculation with ID {calculation_id} found.")
@@ -109,8 +112,7 @@ async def find(
         .join(models.CostCalculation.filament, isouter=True)
         .options(
             contains_eager(models.CostCalculation.printer),
-            contains_eager(models.CostCalculation.filament),
-        )
+            contains_eager(models.CostCalculation.filament).selectinload(models.Filament.vendor),        )
     )
 
     stmt = add_where_clause_int_opt(stmt, models.CostCalculation.printer_id, printer_id)
@@ -202,7 +204,10 @@ async def delete(db: AsyncSession, calculation_id: int) -> None:
             await db.execute(
                 sqlalchemy.select(models.CostCalculation)
                 .filter_by(id=calculation_id)
-                .options(joinedload(models.CostCalculation.printer), joinedload(models.CostCalculation.filament))
+                .options(
+                    joinedload(models.CostCalculation.printer),
+                    joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
+                )
             )
         ).scalar_one()
     except NoResultFound as e:
