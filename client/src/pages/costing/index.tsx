@@ -1,6 +1,6 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { List, useSelect, useTable } from "@refinedev/antd";
-import { CrudFilter, IResourceComponentsProps, useCreate, useInvalidate, useTranslate } from "@refinedev/core";
+import { CrudFilter, CrudFilters, IResourceComponentsProps, useCreate, useInvalidate, useTranslate } from "@refinedev/core";
 import {
   Alert,
   Button,
@@ -90,7 +90,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     }
   }, [settings]);
 
-  const printerSelect = useSelect<IPrinter>({
+  const { selectProps: printerSelectProps } = useSelect<IPrinter>({
     resource: "printer",
     optionLabel: "name",
     optionValue: "id",
@@ -98,7 +98,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
       pageSize: 200,
     },
   });
-  const filamentSelect = useSelect<IFilament>({
+  const { selectProps: filamentSelectProps } = useSelect<IFilament>({
     resource: "filament",
     optionLabel: "name",
     optionValue: "id",
@@ -107,8 +107,14 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
-  const printers = printerSelect.queryResult.data?.data ?? [];
-  const filaments = filamentSelect.queryResult.data?.data ?? [];
+  const printers = printerSelectProps.options?.map((opt) => ({
+    id: Number(opt.value),
+    name: String(opt.label),
+  })) ?? [];
+  const filaments = filamentSelectProps.options?.map((opt) => ({
+    id: Number(opt.value),
+    name: String(opt.label),
+  })) ?? [];
 
   const { mutate, isLoading: isSaving } = useCreate<ICostCalculation>();
 
@@ -240,10 +246,13 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
-  const currentFilters = (filters as CrudFilter[]) ?? [];
-  const selectedPrinterFilters = (currentFilters.find((filter) => filter.field === "printer_id")?.value as number[]) ?? [];
+  const currentFilters = (filters as CrudFilters) ?? [];
+  const selectedPrinterFilters =
+    (currentFilters.find((filter) => "field" in filter && filter.field === "printer_id") as CrudFilter | undefined)
+      ?.value ?? [];
   const selectedFilamentFilters =
-    (currentFilters.find((filter) => filter.field === "filament_id")?.value as number[]) ?? [];
+    (currentFilters.find((filter) => "field" in filter && filter.field === "filament_id") as CrudFilter | undefined)
+      ?.value ?? [];
 
   const handleFilterChange = (printerIds: number[], filamentIds: number[]) => {
     const newFilters: CrudFilter[] = [];
@@ -285,8 +294,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             <Col xs={24} md={12}>
               <Form.Item label={t("cost.fields.printer_id")} name="printer_id" rules={[{ required: true }]}>
                 <Select
-                  loading={printerSelect.queryResult.isFetching}
-                  options={printerSelect.options}
+                  {...printerSelectProps}
+                  loading={printerSelectProps.loading}
                   placeholder={t("cost.placeholders.printer")}
                   showSearch
                   optionFilterProp="label"
@@ -296,8 +305,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             <Col xs={24} md={12}>
               <Form.Item label={t("cost.fields.filament_id")} name="filament_id" rules={[{ required: true }]}>
                 <Select
-                  loading={filamentSelect.queryResult.isFetching}
-                  options={filamentSelect.options}
+                  {...filamentSelectProps}
+                  loading={filamentSelectProps.loading}
                   placeholder={t("cost.placeholders.filament")}
                   showSearch
                   optionFilterProp="label"
@@ -362,7 +371,14 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 tooltip={t("cost.tooltips.failure_rate")}
                 rules={[{ min: 0 }]}
               >
-                <InputNumber min={0} max={10} style={{ width: "100%" }} addonAfter="%" formatter={(value) => `${Number(value ?? 0) * 100}`} parser={(value) => Number(value ?? 0) / 100} />
+                <InputNumber<number>
+                  min={0}
+                  max={10}
+                  style={{ width: "100%" }}
+                  addonAfter="%"
+                  formatter={(value) => `${Number(value ?? 0) * 100}`}
+                  parser={(value) => Number(value ?? 0) / 100}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
@@ -372,7 +388,14 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 tooltip={t("cost.tooltips.markup_rate")}
                 rules={[{ min: 0 }]}
               >
-                <InputNumber min={0} max={10} style={{ width: "100%" }} addonAfter="%" formatter={(value) => `${Number(value ?? 0) * 100}`} parser={(value) => Number(value ?? 0) / 100} />
+                <InputNumber<number>
+                  min={0}
+                  max={10}
+                  style={{ width: "100%" }}
+                  addonAfter="%"
+                  formatter={(value) => `${Number(value ?? 0) * 100}`}
+                  parser={(value) => Number(value ?? 0) / 100}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
@@ -449,7 +472,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
           <Select<number>
             mode="multiple"
             placeholder={t("cost.history.filter_printers")}
-            options={printerSelect.options}
+            options={printerSelectProps.options}
             value={selectedPrinterFilters as number[]}
             onChange={(values) => handleFilterChange(values, selectedFilamentFilters as number[])}
             style={{ minWidth: 240 }}
@@ -458,7 +481,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
           <Select<number>
             mode="multiple"
             placeholder={t("cost.history.filter_filaments")}
-            options={filamentSelect.options}
+            options={filamentSelectProps.options}
             value={selectedFilamentFilters as number[]}
             onChange={(values) => handleFilterChange(selectedPrinterFilters as number[], values)}
             style={{ minWidth: 240 }}
