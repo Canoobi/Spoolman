@@ -310,17 +310,17 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
           </Row>
           <Row gutter={[16, 16]}>
             <Col xs={24} md={8}>
-              <Form.Item label={t("cost.fields.filament_weight_g")} name="filament_weight_g" rules={[{ min: 0 }]}>
+              <Form.Item label={t("cost.fields.filament_weight_g")} name="filament_weight_g" rules={[{ type: "number", min: 0 }]}>
                 <InputNumber style={{ width: "100%" }} addonAfter="g" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item label={t("cost.fields.print_time_hours")} name="print_time_hours" rules={[{ min: 0 }]}>
+              <Form.Item label={t("cost.fields.print_time_hours")} name="print_time_hours" rules={[{ type: "number", min: 0 }]}>
                 <InputNumber style={{ width: "100%" }} addonAfter="h" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item label={t("cost.fields.labor_time_hours")} name="labor_time_hours" rules={[{ min: 0 }]}>
+              <Form.Item label={t("cost.fields.labor_time_hours")} name="labor_time_hours" rules={[{ type: "number", min: 0 }]}>
                 <InputNumber style={{ width: "100%" }} addonAfter="h" />
               </Form.Item>
             </Col>
@@ -331,7 +331,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.energy_cost_per_kwh")}
                 name="energy_cost_per_kwh"
                 tooltip={t("cost.tooltips.energy_cost_per_kwh")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber style={{ width: "100%" }} addonBefore={currencySymbol} addonAfter="/kWh" />
               </Form.Item>
@@ -341,7 +341,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.labor_cost_per_hour")}
                 name="labor_cost_per_hour"
                 tooltip={t("cost.tooltips.labor_cost_per_hour")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber style={{ width: "100%" }} addonBefore={currencySymbol} addonAfter="/h" />
               </Form.Item>
@@ -351,7 +351,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.consumables_cost")}
                 name="consumables_cost"
                 tooltip={t("cost.tooltips.consumables_cost")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber style={{ width: "100%" }} addonBefore={currencySymbol} />
               </Form.Item>
@@ -363,7 +363,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.failure_rate")}
                 name="failure_rate"
                 tooltip={t("cost.tooltips.failure_rate")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber<number>
                   min={0}
@@ -380,7 +380,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.markup_rate")}
                 name="markup_rate"
                 tooltip={t("cost.tooltips.markup_rate")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber<number>
                   min={0}
@@ -397,7 +397,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 label={t("cost.fields.final_price")}
                 name="final_price"
                 tooltip={t("cost.tooltips.final_price")}
-                rules={[{ min: 0 }]}
+                rules={[{ type: "number", min: 0 }]}
               >
                 <InputNumber style={{ width: "100%" }} addonBefore={currencySymbol} />
               </Form.Item>
