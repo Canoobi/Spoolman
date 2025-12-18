@@ -7,21 +7,21 @@ import React from "react";
  * @returns
  */
 export function formatNumberWithSpaceSeparator(input: string): string {
-  const isPeriodDecimalSeparator = input.indexOf(".") > -1;
+    const isPeriodDecimalSeparator = input.indexOf(".") > -1;
 
-  const parts = input.split(isPeriodDecimalSeparator ? "." : ",");
+    const parts = input.split(isPeriodDecimalSeparator ? "." : ",");
 
-  const integerPart = parts[0];
-  const decimalPart = parts[1] || "";
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
 
-  // Add the thousands separator (blank space) to the integer part
-  const formattedIntegerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    // Add the thousands separator (blank space) to the integer part
+    const formattedIntegerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
-  // Combine the formatted integer and decimal parts
-  const suffix = decimalPart ? (isPeriodDecimalSeparator ? "." : ",") + decimalPart : "";
-  const formattedNumber = formattedIntegerPart + suffix;
+    // Combine the formatted integer and decimal parts
+    const suffix = decimalPart ? (isPeriodDecimalSeparator ? "." : ",") + decimalPart : "";
+    const formattedNumber = formattedIntegerPart + suffix;
 
-  return formattedNumber;
+    return formattedNumber;
 }
 
 /**
@@ -31,13 +31,13 @@ export function formatNumberWithSpaceSeparator(input: string): string {
  * @returns
  */
 export function formatNumberOnUserInput(
-  value: number | string | undefined,
-  info: { userTyping: boolean; input: string }
+    value: number | string | undefined,
+    info: { userTyping: boolean; input: string }
 ): string {
-  if (info.userTyping) {
-    return info.input;
-  }
-  return numberFormatter(value);
+    if (info.userTyping) {
+        return info.input;
+    }
+    return numberFormatter(value);
 }
 
 /**
@@ -47,13 +47,13 @@ export function formatNumberOnUserInput(
  * @returns
  */
 export function numberFormatter(value: number | string | undefined): string {
-  const formattedValue = value
-    ? Number(value).toLocaleString(undefined, {
-        useGrouping: false, // Disable thousands separator and do it manually instead so it's always spaces
-      })
-    : "";
+    const formattedValue = value
+        ? Number(value).toLocaleString(undefined, {
+            useGrouping: false, // Disable thousands separator and do it manually instead so it's always spaces
+        })
+        : "";
 
-  return formatNumberWithSpaceSeparator(formattedValue);
+    return formatNumberWithSpaceSeparator(formattedValue);
 }
 
 /**
@@ -62,14 +62,14 @@ export function numberFormatter(value: number | string | undefined): string {
  * @returns
  */
 export function numberParser(value: string | undefined): number {
-  // Convert comma to dot
-  value = value?.replace(",", ".");
+    // Convert comma to dot
+    value = value?.replace(",", ".");
 
-  // Remove all non-digit characters
-  value = value?.replace(/[^\d.-]/g, "");
+    // Remove all non-digit characters
+    value = value?.replace(/[^\d.-]/g, "");
 
-  // Parse as float
-  return parseFloat(value || "0");
+    // Parse as float
+    return parseFloat(value || "0");
 }
 
 /**
@@ -80,18 +80,18 @@ export function numberParser(value: string | undefined): number {
  * @returns
  */
 export function numberParserAllowEmpty(value: string | undefined): number | string {
-  // Convert comma to dot
-  value = value?.replace(",", ".");
+    // Convert comma to dot
+    value = value?.replace(",", ".");
 
-  // Remove all non-digit characters
-  value = value?.replace(/[^\d.-]/g, "");
+    // Remove all non-digit characters
+    value = value?.replace(/[^\d.-]/g, "");
 
-  if (value === "" || value === undefined) {
-    return "";
-  }
+    if (value === "" || value === undefined) {
+        return "";
+    }
 
-  // Parse as float
-  return parseFloat(value);
+    // Parse as float
+    return parseFloat(value);
 }
 
 /**
@@ -100,27 +100,27 @@ export function numberParserAllowEmpty(value: string | undefined): number | stri
  * @returns
  */
 export function enrichText(text: string | undefined) {
-  // Regular expression to match URLs
-  const urlRegex =
-    /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+    // Regular expression to match URLs
+    const urlRegex =
+        /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 
-  // Split the input text by URLs
-  const parts = (text ?? "").split(urlRegex);
+    // Split the input text by URLs
+    const parts = (text ?? "").split(urlRegex);
 
-  // Convert URLs to <a> tags
-  const elements = parts.map((part, index) => {
-    if (part.match(urlRegex)) {
-      return (
-        <a href={part} key={index} target="_blank" rel="noopener noreferrer">
-          {part}
-        </a>
-      );
-    } else {
-      return <React.Fragment key={index}>{part}</React.Fragment>;
-    }
-  });
+    // Convert URLs to <a> tags
+    const elements = parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a href={part} key={index} target="_blank" rel="noopener noreferrer">
+                    {part}
+                </a>
+            );
+        } else {
+            return <React.Fragment key={index}>{part}</React.Fragment>;
+        }
+    });
 
-  return <>{elements}</>;
+    return <>{elements}</>;
 }
 
 /**
@@ -131,13 +131,13 @@ export function enrichText(text: string | undefined) {
  * @return {string} The formatted weight with the appropriate unit (kg or g).
  */
 export function formatWeight(weightInGrams: number, precision: number = 2): string {
-  if (weightInGrams >= 1000) {
-    const kilograms = removeTrailingZeros((weightInGrams / 1000).toFixed(precision));
-    return `${kilograms} kg`;
-  } else {
-    const grams = removeTrailingZeros(weightInGrams.toFixed(precision));
-    return `${grams} g`;
-  }
+    if (weightInGrams >= 1000) {
+        const kilograms = removeTrailingZeros((weightInGrams / 1000).toFixed(precision));
+        return `${kilograms} kg`;
+    } else {
+        const grams = removeTrailingZeros(weightInGrams.toFixed(precision));
+        return `${grams} g`;
+    }
 }
 
 /**
@@ -148,12 +148,12 @@ export function formatWeight(weightInGrams: number, precision: number = 2): stri
  * @return {string} The formatted length with the appropriate unit (m or mm).
  */
 export function formatLength(lengthInMillimeter: number, precision: number = 2): string {
-  if (lengthInMillimeter >= 1000) {
-    const meters = removeTrailingZeros((lengthInMillimeter / 1000).toFixed(precision));
-    return `${meters} m`;
-  } else {
-    return `${lengthInMillimeter} mm`;
-  }
+    if (lengthInMillimeter >= 1000) {
+        const meters = removeTrailingZeros((lengthInMillimeter / 1000).toFixed(precision));
+        return `${meters} m`;
+    } else {
+        return `${lengthInMillimeter} mm`;
+    }
 }
 
 /**
@@ -174,5 +174,5 @@ export function formatLength(lengthInMillimeter: number, precision: number = 2):
  * ```
  */
 function removeTrailingZeros(num: string): string {
-  return num.replace(/(\.\d*?[1-9])0+|\.0*$/, "$1");
+    return num.replace(/(\.\d*?[1-9])0+|\.0*$/, "$1");
 }

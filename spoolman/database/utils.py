@@ -32,6 +32,11 @@ def parse_nested_field(base_obj: type[models.Base], field: str) -> attributes.In
     if fields[0] == "vendor":
         return parse_nested_field(models.Vendor, ".".join(fields[1:]))
 
+    if fields[0] == "printer" and len(fields) == 1:
+        raise ValueError("No field specified for printer")
+    if fields[0] == "printer":
+        return parse_nested_field(models.Printer, ".".join(fields[1:]))
+
     if len(fields) > 1:
         raise ValueError(f"Field '{fields[0]}' does not have any nested fields")
 

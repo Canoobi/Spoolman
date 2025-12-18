@@ -1,16 +1,16 @@
-import { BaseKey, LiveEvent, LiveProvider } from "@refinedev/core";
+import {BaseKey, LiveEvent, LiveProvider} from "@refinedev/core";
 
 /**
  * A spoolman websocket event.
  */
 interface Event {
-  type: "updated" | "deleted" | "added";
-  resource: "filament" | "spool" | "vendor";
-  date: string;
-  payload: {
-    id: number;
-    [key: string]: unknown;
-  };
+    type: "updated" | "deleted" | "added";
+    resource: "filament" | "spool" | "vendor" | "printer" | "cost";
+    date: string;
+    payload: {
+        id: number;
+        [key: string]: unknown;
+    };
 }
 
 /**
@@ -21,28 +21,28 @@ interface Event {
  * @returns The WebSocket URL
  */
 function toWebsocketURL(apiUrl: string) {
-  if (apiUrl[0] === "/") {
-    // Relative URL, e.g. "/api/v1/..."
+    if (apiUrl[0] === "/") {
+        // Relative URL, e.g. "/api/v1/..."
 
-    // Get the current browser URL
-    const currentURL = window.location.href;
+        // Get the current browser URL
+        const currentURL = window.location.href;
 
-    // Split the URL to separate the protocol, host, and path
-    const urlParts = currentURL.split("/");
-    const protocol = urlParts[0];
-    const host = urlParts[2];
+        // Split the URL to separate the protocol, host, and path
+        const urlParts = currentURL.split("/");
+        const protocol = urlParts[0];
+        const host = urlParts[2];
 
-    if (protocol === "https:") {
-      return `wss://${host}${apiUrl}`;
+        if (protocol === "https:") {
+            return `wss://${host}${apiUrl}`;
+        } else {
+            return `ws://${host}${apiUrl}`;
+        }
     } else {
-      return `ws://${host}${apiUrl}`;
-    }
-  } else {
-    // Absolute URL, e.g. "https://example.com/api/v1/..."
+        // Absolute URL, e.g. "https://example.com/api/v1/..."
 
-    // Replace the protocol with "ws://"
-    return apiUrl.replace(/^http/, "ws");
-  }
+        // Replace the protocol with "ws://"
+        return apiUrl.replace(/^http/, "ws");
+    }
 }
 
 /**
@@ -55,71 +55,72 @@ function toWebsocketURL(apiUrl: string) {
  * @returns A function to unsubscribe from the resource
  */
 function subscribeSingle(
-  apiUrl: string,
-  channel: string,
-  resource: string,
-  callback: (event: LiveEvent) => void,
-  id?: BaseKey
+    apiUrl: string,
+    channel: string,
+    resource: string,
+    callback: (event: LiveEvent) => void,
+    id?: BaseKey
 ) {
-  // Verify that WebSockets are supported
-  if (!("WebSocket" in window)) {
-    console.warn("WebSockets are not supported in this browser. Live updates will not be available.");
-    return () => {};
-  }
+    // Verify that WebSockets are supported
+    if (!("WebSocket" in window)) {
+        console.warn("WebSockets are not supported in this browser. Live updates will not be available.");
+        return () => {
+        };
+    }
 
-  const websocketURL = id ? toWebsocketURL(`${apiUrl}/${resource}/${id}`) : toWebsocketURL(`${apiUrl}/${resource}`);
+    const websocketURL = id ? toWebsocketURL(`${apiUrl}/${resource}/${id}`) : toWebsocketURL(`${apiUrl}/${resource}`);
 
-  const ws = new WebSocket(websocketURL);
-  ws.onmessage = (message) => {
-    const data: Event = JSON.parse(message.data);
-    const type = data.type === "added" ? "created" : data.type;
-    const date = new Date(data.date);
+    const ws = new WebSocket(websocketURL);
+    ws.onmessage = (message) => {
+        const data: Event = JSON.parse(message.data);
+        const type = data.type === "added" ? "created" : data.type;
+        const date = new Date(data.date);
 
-    const liveEvent: LiveEvent = {
-      channel: channel,
-      type: type,
-      payload: {
-        data: data.payload,
-        ids: [data.payload.id],
-      },
-      date: date,
+        const liveEvent: LiveEvent = {
+            channel: channel,
+            type: type,
+            payload: {
+                data: data.payload,
+                ids: [data.payload.id],
+            },
+            date: date,
+        };
+
+        callback(liveEvent);
     };
 
-    callback(liveEvent);
-  };
-
-  return () => {
-    ws.close();
-  };
+    return () => {
+        ws.close();
+    };
 }
 
 const liveProvider = (apiUrl: string): LiveProvider => ({
-  subscribe: ({ channel, params, callback }) => {
-    const { resource, subscriptionType, id, ids } = params ?? {};
+    subscribe: ({channel, params, callback}) => {
+        const {resource, subscriptionType, id, ids} = params ?? {};
 
-    if (!subscriptionType) {
-      throw new Error("[useSubscription]: `subscriptionType` is required in `params`");
-    }
+        if (!subscriptionType) {
+            throw new Error("[useSubscription]: `subscriptionType` is required in `params`");
+        }
 
-    if (!resource) {
-      throw new Error("[useSubscription]: `resource` is required in `params`");
-    }
+        if (!resource) {
+            throw new Error("[useSubscription]: `resource` is required in `params`");
+        }
 
-    let idList: BaseKey[];
-    if (ids) idList = ids;
-    else if (id) idList = [id];
-    else {
-      // No ID specified, subscribe to all IDs
-      return [subscribeSingle(apiUrl, channel, resource, callback)];
-    }
+        let idList: BaseKey[];
+        if (ids) idList = ids;
+        else if (id) idList = [id];
+        else {
+            // No ID specified, subscribe to all IDs
+            return [subscribeSingle(apiUrl, channel, resource, callback)];
+        }
 
-    return idList.map((id) => {
-      return subscribeSingle(apiUrl, channel, resource, callback, id);
-    });
-  },
-  unsubscribe: (closers: (() => void)[]) => {
-    closers.forEach((fn) => fn());
-  },
+        return idList.map((id) => {
+            return subscribeSingle(apiUrl, channel, resource, callback, id);
+        });
+    },
+    unsubscribe: (closers: (() => void)[]) => {
+        closers.forEach((fn) => fn());
+    },
 });
 
 export default liveProvider;

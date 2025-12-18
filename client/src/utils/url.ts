@@ -1,7 +1,7 @@
 declare global {
-  interface Window {
-    SPOOLMAN_BASE_PATH: string;
-  }
+    interface Window {
+        SPOOLMAN_BASE_PATH: string;
+    }
 }
 
 /**
@@ -14,11 +14,11 @@ declare global {
  * default base path "" is returned.
  */
 export function getBasePath(): string {
-  if (window.SPOOLMAN_BASE_PATH && window.SPOOLMAN_BASE_PATH.length > 0) {
-    return window.SPOOLMAN_BASE_PATH;
-  } else {
-    return "";
-  }
+    if (window.SPOOLMAN_BASE_PATH && window.SPOOLMAN_BASE_PATH.length > 0) {
+        return window.SPOOLMAN_BASE_PATH;
+    } else {
+        return "";
+    }
 }
 
 /**
@@ -28,8 +28,8 @@ export function getBasePath(): string {
  * @return {string} The API URL
  */
 export function getAPIURL(): string {
-  if (!import.meta.env.VITE_APIURL) {
-    throw new Error("VITE_APIURL is not set");
-  }
-  return getBasePath() + import.meta.env.VITE_APIURL;
+    if (!import.meta.env.VITE_APIURL) {
+        throw new Error("VITE_APIURL is not set");
+    }
+    return getBasePath() + import.meta.env.VITE_APIURL;
 }
