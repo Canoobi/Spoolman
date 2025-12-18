@@ -3,7 +3,7 @@ FROM node:24-bookworm AS client-builder
 WORKDIR /usr/local/app/client
 
 COPY client/package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY client/ ./
 RUN npm run build
