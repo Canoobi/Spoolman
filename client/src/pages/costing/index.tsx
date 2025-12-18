@@ -1,29 +1,29 @@
 import {PlusOutlined} from "@ant-design/icons";
 import {List, useSelect, useTable} from "@refinedev/antd";
 import {
-  CrudFilter,
-  CrudFilters,
-  IResourceComponentsProps,
-  useCreate,
-  useInvalidate,
-  useTranslate
+    CrudFilter,
+    CrudFilters,
+    IResourceComponentsProps,
+    useCreate,
+    useInvalidate,
+    useTranslate
 } from "@refinedev/core";
 import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Descriptions,
-  Divider,
-  Form,
-  Input,
-  InputNumber,
-  Row,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Typography,
+    Alert,
+    Button,
+    Card,
+    Col,
+    Descriptions,
+    Divider,
+    Form,
+    Input,
+    InputNumber,
+    Row,
+    Select,
+    Space,
+    Table,
+    Tag,
+    Typography,
 } from "antd";
 import dayjs from "dayjs";
 import {useEffect, useMemo, useState} from "react";
@@ -141,9 +141,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const depreciationCost = (printer?.depreciation_cost_per_hour ?? 0) * printHours;
         const laborCost = laborHours * laborRate;
         const base = materialCost + energyCost + depreciationCost + laborCost + consumablesCost;
-        const uplifted = base * (1 + failureRate);
-        const total = uplifted * (1 + markupRate);
-        const finalPrice = values.final_price ?? total;
+        const uplifted = base * (1 + failureRate) * (1 + markupRate);
+        const finalPrice = values.final_price ?? uplifted;
 
         setBreakdown({
             material: materialCost,
