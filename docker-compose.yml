@@ -41,10 +41,6 @@ services:
         condition: service_started
     image: ghcr.io/rdiger-36/bambulab-ams-spoolman-filamentstatus:latest
     container_name: Spoolman-AMS-FilamentStatus
-    depends_on:
-      spoolman:
-        condition: service_started
-        restart: true
     ports:
       - 30169:4000
     environment:
