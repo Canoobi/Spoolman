@@ -290,6 +290,89 @@
             "vendor_updated": "This manufacturer has been updated by someone/something else since you opened this page. Saving will overwrite those changes!"
         }
     },
+    "printer": {
+        "printer": "Printers",
+        "fields": {
+            "id": "ID",
+            "name": "Name",
+            "registered": "Registered",
+            "power_watts": "Power",
+            "depreciation_cost_per_hour": "Depreciation /h",
+            "comment": "Comment"
+        },
+        "fields_help": {
+            "power_watts": "Average power draw in watts used for cost estimates.",
+            "depreciation_cost_per_hour": "Hourly cost to account for maintenance or depreciation."
+        },
+        "titles": {
+            "create": "Create Printer",
+            "clone": "Clone Printer",
+            "edit": "Edit Printer",
+            "list": "Printers",
+            "show": "Show Printer",
+            "show_title": "[Printer #{{id}}] {{name}}"
+        },
+        "validation": {
+            "name": "Printer name is required"
+        }
+    },
+    "cost": {
+        "title": "Cost calculation",
+        "description": "Estimate print costs using your default settings and saved equipment.",
+        "fields": {
+            "printer_id": "Printer",
+            "filament_id": "Filament",
+            "printer": "Printer",
+            "filament": "Filament",
+            "print_time_hours": "Print time (h)",
+            "labor_time_hours": "Labor time (h)",
+            "filament_weight_g": "Filament weight (g)",
+            "energy_cost_per_kwh": "Energy cost per kWh",
+            "labor_cost_per_hour": "Labor cost per hour",
+            "consumables_cost": "Consumables",
+            "failure_rate": "Failure rate",
+            "markup_rate": "Markup",
+            "final_price": "Final price",
+            "notes": "Notes",
+            "created": "Created",
+            "base_price": "Base price",
+            "uplifted_price": "Adjusted price"
+        },
+        "placeholders": {
+            "printer": "Select printer",
+            "filament": "Select filament"
+        },
+        "tooltips": {
+            "energy_cost_per_kwh": "Override the default electricity price for this calculation.",
+            "labor_cost_per_hour": "Override the default labor rate for this calculation.",
+            "consumables_cost": "Consumables or other fixed costs for this print.",
+            "failure_rate": "Failure uplift as a decimal (0.1 equals 10%).",
+            "markup_rate": "Markup as a decimal (0.2 equals 20%).",
+            "final_price": "Optionally override the computed total."
+        },
+        "breakdown": {
+            "title": "Breakdown",
+            "material": "Material",
+            "energy": "Energy",
+            "depreciation": "Depreciation",
+            "labor": "Labor",
+            "consumables": "Consumables",
+            "base": "Base total",
+            "uplifted": "After failure + markup",
+            "final": "Final price"
+        },
+        "actions": {
+            "save_calculation": "Save calculation"
+        },
+        "notes": {
+            "using_settings": "Using currency defaults {{currency}} ({{currencySymbol}})."
+        },
+        "history": {
+            "title": "Calculation history",
+            "filter_printers": "Filter by printer",
+            "filter_filaments": "Filter by filament"
+        }
+    },
     "home": {
         "home": "Home",
         "welcome": "Welcome to your Spoolman instance!",
@@ -322,6 +405,35 @@
             "round_prices": {
                 "label": "Round prices",
                 "tooltip": "Round prices to the nearest whole number."
+            },
+            "energy_cost_per_kwh": {
+                "label": "Energy cost per kWh",
+                "tooltip": "Default price of electricity used when estimating print costs."
+            },
+            "labor_cost_per_hour": {
+                "label": "Labor cost per hour",
+                "tooltip": "Default hourly labor rate used when costing prints."
+            },
+            "failure_rate": {
+                "label": "Failure rate",
+                "tooltip": "Expected failure rate expressed as a decimal (for 10% use 0.1)."
+            },
+            "currency_symbol": {
+                "label": "Currency symbol",
+                "tooltip": "Optional symbol to use for currency displays."
+            },
+            "currency_unit": {
+                "label": "Currency unit",
+                "tooltip": "Optional unit label for currency formatting."
+            },
+            "markup_default_rate": {
+                "label": "Default markup",
+                "tooltip": "Default markup applied as a decimal (for 20% use 0.2)."
+            },
+            "consumables_default": {
+                "label": "Default consumables",
+                "tooltip": "JSON list of default consumables or costs to include automatically.",
+                "error": "Consumables defaults must be valid JSON."
             }
         },
         "extra_fields": {

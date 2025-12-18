@@ -6,9 +6,11 @@ import { ErrorComponent } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
 import {
+  DollarCircleOutlined,
   FileOutlined,
   HighlightOutlined,
   HomeOutlined,
+  PrinterOutlined,
   QuestionOutlined,
   TableOutlined,
   ToolOutlined,
@@ -31,7 +33,7 @@ import { languages } from "./i18n";
 import { getAPIURL, getBasePath } from "./utils/url";
 
 interface ResourcePageProps {
-  resource: "spools" | "filaments" | "vendors";
+  resource: "spools" | "filaments" | "vendors" | "printers";
   page: "list" | "create" | "edit" | "show";
   mode?: "create" | "clone";
 }
@@ -150,6 +152,17 @@ function App() {
                   },
                 },
                 {
+                  name: "printer",
+                  list: "/printer",
+                  create: "/printer/create",
+                  edit: "/printer/edit/:id",
+                  show: "/printer/show/:id",
+                  meta: {
+                    canDelete: true,
+                    icon: <PrinterOutlined />,
+                  },
+                },
+                {
                   name: "locations",
                   list: "/locations",
                   meta: {
@@ -163,6 +176,14 @@ function App() {
                   meta: {
                     canDelete: false,
                     icon: <ToolOutlined />,
+                  },
+                },
+                {
+                  name: "cost",
+                  list: "/costing",
+                  meta: {
+                    canDelete: true,
+                    icon: <DollarCircleOutlined />,
                   },
                 },
                 {
@@ -229,7 +250,17 @@ function App() {
                     <Route path="edit/:id" element={<LoadableResourcePage resource="vendors" page="edit" />} />
                     <Route path="show/:id" element={<LoadableResourcePage resource="vendors" page="show" />} />
                   </Route>
+                  <Route path="/printer">
+                    <Route index element={<LoadableResourcePage resource="printers" page="list" />} />
+                    <Route
+                      path="create"
+                      element={<LoadableResourcePage resource="printers" page="create" mode="create" />}
+                    />
+                    <Route path="edit/:id" element={<LoadableResourcePage resource="printers" page="edit" />} />
+                    <Route path="show/:id" element={<LoadableResourcePage resource="printers" page="show" />} />
+                  </Route>
                   <Route path="/settings/*" element={<LoadablePage name="settings" />} />
+                  <Route path="/costing" element={<LoadablePage name="costing" />} />
                   <Route path="/help" element={<LoadablePage name="help" />} />
                   <Route path="/locations" element={<LoadablePage name="locations" />} />
                   <Route path="*" element={<ErrorComponent />} />
