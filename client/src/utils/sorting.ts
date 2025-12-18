@@ -1,9 +1,9 @@
-import { CrudSort } from "@refinedev/core";
-import { SortOrder } from "antd/es/table/interface";
+import {CrudSort} from "@refinedev/core";
+import {SortOrder} from "antd/es/table/interface";
 
 interface TypedCrudSort<Obj> {
-  field: keyof Obj;
-  order: "asc" | "desc";
+    field: keyof Obj;
+    order: "asc" | "desc";
 }
 
 /**
@@ -13,16 +13,16 @@ interface TypedCrudSort<Obj> {
  * @returns The sort order for the given field, or undefined if the field is not being sorted.
  */
 export function getSortOrderForField<Obj, Field extends keyof Obj>(
-  sorters: TypedCrudSort<Obj>[],
-  field: Field
+    sorters: TypedCrudSort<Obj>[],
+    field: Field
 ): SortOrder | undefined {
-  const sorter = sorters.find((s) => s.field === field);
-  if (sorter) {
-    return sorter.order === "asc" ? "ascend" : "descend";
-  }
-  return undefined;
+    const sorter = sorters.find((s) => s.field === field);
+    if (sorter) {
+        return sorter.order === "asc" ? "ascend" : "descend";
+    }
+    return undefined;
 }
 
 export function typeSorters<Obj>(sorters: CrudSort[]): TypedCrudSort<Obj>[] {
-  return sorters as TypedCrudSort<Obj>[]; // <-- Unsafe cast
+    return sorters as TypedCrudSort<Obj>[]; // <-- Unsafe cast
 }

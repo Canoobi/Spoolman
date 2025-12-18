@@ -1,13 +1,13 @@
-import { CrudFilter, CrudOperators } from "@refinedev/core";
+import {CrudFilter, CrudOperators} from "@refinedev/core";
 
 interface TypedCrudFilter<Obj> {
-  field: keyof Obj;
-  operator: Exclude<CrudOperators, "or" | "and">;
-  value: string[];
+    field: keyof Obj;
+    operator: Exclude<CrudOperators, "or" | "and">;
+    value: string[];
 }
 
 export function typeFilters<Obj>(filters: CrudFilter[]): TypedCrudFilter<Obj>[] {
-  return filters as TypedCrudFilter<Obj>[]; // <-- Unsafe cast
+    return filters as TypedCrudFilter<Obj>[]; // <-- Unsafe cast
 }
 
 /**
@@ -17,23 +17,23 @@ export function typeFilters<Obj>(filters: CrudFilter[]): TypedCrudFilter<Obj>[] 
  * @returns An array of filter values for the given field.
  */
 export function getFiltersForField<Obj, Field extends keyof Obj>(
-  filters: TypedCrudFilter<Obj>[],
-  field: Field
+    filters: TypedCrudFilter<Obj>[],
+    field: Field
 ): string[] {
-  const filterValues: string[] = [];
-  filters.forEach((filter) => {
-    if (filter.field === field) {
-      filterValues.push(...(filter.value as string[]));
-    }
-  });
-  return filterValues;
+    const filterValues: string[] = [];
+    filters.forEach((filter) => {
+        if (filter.field === field) {
+            filterValues.push(...(filter.value as string[]));
+        }
+    });
+    return filterValues;
 }
 
 /**
  * Function that returns an array with all undefined values removed.
  */
 export function removeUndefined<T>(array: (T | undefined)[]): T[] {
-  return array.filter((value) => value !== undefined) as T[];
+    return array.filter((value) => value !== undefined) as T[];
 }
 
 /**
@@ -41,6 +41,6 @@ export function removeUndefined<T>(array: (T | undefined)[]): T[] {
  * The query is broken down into words and the search is performed on each word.
  */
 export function searchMatches(query: string, test: string): boolean {
-  const words = query.toLowerCase().split(" ");
-  return words.every((word) => test.toLowerCase().includes(word));
+    const words = query.toLowerCase().split(" ");
+    return words.every((word) => test.toLowerCase().includes(word));
 }

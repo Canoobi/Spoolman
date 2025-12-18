@@ -2,13 +2,13 @@ import dayjs from "dayjs";
 import i18n from "i18next";
 import detector from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
-import { initReactI18next } from "react-i18next";
-import { getBasePath } from "./utils/url";
+import {initReactI18next} from "react-i18next";
+import {getBasePath} from "./utils/url";
 
 interface Language {
-  name: string;
-  fullCode: string;
-  djs: () => Promise<ILocale>;
+    name: string;
+    fullCode: string;
+    djs: () => Promise<ILocale>;
 }
 
 /**
@@ -19,34 +19,34 @@ interface Language {
  * djs: Function to load the dayjs locale, see https://github.com/iamkun/dayjs/tree/dev/src/locale for list of locales
  */
 export const languages: { [key: string]: Language } = {
-  ["en"]: {
-    name: "English",
-    fullCode: "en-GB",
-    djs: () => import("dayjs/locale/en"),
-  },
-  ["de"]: {
-    name: "Deutsch",
-    fullCode: "de-DE",
-    djs: () => import("dayjs/locale/de"),
-  }
+    ["en"]: {
+        name: "English",
+        fullCode: "en-GB",
+        djs: () => import("dayjs/locale/en"),
+    },
+    ["de"]: {
+        name: "Deutsch",
+        fullCode: "de-DE",
+        djs: () => import("dayjs/locale/de"),
+    }
 };
 
 i18n
-  .use(Backend)
-  .use(detector)
-  .use(initReactI18next)
-  .init({
-    supportedLngs: Object.keys(languages),
-    backend: {
-      loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
-    },
-    ns: "common",
-    defaultNS: "common",
-    fallbackLng: "en",
-  });
+    .use(Backend)
+    .use(detector)
+    .use(initReactI18next)
+    .init({
+        supportedLngs: Object.keys(languages),
+        backend: {
+            loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
+        },
+        ns: "common",
+        defaultNS: "common",
+        fallbackLng: "en",
+    });
 
 i18n.on("languageChanged", function (lng) {
-  languages[lng].djs().then((djs) => dayjs.locale(djs.name));
+    languages[lng].djs().then((djs) => dayjs.locale(djs.name));
 });
 
 export default i18n;
