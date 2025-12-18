@@ -40,7 +40,7 @@ jobs:
           password: ${{ secrets.NAS_SSH_KEY }}
           script: |
             cd ${{ secrets.REPO_PATH }}
-            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose down
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker compose down
 
   build-image:
     needs: pull-repo
@@ -54,7 +54,7 @@ jobs:
           password: ${{ secrets.NAS_SSH_KEY }}
           script: |
             cd ${{ secrets.REPO_PATH }}
-            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose build
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker compose build
 
   start-container:
     needs: [ stop-container, build-image ]
@@ -68,4 +68,4 @@ jobs:
           password: ${{ secrets.NAS_SSH_KEY }}
           script: |
             cd ${{ secrets.REPO_PATH }}
-            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker-compose up -d
+            echo "${{ secrets.NAS_SSH_KEY }}" | sudo -S /usr/local/bin/docker compose up -d
