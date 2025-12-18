@@ -172,7 +172,7 @@ export function GeneralSettings() {
                     },
                 ]}
             >
-                <InputNumber addonAfter="/kWh" style={{width: "100%"}}/>
+                <InputNumber addonAfter={`${currencySymbol}/kWh`} style={{width: "100%"}}/>
             </Form.Item>
             <Form.Item
                 label={t("settings.general.labor_cost_per_hour.label")}
