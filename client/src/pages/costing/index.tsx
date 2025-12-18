@@ -27,14 +27,13 @@ import {
 } from "antd";
 import {DefaultOptionType} from "antd/es/select";
 import dayjs from "dayjs";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {IFilament} from "../filaments/model";
 import {IPrinter} from "../printers/model";
 import {ICostCalculation} from "./model";
 import {useGetSettings} from "../../utils/querySettings";
 import {removeUndefined} from "../../utils/filtering";
 import {getCurrencySymbol, useCurrency, useCurrencyFormatter} from "../../utils/settings";
-import {formatLength} from "../../utils/parsing";
 
 const {Title, Paragraph} = Typography;
 
@@ -59,6 +58,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
     const [form] = Form.useForm();
     const [message, setMessage] = useState<string | null>(null);
+    const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
+    const isUpdatingFinalPriceRef = useRef(false);
     const [breakdown, setBreakdown] = useState<Breakdown>({
         material: 0,
         energy: 0,
@@ -165,7 +166,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 averagePrice: type.priceCount > 0 ? type.totalPrice / type.priceCount : undefined,
             }));
 
-            return options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+            return options.sort((a, b) => a.label.localeCompare(b.label, undefined, {sensitivity: "base"}));
         },
         [filaments]
     );
@@ -173,7 +174,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const map = new Map<number, { averagePrice?: number }>();
         filamentTypeOptions.forEach((type) => {
             type.filamentIds.forEach((id) => {
-                map.set(id, { averagePrice: type.averagePrice });
+                map.set(id, {averagePrice: type.averagePrice});
             });
         });
         return map;
@@ -206,8 +207,15 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const laborCost = laborHours * laborRate;
         const base = materialCost + energyCost + depreciationCost + laborCost + consumablesCost;
         const uplifted = base * (1 + failureRate) * (1 + markupRate);
-        const finalPrice = values.final_price ?? uplifted;
+        const shouldUpdateFinalPrice = !isFinalPriceManuallySet || values.final_price === undefined;
+        const computedFinalPrice = uplifted;
+        const finalPrice = shouldUpdateFinalPrice ? computedFinalPrice : values.final_price ?? computedFinalPrice;
 
+        if (shouldUpdateFinalPrice && values.final_price !== computedFinalPrice) {
+            isUpdatingFinalPriceRef.current = true;
+            form.setFieldsValue({final_price: computedFinalPrice});
+            isUpdatingFinalPriceRef.current = false;
+        }
         setBreakdown({
             material: materialCost,
             energy: energyCost,
@@ -350,7 +358,14 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 <Form
                     form={form}
                     layout="vertical"
-                    onValuesChange={() => {
+                    onValuesChange={(changedValues) => {
+                        if (
+                            Object.prototype.hasOwnProperty.call(changedValues, "final_price") &&
+                            !isUpdatingFinalPriceRef.current
+                        ) {
+                            const newValue = changedValues.final_price;
+                            setIsFinalPriceManuallySet(newValue !== undefined && newValue !== null);
+                        }
                         recompute();
                     }}
                 >
