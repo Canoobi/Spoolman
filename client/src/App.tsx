@@ -159,7 +159,7 @@ function App() {
                   show: "/printer/show/:id",
                   meta: {
                     canDelete: true,
-                    icon: <img src="../public/printer.png" width={12} height={15} alt="printer" />,
+                    icon: <img src="../printer.png" width={12} height={15} alt="printer" />,
                   },
                 },
                 {
