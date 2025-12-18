@@ -1,26 +1,6 @@
 version: '3.8'
 services:
-  build:
-    image: node:24
-    working_dir: /usr/local/app/client
-    volumes:
-      - /volume1/docker/Spoolman:/usr/local/app
-    command: >
-      sh -c "npm install &&
-             npm run build
-             tail -f /dev/null"
-    healthcheck:
-      test: [ "CMD", "test", "-d", "/usr/local/app/client/dist" ]
-      interval: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    container_name: Spoolman-Build
-
   spoolman:
-    depends_on:
-      build:
-        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile
