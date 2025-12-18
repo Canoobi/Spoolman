@@ -378,14 +378,6 @@
                 "label": "Fehlerrate",
                 "tooltip": "Erwartete Fehlerrate als Dezimalwert (z. B. 0,1 für 10 %)."
             },
-            "currency_symbol": {
-                "label": "Währungssymbol",
-                "tooltip": "Optionales Symbol für die Anzeige der Währung."
-            },
-            "currency_unit": {
-                "label": "Währungseinheit",
-                "tooltip": "Optionale Einheit für die Währungsformatierung."
-            },
             "markup_default_rate": {
                 "label": "Standard-Aufschlag",
                 "tooltip": "Standardaufschlag als Dezimalzahl (z. B. 0,2 für 20 %)."

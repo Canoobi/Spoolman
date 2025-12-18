@@ -418,14 +418,6 @@
                 "label": "Failure rate",
                 "tooltip": "Expected failure rate expressed as a decimal (for 10% use 0.1)."
             },
-            "currency_symbol": {
-                "label": "Currency symbol",
-                "tooltip": "Optional symbol to use for currency displays."
-            },
-            "currency_unit": {
-                "label": "Currency unit",
-                "tooltip": "Optional unit label for currency formatting."
-            },
             "markup_default_rate": {
                 "label": "Default markup",
                 "tooltip": "Default markup applied as a decimal (for 20% use 0.2)."

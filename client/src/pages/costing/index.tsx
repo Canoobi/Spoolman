@@ -45,18 +45,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
   const currency = useCurrency();
   const settings = useGetSettings();
   const invalidate = useInvalidate();
-  const currencySymbol = useMemo(() => {
-    try {
-      const raw = settings.data?.currency_symbol?.value;
-      const parsed = raw ? JSON.parse(raw) : "";
-      if (parsed) {
-        return parsed as string;
-      }
-    } catch {
-      // Fallback to automatic symbol
-    }
-    return getCurrencySymbol(undefined, currency);
-  }, [currency, settings.data]);
+  const currencySymbol = useMemo(() => getCurrencySymbol(undefined, currency), [currency]);
   const formatter = useCurrencyFormatter();
 
   const [form] = Form.useForm();

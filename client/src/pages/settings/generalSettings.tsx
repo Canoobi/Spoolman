@@ -12,8 +12,6 @@ export function GeneralSettings() {
   const setEnergyCost = useSetSetting("energy_cost_per_kwh");
   const setLaborCost = useSetSetting("labor_cost_per_hour");
   const setFailureRate = useSetSetting("failure_rate");
-  const setCurrencySymbol = useSetSetting("currency_symbol");
-  const setCurrencyUnit = useSetSetting("currency_unit");
   const setMarkupDefault = useSetSetting("markup_default_rate");
   const setConsumablesDefault = useSetSetting<string[]>("consumables_default");
   const [form] = Form.useForm();
@@ -30,8 +28,6 @@ export function GeneralSettings() {
         energy_cost_per_kwh: JSON.parse(settings.data.energy_cost_per_kwh.value ?? "0"),
         labor_cost_per_hour: JSON.parse(settings.data.labor_cost_per_hour.value ?? "0"),
         failure_rate: JSON.parse(settings.data.failure_rate.value ?? "0"),
-        currency_symbol: JSON.parse(settings.data.currency_symbol.value ?? "\"\""),
-        currency_unit: JSON.parse(settings.data.currency_unit.value ?? "\"\""),
         markup_default_rate: JSON.parse(settings.data.markup_default_rate.value ?? "0"),
         consumables_default: settings.data.consumables_default.value,
       });
@@ -47,8 +43,6 @@ export function GeneralSettings() {
       setEnergyCost.isSuccess ||
       setLaborCost.isSuccess ||
       setFailureRate.isSuccess ||
-      setCurrencySymbol.isSuccess ||
-      setCurrencyUnit.isSuccess ||
       setMarkupDefault.isSuccess ||
       setConsumablesDefault.isSuccess
     ) {
@@ -61,8 +55,6 @@ export function GeneralSettings() {
     setEnergyCost.isSuccess,
     setLaborCost.isSuccess,
     setFailureRate.isSuccess,
-    setCurrencySymbol.isSuccess,
-    setCurrencyUnit.isSuccess,
     setMarkupDefault.isSuccess,
     setConsumablesDefault.isSuccess,
     messageApi,
@@ -77,8 +69,6 @@ export function GeneralSettings() {
     energy_cost_per_kwh: number;
     labor_cost_per_hour: number;
     failure_rate: number;
-    currency_symbol: string;
-    currency_unit: string;
     markup_default_rate: number;
     consumables_default: string;
   }) => {
@@ -99,12 +89,6 @@ export function GeneralSettings() {
     }
     if (settings.data?.failure_rate.value !== JSON.stringify(values.failure_rate)) {
       setFailureRate.mutate(values.failure_rate);
-    }
-    if (settings.data?.currency_symbol.value !== JSON.stringify(values.currency_symbol)) {
-      setCurrencySymbol.mutate(values.currency_symbol);
-    }
-    if (settings.data?.currency_unit.value !== JSON.stringify(values.currency_unit)) {
-      setCurrencyUnit.mutate(values.currency_unit);
     }
     if (settings.data?.markup_default_rate.value !== JSON.stringify(values.markup_default_rate)) {
       setMarkupDefault.mutate(values.markup_default_rate);
@@ -214,20 +198,6 @@ export function GeneralSettings() {
         ]}
       >
         <InputNumber min={0} max={1} step={0.05} />
-      </Form.Item>
-      <Form.Item
-        label={t("settings.general.currency_symbol.label")}
-        tooltip={t("settings.general.currency_symbol.tooltip")}
-        name="currency_symbol"
-      >
-        <Input maxLength={4} />
-      </Form.Item>
-      <Form.Item
-        label={t("settings.general.currency_unit.label")}
-        tooltip={t("settings.general.currency_unit.tooltip")}
-        name="currency_unit"
-      >
-        <Input maxLength={32} />
       </Form.Item>
       <Form.Item
         label={t("settings.general.markup_default_rate.label")}
