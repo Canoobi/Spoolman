@@ -2,10 +2,8 @@ FROM node:24-bookworm AS client-builder
 
 WORKDIR /usr/local/app/client
 
-COPY client/package*.json ./
 RUN npm install
 
-COPY client/ ./
 RUN npm run build
 
 FROM python:3.12-bookworm AS python-builder
