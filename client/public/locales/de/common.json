@@ -365,6 +365,27 @@
             "round_prices": {
                 "label": "Gerundeter Preis",
                 "tooltip": "Rundet die Preise auf die nächsthöhere ganze Zahl."
+            },
+            "energy_cost_per_kwh": {
+                "label": "Energiekosten pro kWh",
+                "tooltip": "Standardstrompreis für Kostenschätzungen."
+            },
+            "labor_cost_per_hour": {
+                "label": "Arbeitskosten pro Stunde",
+                "tooltip": "Standard-Stundensatz für Arbeitszeit."
+            },
+            "failure_rate": {
+                "label": "Fehlerrate",
+                "tooltip": "Erwartete Fehlerrate als Dezimalwert (z. B. 0,1 für 10 %)."
+            },
+            "markup_default_rate": {
+                "label": "Standard-Aufschlag",
+                "tooltip": "Standardaufschlag als Dezimalzahl (z. B. 0,2 für 20 %)."
+            },
+            "consumables_default": {
+                "label": "Standard-Verbrauchsmaterialien",
+                "tooltip": "JSON-Liste von Standardkosten/Verbrauchsmaterialien, die automatisch einbezogen werden.",
+                "error": "Verbrauchsmaterialien müssen gültiges JSON sein."
             }
         },
         "extra_fields": {
@@ -405,5 +426,88 @@
         "no_locations_help": "Diese Seite lässt Sie Ihre Spulen zu Orten zuweisen, fügen Sie ein paar Spulen hinzu um loszulegen!",
         "locations": "Orte",
         "new_location": "Neuer Ort"
+    },
+    "printer": {
+        "printer": "Drucker",
+        "fields": {
+            "id": "ID",
+            "name": "Name",
+            "registered": "Registriert",
+            "power_watts": "Leistung",
+            "depreciation_cost_per_hour": "Abschreibung /h",
+            "comment": "Kommentar"
+        },
+        "fields_help": {
+            "power_watts": "Durchschnittliche Leistungsaufnahme in Watt für Kostenschätzungen.",
+            "depreciation_cost_per_hour": "Stündlicher Kostenfaktor für Wartung/Abschreibung."
+        },
+        "titles": {
+            "create": "Drucker anlegen",
+            "clone": "Drucker duplizieren",
+            "edit": "Drucker bearbeiten",
+            "list": "Drucker",
+            "show": "Drucker anzeigen",
+            "show_title": "[Drucker #{{id}}] {{name}}"
+        },
+        "validation": {
+            "name": "Ein Druckername ist erforderlich"
+        }
+    },
+    "cost": {
+        "title": "Kalkulation",
+        "description": "Schätze Druckkosten mit deinen Standardwerten und gespeicherten Geräten.",
+        "fields": {
+            "printer_id": "Drucker",
+            "filament_id": "Filament",
+            "printer": "Drucker",
+            "filament": "Filament",
+            "print_time_hours": "Druckzeit (h)",
+            "labor_time_hours": "Arbeitszeit (h)",
+            "filament_weight_g": "Filamentgewicht (g)",
+            "energy_cost_per_kwh": "Energiekosten pro kWh",
+            "labor_cost_per_hour": "Arbeitskosten pro Stunde",
+            "consumables_cost": "Verbrauchsmaterialien",
+            "failure_rate": "Fehlerrate",
+            "markup_rate": "Aufschlag",
+            "final_price": "Endpreis",
+            "notes": "Notizen",
+            "created": "Erstellt",
+            "base_price": "Basispreis",
+            "uplifted_price": "Angepasster Preis"
+        },
+        "placeholders": {
+            "printer": "Drucker wählen",
+            "filament": "Filament wählen"
+        },
+        "tooltips": {
+            "energy_cost_per_kwh": "Standardstrompreis überschreiben.",
+            "labor_cost_per_hour": "Standard-Stundensatz überschreiben.",
+            "consumables_cost": "Fixe Kosten/Verbrauchsmaterialien für den Druck.",
+            "failure_rate": "Fehlerrate als Dezimalzahl (0,1 entspricht 10 %).",
+            "markup_rate": "Aufschlag als Dezimalzahl (0,2 entspricht 20 %).",
+            "final_price": "Optional den berechneten Gesamtpreis überschreiben."
+        },
+        "breakdown": {
+            "title": "Aufschlüsselung",
+            "material": "Material",
+            "energy": "Energie",
+            "depreciation": "Abschreibung",
+            "labor": "Arbeit",
+            "consumables": "Verbrauchsmaterialien",
+            "base": "Basis gesamt",
+            "uplifted": "Nach Fehlerrate + Aufschlag",
+            "final": "Endpreis"
+        },
+        "actions": {
+            "save_calculation": "Kalkulation speichern"
+        },
+        "notes": {
+            "using_settings": "Verwende Währung {{currency}} ({{currencySymbol}})."
+        },
+        "history": {
+            "title": "Kalkulationshistorie",
+            "filter_printers": "Nach Drucker filtern",
+            "filter_filaments": "Nach Filament filtern"
+        }
     }
 }

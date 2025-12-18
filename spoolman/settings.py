@@ -72,3 +72,11 @@ register_setting("base_url", SettingType.STRING, json.dumps(""))
 
 register_setting("locations", SettingType.ARRAY, json.dumps([]))
 register_setting("locations_spoolorders", SettingType.OBJECT, json.dumps({}))
+
+register_setting("energy_cost_per_kwh", SettingType.NUMBER, json.dumps(0))
+register_setting("labor_cost_per_hour", SettingType.NUMBER, json.dumps(0))
+register_setting("failure_rate", SettingType.NUMBER, json.dumps(0))
+register_setting("currency_symbol", SettingType.STRING, json.dumps("€"))
+register_setting("currency_unit", SettingType.STRING, json.dumps(""))
+register_setting("markup_default_rate", SettingType.NUMBER, json.dumps(0))
+register_setting("consumables_default", SettingType.ARRAY, json.dumps([]))

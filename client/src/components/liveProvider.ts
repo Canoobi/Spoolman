@@ -5,7 +5,7 @@ import { BaseKey, LiveEvent, LiveProvider } from "@refinedev/core";
  */
 interface Event {
   type: "updated" | "deleted" | "added";
-  resource: "filament" | "spool" | "vendor";
+  resource: "filament" | "spool" | "vendor" | "printer" | "cost";
   date: string;
   payload: {
     id: number;

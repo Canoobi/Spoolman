@@ -360,6 +360,94 @@ class Spool(BaseModel):
         )
 
 
+class Printer(BaseModel):
+    id: int = Field(description="Unique internal ID of this printer.")
+    registered: SpoolmanDateTime = Field(description="When the printer was registered in the database. UTC Timezone.")
+    name: str = Field(description="Printer name.", examples=["Bambu X1C"])
+    power_watts: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Average power consumption of the printer in watts.",
+        examples=[250],
+    )
+    depreciation_cost_per_hour: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Depreciation or maintenance cost per print hour.",
+        examples=[0.5],
+    )
+    comment: Optional[str] = Field(
+        None,
+        max_length=1024,
+        description="Free text comment about this printer.",
+        examples=["0.6mm nozzle installed"],
+    )
+
+    @staticmethod
+    def from_db(item: models.Printer) -> "Printer":
+        """Create a new Pydantic printer object from a database printer object."""
+        return Printer(
+            id=item.id,
+            registered=item.registered,
+            name=item.name,
+            power_watts=item.power_watts,
+            depreciation_cost_per_hour=item.depreciation_cost_per_hour,
+            comment=item.comment,
+        )
+
+
+class CostCalculation(BaseModel):
+    id: int = Field(description="Unique internal ID of this calculation.")
+    created: SpoolmanDateTime = Field(description="When the calculation was saved. UTC Timezone.")
+    printer: Optional[Printer] = Field(None, description="The printer used for the calculation.")
+    filament: Optional[Filament] = Field(None, description="The filament used for the calculation.")
+    print_time_hours: Optional[float] = Field(None, ge=0, description="Total print time in hours.")
+    labor_time_hours: Optional[float] = Field(None, ge=0, description="Total labor time in hours.")
+    filament_weight_g: Optional[float] = Field(None, ge=0, description="Filament weight used in grams.")
+    material_cost: Optional[float] = Field(None, ge=0, description="Cost of material.")
+    energy_cost: Optional[float] = Field(None, ge=0, description="Cost of electricity.")
+    depreciation_cost: Optional[float] = Field(None, ge=0, description="Printer depreciation cost.")
+    labor_cost: Optional[float] = Field(None, ge=0, description="Labor cost.")
+    consumables_cost: Optional[float] = Field(None, ge=0, description="Consumables cost.")
+    failure_rate: Optional[float] = Field(None, ge=0, description="Failure rate applied as a factor.")
+    markup_rate: Optional[float] = Field(None, ge=0, description="Markup applied as a factor.")
+    base_price: Optional[float] = Field(None, ge=0, description="Price before uplifts or markup.")
+    uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
+    final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
+    currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
+    notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
+
+    @staticmethod
+    def from_db(
+        item: models.CostCalculation,
+        *,
+        printer: Optional[Printer] = None,
+        filament: Optional[Filament] = None,
+    ) -> "CostCalculation":
+        """Create a new Pydantic cost calculation object from a database cost calculation object."""
+        return CostCalculation(
+            id=item.id,
+            created=item.created,
+            printer=printer if printer is not None else (Printer.from_db(item.printer) if item.printer else None),
+            filament=filament if filament is not None else (Filament.from_db(item.filament) if item.filament else None),
+            print_time_hours=item.print_time_hours,
+            labor_time_hours=item.labor_time_hours,
+            filament_weight_g=item.filament_weight_g,
+            material_cost=item.material_cost,
+            energy_cost=item.energy_cost,
+            depreciation_cost=item.depreciation_cost,
+            labor_cost=item.labor_cost,
+            consumables_cost=item.consumables_cost,
+            failure_rate=item.failure_rate,
+            markup_rate=item.markup_rate,
+            base_price=item.base_price,
+            uplifted_price=item.uplifted_price,
+            final_price=item.final_price,
+            currency=item.currency,
+            notes=item.notes,
+        )
+
+
 class Info(BaseModel):
     version: str = Field(examples=["0.7.0"])
     debug_mode: bool = Field(examples=[False])
@@ -427,3 +515,17 @@ class SettingEvent(Event):
 
     payload: SettingKV = Field(description="Updated setting.")
     resource: Literal["setting"] = Field(description="Resource type.")
+
+
+class PrinterEvent(Event):
+    """Event."""
+
+    payload: Printer = Field(description="Updated printer.")
+    resource: Literal["printer"] = Field(description="Resource type.")
+
+
+class CostEvent(Event):
+    """Event."""
+
+    payload: CostCalculation = Field(description="Updated cost calculation.")
+    resource: Literal["cost"] = Field(description="Resource type.")

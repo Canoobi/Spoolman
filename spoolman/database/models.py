@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -116,3 +116,41 @@ class SpoolField(Base):
     spool: Mapped["Spool"] = relationship(back_populates="extra")
     key: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
     value: Mapped[str] = mapped_column(Text())
+
+
+class Printer(Base):
+    __tablename__ = "printer"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    name: Mapped[str] = mapped_column(String(128))
+    power_watts: Mapped[Optional[float]] = mapped_column(Float)
+    depreciation_cost_per_hour: Mapped[Optional[float]] = mapped_column(Float)
+    comment: Mapped[Optional[str]] = mapped_column(String(1024))
+    cost_calculations: Mapped[list["CostCalculation"]] = relationship(back_populates="printer")
+
+
+class CostCalculation(Base):
+    __tablename__ = "cost_calculation"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    created: Mapped[datetime] = mapped_column()
+    printer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("printer.id"))
+    printer: Mapped[Optional["Printer"]] = relationship(back_populates="cost_calculations")
+    filament_id: Mapped[Optional[int]] = mapped_column(ForeignKey("filament.id"))
+    filament: Mapped[Optional["Filament"]] = relationship()
+    print_time_hours: Mapped[Optional[float]] = mapped_column(Float)
+    labor_time_hours: Mapped[Optional[float]] = mapped_column(Float)
+    filament_weight_g: Mapped[Optional[float]] = mapped_column(Float)
+    material_cost: Mapped[Optional[float]] = mapped_column(Float)
+    energy_cost: Mapped[Optional[float]] = mapped_column(Float)
+    depreciation_cost: Mapped[Optional[float]] = mapped_column(Float)
+    labor_cost: Mapped[Optional[float]] = mapped_column(Float)
+    consumables_cost: Mapped[Optional[float]] = mapped_column(Float)
+    failure_rate: Mapped[Optional[float]] = mapped_column(Float)
+    markup_rate: Mapped[Optional[float]] = mapped_column(Float)
+    base_price: Mapped[Optional[float]] = mapped_column(Float)
+    uplifted_price: Mapped[Optional[float]] = mapped_column(Float)
+    final_price: Mapped[Optional[float]] = mapped_column(Float)
+    currency: Mapped[Optional[str]] = mapped_column(String(8))
+    notes: Mapped[Optional[str]] = mapped_column(String(1024))
