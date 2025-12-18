@@ -2,7 +2,7 @@ FROM node:20-bookworm AS client-builder
 
 WORKDIR /home/app/client
 COPY ./client/package*.json ./
-RUN npm ci
+RUN npm install
 COPY ./client .
 RUN npm run build
 
