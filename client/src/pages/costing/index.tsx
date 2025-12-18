@@ -463,7 +463,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         canCreate={false}
       >
         <Space style={{ marginBottom: 16 }}>
-          <Select<number>
+          <Select<number[]>
             mode="multiple"
             placeholder={t("cost.history.filter_printers")}
             options={printerSelectProps.options}
@@ -472,7 +472,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             style={{ minWidth: 240 }}
             allowClear
           />
-          <Select<number>
+          <Select<number[]>
             mode="multiple"
             placeholder={t("cost.history.filter_filaments")}
             options={filamentSelectProps.options}

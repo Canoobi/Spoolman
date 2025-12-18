@@ -3,6 +3,7 @@ import { Button, Checkbox, Form, Input, InputNumber, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useEffect } from "react";
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
+import {getCurrencySymbol, useCurrency} from "../../utils/settings";
 
 export function GeneralSettings() {
   const settings = useGetSettings();
@@ -17,6 +18,8 @@ export function GeneralSettings() {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const t = useTranslate();
+  const currency = useCurrency();
+  const currencySymbol = getCurrencySymbol(undefined, currency);
 
   // Set initial form values
   useEffect(() => {
@@ -183,7 +186,7 @@ export function GeneralSettings() {
           },
         ]}
       >
-        <InputNumber addonAfter="/h" style={{ width: "100%" }} />
+        <InputNumber addonAfter={`${currencySymbol}/h`} style={{ width: "100%" }} />
       </Form.Item>
       <Form.Item
         label={t("settings.general.failure_rate.label")}

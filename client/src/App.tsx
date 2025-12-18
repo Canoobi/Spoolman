@@ -108,14 +108,6 @@ function App() {
               liveProvider={liveProvider(getAPIURL())}
               resources={[
                 {
-                  name: "home",
-                  list: "/",
-                  meta: {
-                    canDelete: false,
-                    icon: <HomeOutlined />,
-                  },
-                },
-                {
                   name: "spool",
                   list: "/spool",
                   create: "/spool/create",
@@ -140,6 +132,14 @@ function App() {
                   },
                 },
                 {
+                  name: "cost",
+                  list: "/costing",
+                  meta: {
+                    canDelete: true,
+                    icon: <DollarCircleOutlined />,
+                  },
+                },
+                {
                   name: "vendor",
                   list: "/vendor",
                   create: "/vendor/create",
@@ -159,7 +159,7 @@ function App() {
                   show: "/printer/show/:id",
                   meta: {
                     canDelete: true,
-                    icon: <PrinterOutlined />,
+                    icon: <img src="../public/printer.png" width={12} height={15} alt="printer" />,
                   },
                 },
                 {
@@ -176,22 +176,6 @@ function App() {
                   meta: {
                     canDelete: false,
                     icon: <ToolOutlined />,
-                  },
-                },
-                {
-                  name: "cost",
-                  list: "/costing",
-                  meta: {
-                    canDelete: true,
-                    icon: <DollarCircleOutlined />,
-                  },
-                },
-                {
-                  name: "help",
-                  list: "/help",
-                  meta: {
-                    canDelete: false,
-                    icon: <QuestionOutlined />,
                   },
                 },
               ]}
