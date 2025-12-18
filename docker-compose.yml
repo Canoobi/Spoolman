@@ -9,11 +9,10 @@ services:
     command: >
       sh -c "
         npm ci &&
-        npm run build &&
-        rm -rf /out/* &&
-        cp -r dist/* /out/
+        npm run build
       "
     restart: "no"
+    container_name: Spoolman-Client-Build
 
   spoolman:
     depends_on:
