@@ -451,7 +451,6 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             <Form.Item
                                 label={t("cost.fields.failure_rate")}
                                 name="failure_rate"
-                                tooltip={t("cost.tooltips.failure_rate")}
                                 rules={[{type: "number", min: 0}]}
                             >
                                 <InputNumber<number>
@@ -468,7 +467,6 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             <Form.Item
                                 label={t("cost.fields.markup_rate")}
                                 name="markup_rate"
-                                tooltip={t("cost.tooltips.markup_rate")}
                                 rules={[{type: "number", min: 0}]}
                             >
                                 <InputNumber<number>
