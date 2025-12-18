@@ -321,9 +321,9 @@
     "description": "Estimate print costs using your default settings and saved equipment.",
     "fields": {
       "printer_id": "Printer",
-      "filament_id": "Filament",
+      "filament_id": "Filament type",
       "printer": "Printer",
-      "filament": "Filament",
+      "filament": "Filament type",
       "print_time_hours": "Print time (h)",
       "labor_time_hours": "Labor time (h)",
       "filament_weight_g": "Filament weight (g)",
@@ -340,7 +340,7 @@
     },
     "placeholders": {
       "printer": "Select printer",
-      "filament": "Select filament"
+      "filament": "Select filament type"
     },
     "tooltips": {
       "energy_cost_per_kwh": "Override the default electricity price for this calculation.",
@@ -370,7 +370,7 @@
     "history": {
       "title": "Calculation history",
       "filter_printers": "Filter by printer",
-      "filter_filaments": "Filter by filament"
+      "filter_filaments": "Filter by filament type"
     }
   },
   "home": {

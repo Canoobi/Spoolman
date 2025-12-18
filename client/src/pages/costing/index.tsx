@@ -25,6 +25,7 @@ import {
     Tag,
     Typography,
 } from "antd";
+import {DefaultOptionType} from "antd/es/select";
 import dayjs from "dayjs";
 import {useEffect, useMemo, useState} from "react";
 import {IFilament} from "../filaments/model";
@@ -33,6 +34,7 @@ import {ICostCalculation} from "./model";
 import {useGetSettings} from "../../utils/querySettings";
 import {removeUndefined} from "../../utils/filtering";
 import {getCurrencySymbol, useCurrency, useCurrencyFormatter} from "../../utils/settings";
+import {formatFilamentLabel} from "../spools/functions";
 
 const {Title, Paragraph, Text} = Typography;
 
@@ -116,6 +118,72 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
     const printers = (printerQuery.data?.data as IPrinter[] | undefined) ?? [];
     const filaments = (filamentQuery.data?.data as IFilament[] | undefined) ?? [];
+    const filamentTypeOptions = useMemo<(DefaultOptionType & { filamentIds: number[]; averagePrice?: number })[]>(
+        () => {
+            const types = new Map<
+                string,
+                {
+                    label: string;
+                    value: number;
+                    filamentIds: number[];
+                    totalPrice: number;
+                    priceCount: number;
+                    averagePrice?: number;
+                }
+            >();
+
+            filaments.forEach((filament) => {
+                const label = formatFilamentLabel(
+                    filament.name ?? `ID ${filament.id}`,
+                    filament.diameter,
+                    filament.vendor?.name,
+                    filament.material ?? undefined,
+                    filament.weight
+                );
+                const key = `${filament.vendor?.name ?? ""}|${filament.name ?? ""}|${filament.material ?? ""}|${
+                    filament.diameter
+                }|${filament.weight ?? ""}`;
+                const price = typeof filament.price === "number" ? filament.price : undefined;
+
+                const existing = types.get(key);
+                if (existing) {
+                    existing.filamentIds.push(filament.id);
+                    if (price !== undefined) {
+                        existing.totalPrice += price;
+                        existing.priceCount += 1;
+                    }
+                    return;
+                }
+
+                types.set(key, {
+                    label,
+                    value: filament.id,
+                    filamentIds: [filament.id],
+                    totalPrice: price ?? 0,
+                    priceCount: price !== undefined ? 1 : 0,
+                });
+            });
+
+            const options = Array.from(types.values()).map((type) => ({
+                label: type.label,
+                value: type.value,
+                filamentIds: type.filamentIds,
+                averagePrice: type.priceCount > 0 ? type.totalPrice / type.priceCount : undefined,
+            }));
+
+            return options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+        },
+        [filaments]
+    );
+    const filamentGroupById = useMemo(() => {
+        const map = new Map<number, { averagePrice?: number }>();
+        filamentTypeOptions.forEach((type) => {
+            type.filamentIds.forEach((id) => {
+                map.set(id, { averagePrice: type.averagePrice });
+            });
+        });
+        return map;
+    }, [filamentTypeOptions]);
 
     const {mutate, isLoading: isSaving} = useCreate<ICostCalculation>();
 
@@ -123,6 +191,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const values = form.getFieldsValue(true);
         const printer = printers.find((p) => p.id === values.printer_id);
         const filament = filaments.find((f) => f.id === values.filament_id);
+        const filamentGroup = filamentGroupById.get(values.filament_id);
 
         const printHours = Number(values.print_time_hours ?? 0);
         const laborHours = Number(values.labor_time_hours ?? 0);
@@ -133,9 +202,10 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const failureRate = values.failure_rate ?? defaultFailure;
         const markupRate = values.markup_rate ?? defaultMarkup;
 
+        const materialPrice = filamentGroup?.averagePrice ?? filament?.price ?? 0;
         const materialCost =
-            filament && filament.price !== undefined && filament.weight
-                ? (weight / filament.weight) * (filament.price ?? 0)
+            filament && filament.weight
+                ? (weight / filament.weight) * materialPrice
                 : 0;
         const energyCost = ((printer?.power_watts ?? 0) / 1000) * printHours * energyRate;
         const depreciationCost = (printer?.depreciation_cost_per_hour ?? 0) * printHours;
@@ -306,7 +376,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             <Form.Item label={t("cost.fields.filament_id")} name="filament_id"
                                        rules={[{required: true}]}>
                                 <Select
-                                    {...filamentSelectProps}
+                                    options={filamentTypeOptions}
                                     loading={filamentSelectProps.loading}
                                     placeholder={t("cost.placeholders.filament")}
                                     showSearch
@@ -485,7 +555,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     <Select<number[]>
                         mode="multiple"
                         placeholder={t("cost.history.filter_filaments")}
-                        options={filamentSelectProps.options}
+                        options={filamentTypeOptions}
                         value={selectedFilamentFilters as number[]}
                         onChange={(values) => handleFilterChange(selectedPrinterFilters as number[], values)}
                         style={{minWidth: 240}}

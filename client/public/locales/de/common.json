@@ -458,9 +458,9 @@
     "description": "Schätze Druckkosten mit deinen Standardwerten und gespeicherten Geräten.",
     "fields": {
       "printer_id": "Drucker",
-      "filament_id": "Filament",
+      "filament_id": "Filamentart",
       "printer": "Drucker",
-      "filament": "Filament",
+      "filament": "Filamentart",
       "print_time_hours": "Druckzeit (h)",
       "labor_time_hours": "Arbeitszeit (h)",
       "filament_weight_g": "Filamentgewicht (g)",
@@ -477,7 +477,7 @@
     },
     "placeholders": {
       "printer": "Drucker wählen",
-      "filament": "Filament wählen"
+      "filament": "Filamentart wählen"
     },
     "tooltips": {
       "energy_cost_per_kwh": "Standardstrompreis überschreiben.",
@@ -507,7 +507,7 @@
     "history": {
       "title": "Kalkulationshistorie",
       "filter_printers": "Nach Drucker filtern",
-      "filter_filaments": "Nach Filament filtern"
+      "filter_filaments": "Nach Filamentart filtern"
     }
   }
 }
