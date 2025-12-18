@@ -1,11 +1,3 @@
-FROM node:24-bookworm AS client-builder
-
-WORKDIR /usr/local/app/client
-
-RUN npm install
-
-RUN npm run build
-
 FROM python:3.12-bookworm AS python-builder
 
 # Install dependencies

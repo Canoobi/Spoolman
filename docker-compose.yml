@@ -1,10 +1,28 @@
 version: '3.8'
 services:
+  client-build:
+    image: node:20-bookworm
+    working_dir: /work
+    volumes:
+      - /volume1/docker/Spoolman/client:/work
+      - /volume1/docker/Spoolman/client/dist:/out
+    command: >
+      sh -c "
+        npm ci &&
+        npm run build &&
+        rm -rf /out/* &&
+        cp -r dist/* /out/
+      "
+    restart: "no"
+
   spoolman:
+    depends_on:
+      client-build:
+        condition: service_completed_successfully
+    image: spoolman:local
     build:
       context: .
       dockerfile: Dockerfile
-    image: spoolman:local
     restart: unless-stopped
     volumes:
       # Mount the host machine's ./data directory into the container's /home/app/.local/share/spoolman directory
@@ -18,6 +36,9 @@ services:
     container_name: Spoolman
 
   bambulab-ams-filamentstatus:
+    depends_on:
+      spoolman:
+        condition: service_started
     image: ghcr.io/rdiger-36/bambulab-ams-spoolman-filamentstatus:latest
     container_name: Spoolman-AMS-FilamentStatus
     depends_on:
