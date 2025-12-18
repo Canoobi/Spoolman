@@ -1,23 +1,6 @@
 version: '3.8'
 services:
-  client-build:
-    image: node:20-bookworm
-    working_dir: /work
-    volumes:
-      - /volume1/docker/Spoolman/client:/work
-      - /volume1/docker/Spoolman/client/dist:/out
-    command: >
-      sh -c "
-        npm ci &&
-        npm run build
-      "
-    restart: "no"
-    container_name: Spoolman-Client-Build
-
   spoolman:
-    depends_on:
-      client-build:
-        condition: service_completed_successfully
     image: spoolman:local
     build:
       context: .
@@ -28,6 +11,7 @@ services:
       - type: bind
         source: /volume1/docker/Spoolman/data # This is where the data will be stored locally. Could also be set to for example `source: /home/pi/printer_data/spoolman`.
         target: /home/app/.local/share/spoolman # Do NOT modify this line
+      - /volume1/docker/Spoolman:/home/app/spoolman
     ports:
       - 30168:8000
     environment:

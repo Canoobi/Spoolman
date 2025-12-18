@@ -1,3 +1,11 @@
+FROM node:20-bookworm AS client-builder
+
+WORKDIR /home/app/client
+COPY ./client/package*.json ./
+RUN npm ci
+COPY ./client .
+RUN npm run build
+
 FROM python:3.12-bookworm AS python-builder
 
 # Install dependencies
@@ -63,7 +71,7 @@ RUN groupmod -g 1000 users \
     && chown -R app:app /home/app/.local/share/spoolman
 
 # Copy built client
-COPY --chown=app:app ./client/dist /home/app/spoolman/client/dist
+COPY --chown=app:app --from=client-builder /home/app/client/dist /home/app/spoolman/client/dist
 
 # Copy built app
 COPY --chown=app:app --from=python-builder /home/app/spoolman /home/app/spoolman
