@@ -133,10 +133,10 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             >();
 
             filaments.forEach((filament) => {
+                const vendorLabel = filament.vendor?.name ?? "Unknown vendor";
                 const materialLabel = (filament.material ?? "Unknown material").trim() || "Unknown material";
-                const diameterLabel = filament.diameter ? formatLength(filament.diameter) : undefined;
-                const key = `${materialLabel.toLowerCase()}|${filament.diameter ?? ""}`;
-                const label = diameterLabel ? `${materialLabel} (${diameterLabel})` : materialLabel;
+                const key = `${vendorLabel.toLowerCase()}|${materialLabel.toLowerCase()}`;
+                const label = `${vendorLabel} - ${materialLabel}`;
                 const price = typeof filament.price === "number" ? filament.price : undefined;
 
                 const existing = types.get(key);
