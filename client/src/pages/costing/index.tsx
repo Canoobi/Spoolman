@@ -597,8 +597,16 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                         {
                             title: t("cost.fields.filament"),
                             dataIndex: ["filament", "name"],
-                            render: (_value: string, record) => record.filament?.name ?? "-",
-                        },
+                            render: (_value: string, record) => {
+                                const vendor = record.filament?.vendor?.name;
+                                const material = record.filament?.material;
+
+                                if (!vendor && !material) {
+                                    return "-";
+                                }
+
+                                return [vendor, material].filter(Boolean).join(" - ");
+                            },                        },
                         {
                             title: t("cost.fields.base_price"),
                             dataIndex: "base_price",
