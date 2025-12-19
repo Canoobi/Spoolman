@@ -362,7 +362,10 @@
       "final": "Final price"
     },
     "actions": {
-      "save_calculation": "Save calculation"
+      "save_calculation": "Save calculation",
+      "update_calculation": "Update calculation",
+      "cancel_edit": "Cancel editing",
+      "delete_calculation": "Delete calculation"
     },
     "notes": {
       "using_settings": "Using currency defaults {{currency}} ({{currencySymbol}})."

@@ -1,11 +1,13 @@
-import {PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
 import {List, useSelect, useTable} from "@refinedev/antd";
 import {
     CrudFilter,
     CrudFilters,
     IResourceComponentsProps,
     useCreate,
+    useDelete,
     useInvalidate,
+    useUpdate,
     useTranslate
 } from "@refinedev/core";
 import {
@@ -18,6 +20,7 @@ import {
     Form,
     Input,
     InputNumber,
+    Popconfirm,
     Row,
     Select,
     Space,
@@ -58,6 +61,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
     const [form] = Form.useForm();
     const [message, setMessage] = useState<string | null>(null);
+    const [editingCalculation, setEditingCalculation] = useState<ICostCalculation | null>(null);
     const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
     const isUpdatingFinalPriceRef = useRef(false);
     const [breakdown, setBreakdown] = useState<Breakdown>({
@@ -180,7 +184,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         return map;
     }, [filamentTypeOptions]);
 
-    const {mutate, isLoading: isSaving} = useCreate<ICostCalculation>();
+    const {mutate: createCalculation, isLoading: isSaving} = useCreate<ICostCalculation>();
+    const {mutate: updateCalculation, isLoading: isUpdating} = useUpdate<ICostCalculation>();
+    const {mutate: deleteCalculation, isLoading: isDeleting} = useDelete<ICostCalculation>();
 
     const recompute = () => {
         const values = form.getFieldsValue(true);
@@ -250,28 +256,51 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const handleSubmit = async () => {
         const values = await form.validateFields();
         recompute();
-        mutate(
+        const payload = {
+            printer_id: values.printer_id,
+            filament_id: values.filament_id,
+            print_time_hours: values.print_time_hours,
+            labor_time_hours: values.labor_time_hours,
+            filament_weight_g: values.filament_weight_g,
+            material_cost: breakdown.material,
+            energy_cost: breakdown.energy,
+            depreciation_cost: breakdown.depreciation,
+            labor_cost: breakdown.labor,
+            consumables_cost: breakdown.consumables,
+            failure_rate: values.failure_rate ?? defaultFailure,
+            markup_rate: values.markup_rate ?? defaultMarkup,
+            base_price: breakdown.base,
+            uplifted_price: breakdown.uplifted,
+            final_price: breakdown.final,
+            currency: currency,
+            notes: values.notes,
+        };
+
+        if (editingCalculation) {
+            updateCalculation(
+                {
+                    resource: "cost",
+                    id: editingCalculation.id,
+                    values: payload,
+                },
+                {
+                    onSuccess: () => {
+                        setMessage(t("notifications.editSuccess", {resource: t("cost.title")}));
+                        invalidate({
+                            resource: "cost",
+                            invalidates: ["list"],
+                        });
+                        setEditingCalculation(null);
+                    },
+                }
+            );
+            return;
+        }
+
+        createCalculation(
             {
                 resource: "cost",
-                values: {
-                    printer_id: values.printer_id,
-                    filament_id: values.filament_id,
-                    print_time_hours: values.print_time_hours,
-                    labor_time_hours: values.labor_time_hours,
-                    filament_weight_g: values.filament_weight_g,
-                    material_cost: breakdown.material,
-                    energy_cost: breakdown.energy,
-                    depreciation_cost: breakdown.depreciation,
-                    labor_cost: breakdown.labor,
-                    consumables_cost: breakdown.consumables,
-                    failure_rate: values.failure_rate ?? defaultFailure,
-                    markup_rate: values.markup_rate ?? defaultMarkup,
-                    base_price: breakdown.base,
-                    uplifted_price: breakdown.uplifted,
-                    final_price: breakdown.final,
-                    currency: currency,
-                    notes: values.notes,
-                },
+                values: payload,
             },
             {
                 onSuccess: () => {
@@ -280,6 +309,81 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                         resource: "cost",
                         invalidates: ["list"],
                     });
+                },
+            }
+        );
+    };
+
+    const handleEdit = (calculation: ICostCalculation) => {
+        setEditingCalculation(calculation);
+        setMessage(null);
+        setIsFinalPriceManuallySet(calculation.final_price !== undefined && calculation.final_price !== null);
+        form.setFieldsValue({
+            printer_id: calculation.printer?.id,
+            filament_id: calculation.filament?.id,
+            print_time_hours: calculation.print_time_hours,
+            labor_time_hours: calculation.labor_time_hours,
+            filament_weight_g: calculation.filament_weight_g,
+            energy_cost_per_kwh: calculation.energy_cost ?? defaultEnergy,
+            labor_cost_per_hour: calculation.labor_cost ?? defaultLabor,
+            consumables_cost: calculation.consumables_cost ?? defaultConsumables,
+            failure_rate: calculation.failure_rate ?? defaultFailure,
+            markup_rate: calculation.markup_rate ?? defaultMarkup,
+            final_price: calculation.final_price,
+            notes: calculation.notes,
+        });
+        setBreakdown({
+            material: calculation.material_cost ?? 0,
+            energy: calculation.energy_cost ?? 0,
+            depreciation: calculation.depreciation_cost ?? 0,
+            labor: calculation.labor_cost ?? 0,
+            consumables: calculation.consumables_cost ?? 0,
+            base: calculation.base_price ?? 0,
+            uplifted: calculation.uplifted_price ?? 0,
+            final: calculation.final_price ?? 0,
+        });
+    };
+
+    const resetEditing = () => {
+        setEditingCalculation(null);
+        setMessage(null);
+        setIsFinalPriceManuallySet(false);
+        form.resetFields();
+        form.setFieldsValue({
+            energy_cost_per_kwh: defaultEnergy,
+            labor_cost_per_hour: defaultLabor,
+            failure_rate: defaultFailure,
+            markup_rate: defaultMarkup,
+            consumables_cost: defaultConsumables,
+        });
+        setBreakdown({
+            material: 0,
+            energy: 0,
+            depreciation: 0,
+            labor: 0,
+            consumables: 0,
+            base: 0,
+            uplifted: 0,
+            final: 0,
+        });
+    };
+
+    const handleDelete = (calculation: ICostCalculation) => {
+        deleteCalculation(
+            {
+                resource: "cost",
+                id: calculation.id,
+            },
+            {
+                onSuccess: () => {
+                    invalidate({
+                        resource: "cost",
+                        invalidates: ["list"],
+                    });
+                    setMessage(t("notifications.deleteSuccess", {resource: t("cost.title")}));
+                    if (editingCalculation?.id === calculation.id) {
+                        resetEditing();
+                    }
                 },
             }
         );
@@ -309,7 +413,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         },
         liveMode: "manual",
         onLiveEvent(event) {
-            if (event.type === "created" || event.type === "deleted") {
+            if (event.type === "created" || event.type === "deleted" || event.type === "updated") {
                 invalidate({
                     resource: "cost",
                     invalidates: ["list"],
@@ -534,9 +638,19 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                         currencySymbol: currencySymbol,
                                     })}
                                 />
-                                <Button type="primary" icon={<PlusOutlined/>} loading={isSaving} onClick={handleSubmit}>
-                                    {t("cost.actions.save_calculation")}
+                                <Button
+                                    type="primary"
+                                    icon={<PlusOutlined/>}
+                                    loading={isSaving || isUpdating}
+                                    onClick={handleSubmit}
+                                >
+                                    {editingCalculation
+                                        ? t("cost.actions.update_calculation")
+                                        : t("cost.actions.save_calculation")}
                                 </Button>
+                                {editingCalculation && (
+                                    <Button onClick={resetEditing}>{t("cost.actions.cancel_edit")}</Button>
+                                )}
                                 {message && <Alert type="success" message={message} showIcon/>}
                             </Space>
                         </Col>
@@ -629,6 +743,28 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             title: t("cost.fields.notes"),
                             dataIndex: "notes",
                             render: (value?: string) => value ?? "",
+                        },
+                        {
+                            title: t("table.actions"),
+                            dataIndex: "actions",
+                            render: (_value, record) => (
+                                <Space>
+                                    <Button size="small" icon={<EditOutlined/>} onClick={() => handleEdit(record)}>
+                                        {t("buttons.edit")}
+                                    </Button>
+                                    <Popconfirm
+                                        title={t("cost.actions.delete_calculation")}
+                                        okText={t("buttons.delete")}
+                                        cancelText={t("buttons.cancel")}
+                                        placement="left"
+                                        onConfirm={() => handleDelete(record)}
+                                    >
+                                        <Button size="small" icon={<DeleteOutlined/>} loading={isDeleting} danger>
+                                            {t("buttons.delete")}
+                                        </Button>
+                                    </Popconfirm>
+                                </Space>
+                            ),
                         },
                     ])}
                 />

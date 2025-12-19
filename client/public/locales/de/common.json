@@ -499,7 +499,10 @@
       "final": "Endpreis"
     },
     "actions": {
-      "save_calculation": "Kalkulation speichern"
+      "save_calculation": "Kalkulation speichern",
+      "update_calculation": "Kalkulation aktualisieren",
+      "cancel_edit": "Bearbeitung abbrechen",
+      "delete_calculation": "Kalkulation löschen"
     },
     "notes": {
       "using_settings": "Verwende Währung {{currency}} ({{currencySymbol}})."
