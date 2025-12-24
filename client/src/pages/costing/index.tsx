@@ -232,7 +232,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const computeBreakdownFromValues = (values: CostFormValues) => {
         const printer = printers.find((p) => p.id === values.printer_id);
         const filament = filaments.find((f) => f.id === values.filament_id);
-        const filamentGroup = filamentGroupById.get(values.filament_id);
+        const filamentGroup = values.filament_id ? filamentGroupById.get(values.filament_id) : undefined;
 
         const printHours = Number(values.print_time_hours ?? 0);
         const laborHours = Number(values.labor_time_hours ?? 0);
@@ -302,7 +302,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     };
 
     const printHandler = useReactToPrint({
-        content: () => printRef.current,
+        contentRef: printRef,
         documentTitle: t("cost.pdf.document_title"),
         onAfterPrint: () => setExportData(null),
     });
@@ -436,11 +436,14 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             const selectedPrinter = printers.find((printer) => printer.id === values.printer_id);
             const filamentOption = filamentTypeOptions.find((option) => option.value === values.filament_id);
             const selectedFilament = filaments.find((filament) => filament.id === values.filament_id);
+            const filamentLabel = typeof filamentOption?.label === "string"
+                ? filamentOption.label
+                : formatFilamentLabel(selectedFilament);
 
             setExportData({
                 issuedAt: dayjs().format("YYYY-MM-DD"),
                 printerName: selectedPrinter?.name ?? "-",
-                filamentName: filamentOption?.label ?? formatFilamentLabel(selectedFilament),
+                filamentName: filamentLabel,
                 printTimeHours: values.print_time_hours,
                 laborTimeHours: values.labor_time_hours,
                 filamentWeightG: values.filament_weight_g,
