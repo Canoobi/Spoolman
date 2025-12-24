@@ -17,6 +17,7 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({sticky}) => {
     const {mode, setMode} = useContext(ColorModeContext);
 
     const currentLocale = locale();
+    const normalizedLocale = currentLocale ? currentLocale.split("-")[0] : "en";
 
     const menuItems: MenuProps["items"] = [...(Object.keys(languages) || [])].sort().map((lang: string) => ({
         key: lang,
@@ -45,12 +46,12 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({sticky}) => {
                 <Dropdown
                     menu={{
                         items: menuItems,
-                        selectedKeys: currentLocale ? [currentLocale] : [],
+                        selectedKeys: normalizedLocale ? [normalizedLocale] : [],
                     }}
                 >
                     <Button type="text">
                         <Space>
-                            {languages[currentLocale ?? "en"].name}
+                            {languages[normalizedLocale ?? "en"].name}
                             <DownOutlined/>
                         </Space>
                     </Button>

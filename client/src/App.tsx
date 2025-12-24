@@ -51,9 +51,7 @@ function App() {
         const normalized = language.split("-")[0];
         return languages[normalized] ? normalized : "en";
     };
-    const [activeLocale, setActiveLocale] = useState(
-        normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
-    );
+    const [activeLocale, setActiveLocale] = useState(i18n.resolvedLanguage ?? i18n.language);
 
     useEffect(() => {
         const handleLanguageChange = (language: string) => {
@@ -68,8 +66,8 @@ function App() {
 
     const i18nProvider = {
         translate: (key: string, params?: never) => t(key, params),
-        changeLocale: (lang: string) => i18n.changeLanguage(lang),
-        getLocale: () => normalizeLanguage(i18n.resolvedLanguage ?? i18n.language),
+        changeLocale: (lang: string) => i18n.changeLanguage(normalizeLanguage(lang)),
+        getLocale: () => i18n.resolvedLanguage ?? i18n.language,
     };
 
     // Fetch the antd locale using dynamic imports
