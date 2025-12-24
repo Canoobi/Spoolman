@@ -55,7 +55,7 @@ function App() {
 
     useEffect(() => {
         const handleLanguageChange = (language: string) => {
-            setActiveLocale(language);
+            setActiveLocale(normalizeLanguage(language));
         };
 
         i18n.on("languageChanged", handleLanguageChange);
