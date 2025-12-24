@@ -36,6 +36,9 @@ i18n
     .use(detector)
     .use(initReactI18next)
     .init({
+        react: {
+            useSuspense: false,
+        },
         supportedLngs: Object.keys(languages),
         backend: {
             loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
