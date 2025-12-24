@@ -49,7 +49,7 @@ i18n
         },
         ns: "common",
         defaultNS: "common",
-        fallbackLng: "en",
+        fallbackLng: "de",
     });
 
 i18n.on("languageChanged", function (lng) {
