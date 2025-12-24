@@ -470,6 +470,7 @@
       "failure_rate": "Fehlerrate",
       "markup_rate": "Aufschlag",
       "final_price": "Endpreis",
+      "item_names": "Artikelnamen",
       "notes": "Notizen",
       "created": "Erstellt",
       "base_price": "Basispreis",
@@ -477,7 +478,8 @@
     },
     "placeholders": {
       "printer": "Drucker wählen",
-      "filament": "Filamentart wählen"
+      "filament": "Filamentart wählen",
+      "item_names": "z. B. Gehäuse, Abdeckung, Halterung"
     },
     "tooltips": {
       "energy_cost_per_kwh": "Standardstrompreis überschreiben.",
@@ -499,7 +501,10 @@
       "final": "Endpreis"
     },
     "actions": {
-      "save_calculation": "Kalkulation speichern"
+      "save_calculation": "Kalkulation speichern",
+      "update_calculation": "Kalkulation aktualisieren",
+      "cancel_edit": "Bearbeitung abbrechen",
+      "delete_calculation": "Kalkulation löschen"
     },
     "notes": {
       "using_settings": "Verwende Währung {{currency}} ({{currencySymbol}})."

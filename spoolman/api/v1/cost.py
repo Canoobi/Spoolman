@@ -35,8 +35,10 @@ class CostCalculationParameters(BaseModel):
     filament_weight_g: Optional[float] = Field(None, ge=0, description="Filament weight used in grams.")
     material_cost: Optional[float] = Field(None, ge=0, description="Cost of material.")
     energy_cost: Optional[float] = Field(None, ge=0, description="Cost of electricity.")
+    energy_cost_per_kwh: Optional[float] = Field(None, ge=0, description="Energy cost per kWh.")
     depreciation_cost: Optional[float] = Field(None, ge=0, description="Printer depreciation cost.")
     labor_cost: Optional[float] = Field(None, ge=0, description="Labor cost.")
+    labor_cost_per_hour: Optional[float] = Field(None, ge=0, description="Labor cost per hour.")
     consumables_cost: Optional[float] = Field(None, ge=0, description="Consumables cost.")
     failure_rate: Optional[float] = Field(None, ge=0, description="Failure rate applied as a factor.")
     markup_rate: Optional[float] = Field(None, ge=0, description="Markup applied as a factor.")
@@ -44,6 +46,7 @@ class CostCalculationParameters(BaseModel):
     uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
     final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
+    item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
 
 
@@ -222,8 +225,10 @@ async def create(
             filament_weight_g=body.filament_weight_g,
             material_cost=body.material_cost,
             energy_cost=body.energy_cost,
+            energy_cost_per_kwh=body.energy_cost_per_kwh,
             depreciation_cost=body.depreciation_cost,
             labor_cost=body.labor_cost,
+            labor_cost_per_hour=body.labor_cost_per_hour,
             consumables_cost=body.consumables_cost,
             failure_rate=body.failure_rate,
             markup_rate=body.markup_rate,
@@ -231,6 +236,7 @@ async def create(
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
             currency=body.currency,
+            item_names=body.item_names,
             notes=body.notes,
         )
     except ItemNotFoundError as e:
@@ -268,8 +274,10 @@ async def update(
             filament_weight_g=body.filament_weight_g,
             material_cost=body.material_cost,
             energy_cost=body.energy_cost,
+            energy_cost_per_kwh=body.energy_cost_per_kwh,
             depreciation_cost=body.depreciation_cost,
             labor_cost=body.labor_cost,
+            labor_cost_per_hour=body.labor_cost_per_hour,
             consumables_cost=body.consumables_cost,
             failure_rate=body.failure_rate,
             markup_rate=body.markup_rate,
@@ -277,6 +285,7 @@ async def update(
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
             currency=body.currency,
+            item_names=body.item_names,
             notes=body.notes,
         )
     except ItemNotFoundError as e:
