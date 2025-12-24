@@ -46,7 +46,7 @@ const LoadablePage = loadable((props: LoadablePageProps) => import(`./pages/${pr
 });
 
 function App() {
-    const {t, i18n} = useTranslation();
+    const {t, i18n, ready} = useTranslation();
 
     const i18nProvider = {
         translate: (key: string, params?: never) => t(key, params),
@@ -65,6 +65,14 @@ function App() {
         };
         fetchLocale().catch(console.error);
     }, [i18n.language]);
+
+    if (!ready) {
+        return (
+            <div style={{padding: "2rem", textAlign: "center"}}>
+                <p>Loading translations…</p>
+            </div>
+        );
+    }
 
     if (!import.meta.env.VITE_APIURL) {
         return (
@@ -92,6 +100,7 @@ function App() {
                         }}
                     >
                         <Refine
+                            key={i18n.language}
                             dataProvider={dataProvider(getAPIURL())}
                             notificationProvider={SpoolmanNotificationProvider}
                             i18nProvider={i18nProvider}
