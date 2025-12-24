@@ -406,8 +406,10 @@ class CostCalculation(BaseModel):
     filament_weight_g: Optional[float] = Field(None, ge=0, description="Filament weight used in grams.")
     material_cost: Optional[float] = Field(None, ge=0, description="Cost of material.")
     energy_cost: Optional[float] = Field(None, ge=0, description="Cost of electricity.")
+    energy_cost_per_kwh: Optional[float] = Field(None, ge=0, description="Energy cost per kWh.")
     depreciation_cost: Optional[float] = Field(None, ge=0, description="Printer depreciation cost.")
     labor_cost: Optional[float] = Field(None, ge=0, description="Labor cost.")
+    labor_cost_per_hour: Optional[float] = Field(None, ge=0, description="Labor cost per hour.")
     consumables_cost: Optional[float] = Field(None, ge=0, description="Consumables cost.")
     failure_rate: Optional[float] = Field(None, ge=0, description="Failure rate applied as a factor.")
     markup_rate: Optional[float] = Field(None, ge=0, description="Markup applied as a factor.")
@@ -415,6 +417,7 @@ class CostCalculation(BaseModel):
     uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
     final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
+    item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
 
     @staticmethod
@@ -435,8 +438,10 @@ class CostCalculation(BaseModel):
             filament_weight_g=item.filament_weight_g,
             material_cost=item.material_cost,
             energy_cost=item.energy_cost,
+            energy_cost_per_kwh=item.energy_cost_per_kwh,
             depreciation_cost=item.depreciation_cost,
             labor_cost=item.labor_cost,
+            labor_cost_per_hour=item.labor_cost_per_hour,
             consumables_cost=item.consumables_cost,
             failure_rate=item.failure_rate,
             markup_rate=item.markup_rate,
@@ -444,6 +449,7 @@ class CostCalculation(BaseModel):
             uplifted_price=item.uplifted_price,
             final_price=item.final_price,
             currency=item.currency,
+            item_names=item.item_names,
             notes=item.notes,
         )
 

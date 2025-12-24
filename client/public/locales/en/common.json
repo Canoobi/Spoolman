@@ -333,6 +333,7 @@
       "failure_rate": "Failure rate",
       "markup_rate": "Markup",
       "final_price": "Final price",
+      "item_names": "Item names",
       "notes": "Notes",
       "created": "Created",
       "base_price": "Base price",
@@ -340,7 +341,8 @@
     },
     "placeholders": {
       "printer": "Select printer",
-      "filament": "Select filament type"
+      "filament": "Select filament type",
+      "item_names": "e.g. Housing, cover, bracket"
     },
     "tooltips": {
       "energy_cost_per_kwh": "Override the default electricity price for this calculation.",
@@ -362,7 +364,10 @@
       "final": "Final price"
     },
     "actions": {
-      "save_calculation": "Save calculation"
+      "save_calculation": "Save calculation",
+      "update_calculation": "Update calculation",
+      "cancel_edit": "Cancel editing",
+      "delete_calculation": "Delete calculation"
     },
     "notes": {
       "using_settings": "Using currency defaults {{currency}} ({{currencySymbol}})."

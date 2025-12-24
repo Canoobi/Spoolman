@@ -9,7 +9,8 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
 
-from spoolman.api.v1.models import CostCalculation, CostEvent, EventType, Filament, Printer
+from spoolman.api.v1.models import CostCalculation as CostCalculationSchema
+from spoolman.api.v1.models import CostEvent, EventType, Filament, Printer
 from spoolman.database import models, printer as printer_db
 from spoolman.database.utils import (
     SortOrder,
@@ -33,8 +34,10 @@ async def create(
     filament_weight_g: Optional[float] = None,
     material_cost: Optional[float] = None,
     energy_cost: Optional[float] = None,
+    energy_cost_per_kwh: Optional[float] = None,
     depreciation_cost: Optional[float] = None,
     labor_cost: Optional[float] = None,
+    labor_cost_per_hour: Optional[float] = None,
     consumables_cost: Optional[float] = None,
     failure_rate: Optional[float] = None,
     markup_rate: Optional[float] = None,
@@ -42,6 +45,7 @@ async def create(
     uplifted_price: Optional[float] = None,
     final_price: Optional[float] = None,
     currency: Optional[str] = None,
+    item_names: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Add a new cost calculation entry to the database."""
@@ -63,8 +67,10 @@ async def create(
         filament_weight_g=filament_weight_g,
         material_cost=material_cost,
         energy_cost=energy_cost,
+        energy_cost_per_kwh=energy_cost_per_kwh,
         depreciation_cost=depreciation_cost,
         labor_cost=labor_cost,
+        labor_cost_per_hour=labor_cost_per_hour,
         consumables_cost=consumables_cost,
         failure_rate=failure_rate,
         markup_rate=markup_rate,
@@ -72,6 +78,7 @@ async def create(
         uplifted_price=uplifted_price,
         final_price=final_price,
         currency=currency,
+        item_names=item_names,
         notes=notes,
     )
     db.add(calculation)
@@ -152,8 +159,10 @@ async def update(
     filament_weight_g: Optional[float] = None,
     material_cost: Optional[float] = None,
     energy_cost: Optional[float] = None,
+    energy_cost_per_kwh: Optional[float] = None,
     depreciation_cost: Optional[float] = None,
     labor_cost: Optional[float] = None,
+    labor_cost_per_hour: Optional[float] = None,
     consumables_cost: Optional[float] = None,
     failure_rate: Optional[float] = None,
     markup_rate: Optional[float] = None,
@@ -161,6 +170,7 @@ async def update(
     uplifted_price: Optional[float] = None,
     final_price: Optional[float] = None,
     currency: Optional[str] = None,
+    item_names: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Update a cost calculation."""
@@ -180,10 +190,16 @@ async def update(
     )
     calculation.material_cost = material_cost if material_cost is not None else calculation.material_cost
     calculation.energy_cost = energy_cost if energy_cost is not None else calculation.energy_cost
+    calculation.energy_cost_per_kwh = (
+        energy_cost_per_kwh if energy_cost_per_kwh is not None else calculation.energy_cost_per_kwh
+    )
     calculation.depreciation_cost = (
         depreciation_cost if depreciation_cost is not None else calculation.depreciation_cost
     )
     calculation.labor_cost = labor_cost if labor_cost is not None else calculation.labor_cost
+    calculation.labor_cost_per_hour = (
+        labor_cost_per_hour if labor_cost_per_hour is not None else calculation.labor_cost_per_hour
+    )
     calculation.consumables_cost = consumables_cost if consumables_cost is not None else calculation.consumables_cost
     calculation.failure_rate = failure_rate if failure_rate is not None else calculation.failure_rate
     calculation.markup_rate = markup_rate if markup_rate is not None else calculation.markup_rate
@@ -191,6 +207,7 @@ async def update(
     calculation.uplifted_price = uplifted_price if uplifted_price is not None else calculation.uplifted_price
     calculation.final_price = final_price if final_price is not None else calculation.final_price
     calculation.currency = currency if currency is not None else calculation.currency
+    calculation.item_names = item_names if item_names is not None else calculation.item_names
     calculation.notes = notes if notes is not None else calculation.notes
     await db.commit()
     await cost_changed(calculation, EventType.UPDATED)
@@ -200,38 +217,52 @@ async def update(
 async def delete(db: AsyncSession, calculation_id: int) -> None:
     """Delete a cost calculation."""
     try:
-        calculation = (
-            await db.execute(
-                sqlalchemy.select(models.CostCalculation)
-                .filter_by(id=calculation_id)
-                .options(
-                    joinedload(models.CostCalculation.printer),
-                    joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
-                )
+        result = await db.execute(
+            sqlalchemy.select(models.CostCalculation)
+            .filter_by(id=calculation_id)
+            .options(
+                joinedload(models.CostCalculation.printer),
+                joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
             )
-        ).scalar_one()
+        )
+        calculation = result.unique().scalar_one()
     except NoResultFound as e:
         raise ItemNotFoundError(f"No cost calculation with ID {calculation_id} found.") from e
 
+    payload = CostCalculationSchema.from_db(
+        calculation,
+        printer=Printer.from_db(calculation.printer) if calculation.printer is not None else None,
+        filament=Filament.from_db(calculation.filament) if calculation.filament is not None else None,
+    )
+    cost_calc_id = calculation.id
     await db.delete(calculation)
     await db.commit()
-    await cost_changed(calculation, EventType.DELETED)
+    await cost_changed(calculation, EventType.DELETED, payload=payload, cost_calc_id=cost_calc_id)
 
 
-async def cost_changed(cost_calc: models.CostCalculation, typ: EventType) -> None:
+async def cost_changed(
+    cost_calc: models.CostCalculation,
+    typ: EventType,
+    *,
+    payload: CostCalculationSchema | None = None,
+    cost_calc_id: int | None = None,
+) -> None:
     """Notify websocket clients that a cost calculation has changed."""
     try:
+        if payload is None:
+            payload = CostCalculationSchema.from_db(
+                cost_calc,
+                printer=Printer.from_db(cost_calc.printer) if cost_calc.printer is not None else None,
+                filament=Filament.from_db(cost_calc.filament) if cost_calc.filament is not None else None,
+            )
+        event_cost_id = cost_calc_id if cost_calc_id is not None else cost_calc.id
         await websocket_manager.send(
-            ("cost", str(cost_calc.id)),
+            ("cost", str(event_cost_id)),
             CostEvent(
                 type=typ,
                 resource="cost",
                 date=datetime.utcnow(),
-                payload=CostCalculation.from_db(
-                    cost_calc,
-                    printer=Printer.from_db(cost_calc.printer) if cost_calc.printer is not None else None,
-                    filament=Filament.from_db(cost_calc.filament) if cost_calc.filament is not None else None,
-                ),
+                payload=payload,
             ),
         )
     except Exception:
