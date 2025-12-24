@@ -217,16 +217,15 @@ async def update(
 async def delete(db: AsyncSession, calculation_id: int) -> None:
     """Delete a cost calculation."""
     try:
-        calculation = (
-            await db.execute(
-                sqlalchemy.select(models.CostCalculation)
-                .filter_by(id=calculation_id)
-                .options(
-                    joinedload(models.CostCalculation.printer),
-                    joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
-                )
+        result = await db.execute(
+            sqlalchemy.select(models.CostCalculation)
+            .filter_by(id=calculation_id)
+            .options(
+                joinedload(models.CostCalculation.printer),
+                joinedload(models.CostCalculation.filament).joinedload(models.Filament.vendor),
             )
-        ).scalar_one()
+        )
+        calculation = result.unique().scalar_one()
     except NoResultFound as e:
         raise ItemNotFoundError(f"No cost calculation with ID {calculation_id} found.") from e
 
