@@ -9,7 +9,8 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
 
-from spoolman.api.v1.models import CostCalculation, CostEvent, EventType, Filament, Printer
+from spoolman.api.v1.models import CostCalculation as CostCalculationSchema
+from spoolman.api.v1.models import CostEvent, EventType, Filament, Printer
 from spoolman.database import models, printer as printer_db
 from spoolman.database.utils import (
     SortOrder,
@@ -229,25 +230,40 @@ async def delete(db: AsyncSession, calculation_id: int) -> None:
     except NoResultFound as e:
         raise ItemNotFoundError(f"No cost calculation with ID {calculation_id} found.") from e
 
+    payload = CostCalculationSchema.from_db(
+        calculation,
+        printer=Printer.from_db(calculation.printer) if calculation.printer is not None else None,
+        filament=Filament.from_db(calculation.filament) if calculation.filament is not None else None,
+    )
+    cost_calc_id = calculation.id
     await db.delete(calculation)
     await db.commit()
-    await cost_changed(calculation, EventType.DELETED)
+    await cost_changed(calculation, EventType.DELETED, payload=payload, cost_calc_id=cost_calc_id)
 
 
-async def cost_changed(cost_calc: models.CostCalculation, typ: EventType) -> None:
+async def cost_changed(
+    cost_calc: models.CostCalculation,
+    typ: EventType,
+    *,
+    payload: CostCalculationSchema | None = None,
+    cost_calc_id: int | None = None,
+) -> None:
     """Notify websocket clients that a cost calculation has changed."""
     try:
+        if payload is None:
+            payload = CostCalculationSchema.from_db(
+                cost_calc,
+                printer=Printer.from_db(cost_calc.printer) if cost_calc.printer is not None else None,
+                filament=Filament.from_db(cost_calc.filament) if cost_calc.filament is not None else None,
+            )
+        event_cost_id = cost_calc_id if cost_calc_id is not None else cost_calc.id
         await websocket_manager.send(
-            ("cost", str(cost_calc.id)),
+            ("cost", str(event_cost_id)),
             CostEvent(
                 type=typ,
                 resource="cost",
                 date=datetime.utcnow(),
-                payload=CostCalculation.from_db(
-                    cost_calc,
-                    printer=Printer.from_db(cost_calc.printer) if cost_calc.printer is not None else None,
-                    filament=Filament.from_db(cost_calc.filament) if cost_calc.filament is not None else None,
-                ),
+                payload=payload,
             ),
         )
     except Exception:
