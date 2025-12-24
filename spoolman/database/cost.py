@@ -33,8 +33,10 @@ async def create(
     filament_weight_g: Optional[float] = None,
     material_cost: Optional[float] = None,
     energy_cost: Optional[float] = None,
+    energy_cost_per_kwh: Optional[float] = None,
     depreciation_cost: Optional[float] = None,
     labor_cost: Optional[float] = None,
+    labor_cost_per_hour: Optional[float] = None,
     consumables_cost: Optional[float] = None,
     failure_rate: Optional[float] = None,
     markup_rate: Optional[float] = None,
@@ -42,6 +44,7 @@ async def create(
     uplifted_price: Optional[float] = None,
     final_price: Optional[float] = None,
     currency: Optional[str] = None,
+    item_names: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Add a new cost calculation entry to the database."""
@@ -63,8 +66,10 @@ async def create(
         filament_weight_g=filament_weight_g,
         material_cost=material_cost,
         energy_cost=energy_cost,
+        energy_cost_per_kwh=energy_cost_per_kwh,
         depreciation_cost=depreciation_cost,
         labor_cost=labor_cost,
+        labor_cost_per_hour=labor_cost_per_hour,
         consumables_cost=consumables_cost,
         failure_rate=failure_rate,
         markup_rate=markup_rate,
@@ -72,6 +77,7 @@ async def create(
         uplifted_price=uplifted_price,
         final_price=final_price,
         currency=currency,
+        item_names=item_names,
         notes=notes,
     )
     db.add(calculation)
@@ -152,8 +158,10 @@ async def update(
     filament_weight_g: Optional[float] = None,
     material_cost: Optional[float] = None,
     energy_cost: Optional[float] = None,
+    energy_cost_per_kwh: Optional[float] = None,
     depreciation_cost: Optional[float] = None,
     labor_cost: Optional[float] = None,
+    labor_cost_per_hour: Optional[float] = None,
     consumables_cost: Optional[float] = None,
     failure_rate: Optional[float] = None,
     markup_rate: Optional[float] = None,
@@ -161,6 +169,7 @@ async def update(
     uplifted_price: Optional[float] = None,
     final_price: Optional[float] = None,
     currency: Optional[str] = None,
+    item_names: Optional[str] = None,
     notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Update a cost calculation."""
@@ -180,10 +189,16 @@ async def update(
     )
     calculation.material_cost = material_cost if material_cost is not None else calculation.material_cost
     calculation.energy_cost = energy_cost if energy_cost is not None else calculation.energy_cost
+    calculation.energy_cost_per_kwh = (
+        energy_cost_per_kwh if energy_cost_per_kwh is not None else calculation.energy_cost_per_kwh
+    )
     calculation.depreciation_cost = (
         depreciation_cost if depreciation_cost is not None else calculation.depreciation_cost
     )
     calculation.labor_cost = labor_cost if labor_cost is not None else calculation.labor_cost
+    calculation.labor_cost_per_hour = (
+        labor_cost_per_hour if labor_cost_per_hour is not None else calculation.labor_cost_per_hour
+    )
     calculation.consumables_cost = consumables_cost if consumables_cost is not None else calculation.consumables_cost
     calculation.failure_rate = failure_rate if failure_rate is not None else calculation.failure_rate
     calculation.markup_rate = markup_rate if markup_rate is not None else calculation.markup_rate
@@ -191,6 +206,7 @@ async def update(
     calculation.uplifted_price = uplifted_price if uplifted_price is not None else calculation.uplifted_price
     calculation.final_price = final_price if final_price is not None else calculation.final_price
     calculation.currency = currency if currency is not None else calculation.currency
+    calculation.item_names = item_names if item_names is not None else calculation.item_names
     calculation.notes = notes if notes is not None else calculation.notes
     await db.commit()
     await cost_changed(calculation, EventType.UPDATED)

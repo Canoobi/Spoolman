@@ -11,8 +11,10 @@ export interface ICostCalculation {
     filament_weight_g?: number;
     material_cost?: number;
     energy_cost?: number;
+    energy_cost_per_kwh?: number;
     depreciation_cost?: number;
     labor_cost?: number;
+    labor_cost_per_hour?: number;
     consumables_cost?: number;
     failure_rate?: number;
     markup_rate?: number;
@@ -20,5 +22,6 @@ export interface ICostCalculation {
     uplifted_price?: number;
     final_price?: number;
     currency?: string;
+    item_names?: string;
     notes?: string;
 }

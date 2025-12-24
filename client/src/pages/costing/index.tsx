@@ -64,6 +64,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const [editingCalculation, setEditingCalculation] = useState<ICostCalculation | null>(null);
     const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
     const isUpdatingFinalPriceRef = useRef(false);
+    const isHydratingCalculationRef = useRef(false);
     const [breakdown, setBreakdown] = useState<Breakdown>({
         material: 0,
         energy: 0,
@@ -262,17 +263,20 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             print_time_hours: values.print_time_hours,
             labor_time_hours: values.labor_time_hours,
             filament_weight_g: values.filament_weight_g,
+            energy_cost_per_kwh: values.energy_cost_per_kwh,
+            labor_cost_per_hour: values.labor_cost_per_hour,
             material_cost: breakdown.material,
             energy_cost: breakdown.energy,
             depreciation_cost: breakdown.depreciation,
             labor_cost: breakdown.labor,
             consumables_cost: breakdown.consumables,
-            failure_rate: values.failure_rate ?? defaultFailure,
-            markup_rate: values.markup_rate ?? defaultMarkup,
+            failure_rate: values.failure_rate,
+            markup_rate: values.markup_rate,
             base_price: breakdown.base,
             uplifted_price: breakdown.uplifted,
             final_price: breakdown.final,
             currency: currency,
+            item_names: values.item_names,
             notes: values.notes,
         };
 
@@ -318,18 +322,20 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         setEditingCalculation(calculation);
         setMessage(null);
         setIsFinalPriceManuallySet(calculation.final_price !== undefined && calculation.final_price !== null);
+        isHydratingCalculationRef.current = true;
         form.setFieldsValue({
             printer_id: calculation.printer?.id,
             filament_id: calculation.filament?.id,
             print_time_hours: calculation.print_time_hours,
             labor_time_hours: calculation.labor_time_hours,
             filament_weight_g: calculation.filament_weight_g,
-            energy_cost_per_kwh: calculation.energy_cost ?? defaultEnergy,
-            labor_cost_per_hour: calculation.labor_cost ?? defaultLabor,
+            energy_cost_per_kwh: calculation.energy_cost_per_kwh ?? defaultEnergy,
+            labor_cost_per_hour: calculation.labor_cost_per_hour ?? defaultLabor,
             consumables_cost: calculation.consumables_cost ?? defaultConsumables,
             failure_rate: calculation.failure_rate ?? defaultFailure,
             markup_rate: calculation.markup_rate ?? defaultMarkup,
             final_price: calculation.final_price,
+            item_names: calculation.item_names,
             notes: calculation.notes,
         });
         setBreakdown({
@@ -342,6 +348,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             uplifted: calculation.uplifted_price ?? 0,
             final: calculation.final_price ?? 0,
         });
+        isHydratingCalculationRef.current = false;
     };
 
     const resetEditing = () => {
@@ -463,6 +470,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     form={form}
                     layout="vertical"
                     onValuesChange={(changedValues) => {
+                        if (isHydratingCalculationRef.current) {
+                            return;
+                        }
                         if (
                             Object.prototype.hasOwnProperty.call(changedValues, "final_price") &&
                             !isUpdatingFinalPriceRef.current
@@ -596,6 +606,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     </Row>
                     <Form.Item label={t("cost.fields.notes")} name="notes">
                         <Input.TextArea rows={3}/>
+                    </Form.Item>
+                    <Form.Item label={t("cost.fields.item_names")} name="item_names">
+                        <Input placeholder={t("cost.placeholders.item_names")}/>
                     </Form.Item>
                     <Divider/>
                     <Row gutter={[16, 16]}>
@@ -742,6 +755,11 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                         {
                             title: t("cost.fields.notes"),
                             dataIndex: "notes",
+                            render: (value?: string) => value ?? "",
+                        },
+                        {
+                            title: t("cost.fields.item_names"),
+                            dataIndex: "item_names",
                             render: (value?: string) => value ?? "",
                         },
                         {
