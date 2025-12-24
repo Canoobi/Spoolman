@@ -31,6 +31,8 @@ export const languages: { [key: string]: Language } = {
     }
 };
 
+const normalizeLanguage = (lng: string): string => lng.split("-")[0];
+
 i18n
     .use(Backend)
     .use(detector)
@@ -40,6 +42,8 @@ i18n
             useSuspense: false,
         },
         supportedLngs: Object.keys(languages),
+        nonExplicitSupportedLngs: true,
+        load: "languageOnly",
         backend: {
             loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
         },
@@ -49,7 +53,11 @@ i18n
     });
 
 i18n.on("languageChanged", function (lng) {
-    languages[lng].djs().then((djs) => dayjs.locale(djs.name));
+    const normalized = normalizeLanguage(lng);
+    const language = languages[normalized];
+    if (language) {
+        language.djs().then((djs) => dayjs.locale(djs.name));
+    }
 });
 
 export default i18n;

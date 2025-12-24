@@ -47,11 +47,17 @@ const LoadablePage = loadable((props: LoadablePageProps) => import(`./pages/${pr
 
 function App() {
     const {t, i18n, ready} = useTranslation();
-    const [activeLocale, setActiveLocale] = useState(i18n.resolvedLanguage ?? i18n.language);
+    const normalizeLanguage = (language: string) => {
+        const normalized = language.split("-")[0];
+        return languages[normalized] ? normalized : "en";
+    };
+    const [activeLocale, setActiveLocale] = useState(
+        normalizeLanguage(i18n.resolvedLanguage ?? i18n.language)
+    );
 
     useEffect(() => {
         const handleLanguageChange = (language: string) => {
-            setActiveLocale(language);
+            setActiveLocale(normalizeLanguage(language));
         };
 
         i18n.on("languageChanged", handleLanguageChange);
@@ -63,20 +69,21 @@ function App() {
     const i18nProvider = {
         translate: (key: string, params?: never) => t(key, params),
         changeLocale: (lang: string) => i18n.changeLanguage(lang),
-        getLocale: () => i18n.language,
+        getLocale: () => normalizeLanguage(i18n.resolvedLanguage ?? i18n.language),
     };
 
     // Fetch the antd locale using dynamic imports
     const [antdLocale, setAntdLocale] = useState<Locale | undefined>();
     useEffect(() => {
         const fetchLocale = async () => {
+            const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language);
             const locale = await import(
-                `./../node_modules/antd/es/locale/${languages[i18n.language].fullCode.replace("-", "_")}.js`
-                );
+                `./../node_modules/antd/es/locale/${languages[language].fullCode.replace("-", "_")}.js`
+            );
             setAntdLocale(locale.default);
         };
         fetchLocale().catch(console.error);
-    }, [i18n.language]);
+    }, [i18n.language, i18n.resolvedLanguage]);
 
     if (!i18n.isInitialized || !ready) {
         return (
