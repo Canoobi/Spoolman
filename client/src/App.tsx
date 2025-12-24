@@ -47,6 +47,18 @@ const LoadablePage = loadable((props: LoadablePageProps) => import(`./pages/${pr
 
 function App() {
     const {t, i18n, ready} = useTranslation();
+    const [activeLocale, setActiveLocale] = useState(i18n.resolvedLanguage ?? i18n.language);
+
+    useEffect(() => {
+        const handleLanguageChange = (language: string) => {
+            setActiveLocale(language);
+        };
+
+        i18n.on("languageChanged", handleLanguageChange);
+        return () => {
+            i18n.off("languageChanged", handleLanguageChange);
+        };
+    }, [i18n]);
 
     const i18nProvider = {
         translate: (key: string, params?: never) => t(key, params),
@@ -66,7 +78,7 @@ function App() {
         fetchLocale().catch(console.error);
     }, [i18n.language]);
 
-    if (!ready) {
+    if (!i18n.isInitialized || !ready) {
         return (
             <div style={{padding: "2rem", textAlign: "center"}}>
                 <p>Loading translations…</p>
@@ -100,7 +112,7 @@ function App() {
                         }}
                     >
                         <Refine
-                            key={i18n.language}
+                            key={activeLocale}
                             dataProvider={dataProvider(getAPIURL())}
                             notificationProvider={SpoolmanNotificationProvider}
                             i18nProvider={i18nProvider}
