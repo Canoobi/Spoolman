@@ -7,8 +7,8 @@ import {
     useCreate,
     useDelete,
     useInvalidate,
-    useUpdate,
-    useTranslate
+    useTranslate,
+    useUpdate
 } from "@refinedev/core";
 import {
     Alert,
@@ -227,7 +227,10 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const {mutate: deleteCalculation, isLoading: isDeleting} = useDelete<ICostCalculation>();
 
     const numberFormatter = useMemo(() => new Intl.NumberFormat(undefined, {maximumFractionDigits: 2}), []);
-    const percentFormatter = useMemo(() => new Intl.NumberFormat(undefined, {style: "percent", maximumFractionDigits: 2}), []);
+    const percentFormatter = useMemo(() => new Intl.NumberFormat(undefined, {
+        style: "percent",
+        maximumFractionDigits: 2
+    }), []);
 
     const computeBreakdownFromValues = (values: CostFormValues) => {
         const printer = printers.find((p) => p.id === values.printer_id);
@@ -491,7 +494,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         });
     };
 
-    const CostingInvoice = forwardRef<HTMLDivElement, {data: CostingInvoiceData}>(({data}, ref) => (
+    const CostingInvoice = forwardRef<HTMLDivElement, { data: CostingInvoiceData }>(({data}, ref) => (
         <div
             ref={ref}
             style={{
@@ -510,10 +513,17 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     }
                 }
             `}</style>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px"}}>
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "24px"
+            }}>
                 <div>
-                    <h1 style={{margin: 0, fontSize: "28px"}}>{t("cost.pdf.title")}</h1>
-                    <p style={{margin: "4px 0", color: "#555"}}>{t("cost.pdf.subtitle")}</p>
+                    <h1 style={{margin: 0, fontSize: "28px"}}>
+                        {t("cost.pdf.title")}
+                        {data.itemNames ? ` für ${data.itemNames}` : ""}
+                    </h1>
                 </div>
                 <div style={{textAlign: "right"}}>
                     <div style={{fontSize: "14px", color: "#555"}}>{t("cost.pdf.issued_at")}</div>
@@ -528,30 +538,41 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     <div style={{fontSize: "14px", lineHeight: 1.6}}>
                         <div><strong>{t("cost.pdf.printer")}:</strong> {data.printerName}</div>
                         <div><strong>{t("cost.pdf.filament")}:</strong> {data.filamentName}</div>
-                        <div><strong>{t("cost.pdf.print_time_hours")}:</strong> {data.printTimeHours != null ? `${numberFormatter.format(data.printTimeHours)} h` : "-"}</div>
-                        <div><strong>{t("cost.pdf.labor_time_hours")}:</strong> {data.laborTimeHours != null ? `${numberFormatter.format(data.laborTimeHours)} h` : "-"}</div>
-                        <div><strong>{t("cost.pdf.filament_weight_g")}:</strong> {data.filamentWeightG != null ? `${numberFormatter.format(data.filamentWeightG)} g` : "-"}</div>
+                        <div>
+                            <strong>{t("cost.pdf.print_time_hours")}:</strong> {data.printTimeHours != null ? `${numberFormatter.format(data.printTimeHours)} h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.labor_time_hours")}:</strong> {data.laborTimeHours != null ? `${numberFormatter.format(data.laborTimeHours)} h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.filament_weight_g")}:</strong> {data.filamentWeightG != null ? `${numberFormatter.format(data.filamentWeightG)} g` : "-"}
+                        </div>
                     </div>
                 </div>
                 <div>
                     <h2 style={{margin: "0 0 8px", fontSize: "18px"}}>{t("cost.pdf.rates_title")}</h2>
                     <div style={{fontSize: "14px", lineHeight: 1.6}}>
-                        <div><strong>{t("cost.pdf.energy_cost_per_kwh")}:</strong> {data.energyCostPerKwh != null ? `${formatter.format(data.energyCostPerKwh)}/kWh` : "-"}</div>
-                        <div><strong>{t("cost.pdf.labor_cost_per_hour")}:</strong> {data.laborCostPerHour != null ? `${formatter.format(data.laborCostPerHour)}/h` : "-"}</div>
-                        <div><strong>{t("cost.pdf.consumables_cost")}:</strong> {data.consumablesCost != null ? formatter.format(data.consumablesCost) : "-"}</div>
-                        <div><strong>{t("cost.pdf.failure_rate")}:</strong> {data.failureRate != null ? percentFormatter.format(data.failureRate) : "-"}</div>
-                        <div><strong>{t("cost.pdf.markup_rate")}:</strong> {data.markupRate != null ? percentFormatter.format(data.markupRate) : "-"}</div>
+                        <div>
+                            <strong>{t("cost.pdf.energy_cost_per_kwh")}:</strong> {data.energyCostPerKwh != null ? `${formatter.format(data.energyCostPerKwh)}/kWh` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.labor_cost_per_hour")}:</strong> {data.laborCostPerHour != null ? `${formatter.format(data.laborCostPerHour)}/h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.consumables_cost")}:</strong> {data.consumablesCost != null ? formatter.format(data.consumablesCost) : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.failure_rate")}:</strong> {data.failureRate != null ? percentFormatter.format(data.failureRate) : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.markup_rate")}:</strong> {data.markupRate != null ? percentFormatter.format(data.markupRate) : "-"}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {(data.itemNames || data.notes) && (
+            {data.notes && (
                 <div style={{marginBottom: "24px", fontSize: "14px", lineHeight: 1.6}}>
-                    {data.itemNames && (
-                        <div style={{marginBottom: "8px"}}>
-                            <strong>{t("cost.pdf.item_names")}:</strong> {data.itemNames}
-                        </div>
-                    )}
                     {data.notes && (
                         <div>
                             <strong>{t("cost.pdf.notes")}:</strong> {data.notes}
@@ -563,32 +584,44 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             <h2 style={{margin: "0 0 12px", fontSize: "18px"}}>{t("cost.pdf.line_items_title")}</h2>
             <table style={{width: "100%", borderCollapse: "collapse", marginBottom: "24px"}}>
                 <thead>
-                    <tr style={{backgroundColor: "#f5f5f5"}}>
-                        <th style={{textAlign: "left", padding: "10px", border: "1px solid #e0e0e0"}}>{t("cost.breakdown.title")}</th>
-                        <th style={{textAlign: "right", padding: "10px", border: "1px solid #e0e0e0"}}>{t("cost.fields.final_price")}</th>
-                    </tr>
+                <tr style={{backgroundColor: "#f5f5f5"}}>
+                    <th style={{
+                        textAlign: "left",
+                        padding: "10px",
+                        border: "1px solid #e0e0e0"
+                    }}>{t("cost.breakdown.title")}</th>
+                    <th style={{
+                        textAlign: "right",
+                        padding: "10px",
+                        border: "1px solid #e0e0e0"
+                    }}>{t("cost.fields.final_price")}</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {[
-                        {label: t("cost.breakdown.material"), value: data.breakdown.material},
-                        {label: t("cost.breakdown.energy"), value: data.breakdown.energy},
-                        {label: t("cost.breakdown.depreciation"), value: data.breakdown.depreciation},
-                        {label: t("cost.breakdown.labor"), value: data.breakdown.labor},
-                        {label: t("cost.breakdown.consumables"), value: data.breakdown.consumables},
-                    ].map((row) => (
-                        <tr key={row.label}>
-                            <td style={{padding: "10px", border: "1px solid #e0e0e0"}}>{row.label}</td>
-                            <td style={{padding: "10px", border: "1px solid #e0e0e0", textAlign: "right"}}>
-                                {formatter.format(row.value)}
-                            </td>
-                        </tr>
-                    ))}
+                {[
+                    {label: t("cost.breakdown.material"), value: data.breakdown.material},
+                    {label: t("cost.breakdown.energy"), value: data.breakdown.energy},
+                    {label: t("cost.breakdown.depreciation"), value: data.breakdown.depreciation},
+                    {label: t("cost.breakdown.labor"), value: data.breakdown.labor},
+                    {label: t("cost.breakdown.consumables"), value: data.breakdown.consumables},
+                ].map((row) => (
+                    <tr key={row.label}>
+                        <td style={{padding: "10px", border: "1px solid #e0e0e0"}}>{row.label}</td>
+                        <td style={{padding: "10px", border: "1px solid #e0e0e0", textAlign: "right"}}>
+                            {formatter.format(row.value)}
+                        </td>
+                    </tr>
+                ))}
                 </tbody>
             </table>
 
             <div style={{display: "flex", justifyContent: "flex-end"}}>
                 <div style={{minWidth: "280px", fontSize: "14px"}}>
-                    <h2 style={{margin: "0 0 12px", fontSize: "18px", textAlign: "right"}}>{t("cost.pdf.summary_title")}</h2>
+                    <h2 style={{
+                        margin: "0 0 12px",
+                        fontSize: "18px",
+                        textAlign: "right"
+                    }}>{t("cost.pdf.summary_title")}</h2>
                     <div style={{display: "flex", justifyContent: "space-between", padding: "6px 0"}}>
                         <span>{t("cost.pdf.base_price")}</span>
                         <strong>{formatter.format(data.breakdown.base)}</strong>
@@ -597,7 +630,13 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                         <span>{t("cost.pdf.uplifted_price")}</span>
                         <strong>{formatter.format(data.breakdown.uplifted)}</strong>
                     </div>
-                    <div style={{display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #e0e0e0", marginTop: "8px"}}>
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderTop: "1px solid #e0e0e0",
+                        marginTop: "8px"
+                    }}>
                         <span>{t("cost.pdf.final_price")}</span>
                         <strong>{formatter.format(data.breakdown.final)}</strong>
                     </div>
@@ -997,7 +1036,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                 }
 
                                 return [vendor, material].filter(Boolean).join(" - ");
-                            },                        },
+                            },
+                        },
                         {
                             title: t("cost.fields.base_price"),
                             dataIndex: "base_price",
