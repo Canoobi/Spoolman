@@ -31,22 +31,33 @@ export const languages: { [key: string]: Language } = {
     }
 };
 
+const normalizeLanguage = (lng: string): string => lng.split("-")[0];
+
 i18n
     .use(Backend)
     .use(detector)
     .use(initReactI18next)
     .init({
+        react: {
+            useSuspense: false,
+        },
         supportedLngs: Object.keys(languages),
+        nonExplicitSupportedLngs: true,
+        load: "languageOnly",
         backend: {
             loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
         },
         ns: "common",
         defaultNS: "common",
-        fallbackLng: "en",
+        fallbackLng: "de",
     });
 
 i18n.on("languageChanged", function (lng) {
-    languages[lng].djs().then((djs) => dayjs.locale(djs.name));
+    const normalized = normalizeLanguage(lng);
+    const language = languages[normalized];
+    if (language) {
+        language.djs().then((djs) => dayjs.locale(djs.name));
+    }
 });
 
 export default i18n;

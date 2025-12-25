@@ -317,6 +317,7 @@
     }
   },
   "cost": {
+    "cost": "Cost calculation",
     "title": "Cost calculation",
     "description": "Estimate print costs using your default settings and saved equipment.",
     "fields": {
@@ -367,7 +368,8 @@
       "save_calculation": "Save calculation",
       "update_calculation": "Update calculation",
       "cancel_edit": "Cancel editing",
-      "delete_calculation": "Delete calculation"
+      "delete_calculation": "Delete calculation",
+      "export_pdf": "Export PDF"
     },
     "notes": {
       "using_settings": "Using currency defaults {{currency}} ({{currencySymbol}})."
@@ -376,6 +378,31 @@
       "title": "Calculation history",
       "filter_printers": "Filter by printer",
       "filter_filaments": "Filter by filament type"
+    },
+    "pdf": {
+      "document_title": "Cost calculation",
+      "title": "Cost summary",
+      "subtitle": "Formatted export for customer review.",
+      "issued_at": "Issued on",
+      "details_title": "Print details",
+      "rates_title": "Rates",
+      "line_items_title": "Line items",
+      "summary_title": "Totals",
+      "printer": "Printer",
+      "filament": "Filament",
+      "print_time_hours": "Print time",
+      "labor_time_hours": "Labor time",
+      "filament_weight_g": "Filament weight",
+      "energy_cost_per_kwh": "Energy cost per kWh",
+      "labor_cost_per_hour": "Labor cost per hour",
+      "consumables_cost": "Consumables",
+      "failure_rate": "Failure rate",
+      "markup_rate": "Markup",
+      "item_names": "Item names",
+      "notes": "Notes",
+      "base_price": "Base total",
+      "uplifted_price": "Adjusted total",
+      "final_price": "Final price"
     }
   },
   "home": {

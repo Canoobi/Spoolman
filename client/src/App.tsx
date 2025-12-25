@@ -46,25 +46,50 @@ const LoadablePage = loadable((props: LoadablePageProps) => import(`./pages/${pr
 });
 
 function App() {
-    const {t, i18n} = useTranslation();
+    const {t, i18n, ready} = useTranslation();
+    const normalizeLanguage = (language: string) => {
+        const normalized = language.split("-")[0];
+        return languages[normalized] ? normalized : "en";
+    };
+    const [activeLocale, setActiveLocale] = useState(i18n.resolvedLanguage ?? i18n.language);
+
+    useEffect(() => {
+        const handleLanguageChange = (language: string) => {
+            setActiveLocale(normalizeLanguage(language));
+        };
+
+        i18n.on("languageChanged", handleLanguageChange);
+        return () => {
+            i18n.off("languageChanged", handleLanguageChange);
+        };
+    }, [i18n]);
 
     const i18nProvider = {
         translate: (key: string, params?: never) => t(key, params),
-        changeLocale: (lang: string) => i18n.changeLanguage(lang),
-        getLocale: () => i18n.language,
+        changeLocale: (lang: string) => i18n.changeLanguage(normalizeLanguage(lang)),
+        getLocale: () => i18n.resolvedLanguage ?? i18n.language,
     };
 
     // Fetch the antd locale using dynamic imports
     const [antdLocale, setAntdLocale] = useState<Locale | undefined>();
     useEffect(() => {
         const fetchLocale = async () => {
+            const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language);
             const locale = await import(
-                `./../node_modules/antd/es/locale/${languages[i18n.language].fullCode.replace("-", "_")}.js`
-                );
+                `./../node_modules/antd/es/locale/${languages[language].fullCode.replace("-", "_")}.js`
+            );
             setAntdLocale(locale.default);
         };
         fetchLocale().catch(console.error);
-    }, [i18n.language]);
+    }, [i18n.language, i18n.resolvedLanguage]);
+
+    if (!i18n.isInitialized || !ready) {
+        return (
+            <div style={{padding: "2rem", textAlign: "center"}}>
+                <p>Loading translations…</p>
+            </div>
+        );
+    }
 
     if (!import.meta.env.VITE_APIURL) {
         return (
@@ -92,6 +117,7 @@ function App() {
                         }}
                     >
                         <Refine
+                            key={activeLocale}
                             dataProvider={dataProvider(getAPIURL())}
                             notificationProvider={SpoolmanNotificationProvider}
                             i18nProvider={i18nProvider}

@@ -454,7 +454,8 @@
     }
   },
   "cost": {
-    "title": "Kalkulation",
+    "cost": "Kostenberechnung",
+    "title": "Kostenberechnung",
     "description": "Schätze Druckkosten mit deinen Standardwerten und gespeicherten Geräten.",
     "fields": {
       "printer_id": "Drucker",
@@ -504,7 +505,8 @@
       "save_calculation": "Kalkulation speichern",
       "update_calculation": "Kalkulation aktualisieren",
       "cancel_edit": "Bearbeitung abbrechen",
-      "delete_calculation": "Kalkulation löschen"
+      "delete_calculation": "Kalkulation löschen",
+      "export_pdf": "PDF exportieren"
     },
     "notes": {
       "using_settings": "Verwende Währung {{currency}} ({{currencySymbol}})."
@@ -513,6 +515,31 @@
       "title": "Kalkulationshistorie",
       "filter_printers": "Nach Drucker filtern",
       "filter_filaments": "Nach Filamentart filtern"
+    },
+    "pdf": {
+      "document_title": "Kalkulation",
+      "title": "Kostenübersicht",
+      "subtitle": "Formatierter Export für deine Kalkulation.",
+      "issued_at": "Ausgestellt am",
+      "details_title": "Druckdetails",
+      "rates_title": "Kostenansätze",
+      "line_items_title": "Positionen",
+      "summary_title": "Summen",
+      "printer": "Drucker",
+      "filament": "Filament",
+      "print_time_hours": "Druckzeit",
+      "labor_time_hours": "Arbeitszeit",
+      "filament_weight_g": "Filamentgewicht",
+      "energy_cost_per_kwh": "Energiekosten pro kWh",
+      "labor_cost_per_hour": "Arbeitskosten pro Stunde",
+      "consumables_cost": "Verbrauchsmaterialien",
+      "failure_rate": "Fehlerrate",
+      "markup_rate": "Aufschlag",
+      "item_names": "Artikelnamen",
+      "notes": "Notizen",
+      "base_price": "Basis gesamt",
+      "uplifted_price": "Angepasster Gesamtpreis",
+      "final_price": "Endpreis"
     }
   }
 }

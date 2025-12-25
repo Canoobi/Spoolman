@@ -1,4 +1,4 @@
-import {DeleteOutlined, EditOutlined, PlusOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, FilePdfOutlined, PlusOutlined} from "@ant-design/icons";
 import {List, useSelect, useTable} from "@refinedev/antd";
 import {
     CrudFilter,
@@ -7,8 +7,8 @@ import {
     useCreate,
     useDelete,
     useInvalidate,
-    useUpdate,
-    useTranslate
+    useTranslate,
+    useUpdate
 } from "@refinedev/core";
 import {
     Alert,
@@ -30,7 +30,8 @@ import {
 } from "antd";
 import {DefaultOptionType} from "antd/es/select";
 import dayjs from "dayjs";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {forwardRef, useEffect, useMemo, useRef, useState} from "react";
+import {useReactToPrint} from "react-to-print";
 import {IFilament} from "../filaments/model";
 import {IPrinter} from "../printers/model";
 import {ICostCalculation} from "./model";
@@ -51,6 +52,40 @@ interface Breakdown {
     final: number;
 }
 
+interface CostFormValues {
+    printer_id?: number;
+    filament_id?: number;
+    print_time_hours?: number;
+    labor_time_hours?: number;
+    filament_weight_g?: number;
+    energy_cost_per_kwh?: number;
+    labor_cost_per_hour?: number;
+    consumables_cost?: number;
+    failure_rate?: number;
+    markup_rate?: number;
+    final_price?: number;
+    item_names?: string;
+    notes?: string;
+}
+
+interface CostingInvoiceData {
+    issuedAt: string;
+    printerName: string;
+    filamentName: string;
+    printTimeHours?: number;
+    laborTimeHours?: number;
+    filamentWeightG?: number;
+    energyCostPerKwh?: number;
+    laborCostPerHour?: number;
+    consumablesCost?: number;
+    failureRate?: number;
+    markupRate?: number;
+    itemNames?: string;
+    notes?: string;
+    breakdown: Breakdown;
+    currency: string;
+}
+
 export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const t = useTranslate();
     const currency = useCurrency();
@@ -65,6 +100,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
     const isUpdatingFinalPriceRef = useRef(false);
     const isHydratingCalculationRef = useRef(false);
+    const [exportData, setExportData] = useState<CostingInvoiceData | null>(null);
+    const printRef = useRef<HTMLDivElement>(null);
     const [breakdown, setBreakdown] = useState<Breakdown>({
         material: 0,
         energy: 0,
@@ -189,11 +226,16 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const {mutate: updateCalculation, isLoading: isUpdating} = useUpdate<ICostCalculation>();
     const {mutate: deleteCalculation, isLoading: isDeleting} = useDelete<ICostCalculation>();
 
-    const recompute = () => {
-        const values = form.getFieldsValue(true);
+    const numberFormatter = useMemo(() => new Intl.NumberFormat(undefined, {maximumFractionDigits: 2}), []);
+    const percentFormatter = useMemo(() => new Intl.NumberFormat(undefined, {
+        style: "percent",
+        maximumFractionDigits: 2
+    }), []);
+
+    const computeBreakdownFromValues = (values: CostFormValues) => {
         const printer = printers.find((p) => p.id === values.printer_id);
         const filament = filaments.find((f) => f.id === values.filament_id);
-        const filamentGroup = filamentGroupById.get(values.filament_id);
+        const filamentGroup = values.filament_id ? filamentGroupById.get(values.filament_id) : undefined;
 
         const printHours = Number(values.print_time_hours ?? 0);
         const laborHours = Number(values.labor_time_hours ?? 0);
@@ -218,22 +260,61 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         const computedFinalPrice = uplifted;
         const finalPrice = shouldUpdateFinalPrice ? computedFinalPrice : values.final_price ?? computedFinalPrice;
 
-        if (shouldUpdateFinalPrice && values.final_price !== computedFinalPrice) {
+        return {
+            breakdown: {
+                material: materialCost,
+                energy: energyCost,
+                depreciation: depreciationCost,
+                labor: laborCost,
+                consumables: consumablesCost,
+                base,
+                uplifted,
+                final: finalPrice,
+            },
+            shouldUpdateFinalPrice,
+            computedFinalPrice,
+        };
+    };
+
+    const applyComputedBreakdown = (values: CostFormValues) => {
+        const computed = computeBreakdownFromValues(values);
+
+        if (computed.shouldUpdateFinalPrice && values.final_price !== computed.computedFinalPrice) {
             isUpdatingFinalPriceRef.current = true;
-            form.setFieldsValue({final_price: computedFinalPrice});
+            form.setFieldsValue({final_price: computed.computedFinalPrice});
             isUpdatingFinalPriceRef.current = false;
         }
-        setBreakdown({
-            material: materialCost,
-            energy: energyCost,
-            depreciation: depreciationCost,
-            labor: laborCost,
-            consumables: consumablesCost,
-            base,
-            uplifted,
-            final: finalPrice,
-        });
+        setBreakdown(computed.breakdown);
+        return computed.breakdown;
     };
+
+    const recompute = () => {
+        const values = form.getFieldsValue(true);
+        applyComputedBreakdown(values);
+    };
+
+    const formatFilamentLabel = (filament?: IFilament) => {
+        const vendor = filament?.vendor?.name;
+        const material = filament?.material;
+
+        if (!vendor && !material) {
+            return filament?.name ?? "-";
+        }
+
+        return [vendor, material].filter(Boolean).join(" - ");
+    };
+
+    const printHandler = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: t("cost.pdf.document_title"),
+        onAfterPrint: () => setExportData(null),
+    });
+
+    useEffect(() => {
+        if (exportData) {
+            printHandler();
+        }
+    }, [exportData, printHandler]);
 
     useEffect(() => {
         if (settings.data) {
@@ -256,7 +337,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
     const handleSubmit = async () => {
         const values = await form.validateFields();
-        recompute();
+        const computedBreakdown = applyComputedBreakdown(values);
         const payload = {
             printer_id: values.printer_id,
             filament_id: values.filament_id,
@@ -265,16 +346,16 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             filament_weight_g: values.filament_weight_g,
             energy_cost_per_kwh: values.energy_cost_per_kwh,
             labor_cost_per_hour: values.labor_cost_per_hour,
-            material_cost: breakdown.material,
-            energy_cost: breakdown.energy,
-            depreciation_cost: breakdown.depreciation,
-            labor_cost: breakdown.labor,
-            consumables_cost: breakdown.consumables,
+            material_cost: computedBreakdown.material,
+            energy_cost: computedBreakdown.energy,
+            depreciation_cost: computedBreakdown.depreciation,
+            labor_cost: computedBreakdown.labor,
+            consumables_cost: computedBreakdown.consumables,
             failure_rate: values.failure_rate,
             markup_rate: values.markup_rate,
-            base_price: breakdown.base,
-            uplifted_price: breakdown.uplifted,
-            final_price: breakdown.final,
+            base_price: computedBreakdown.base,
+            uplifted_price: computedBreakdown.uplifted,
+            final_price: computedBreakdown.final,
             currency: currency,
             item_names: values.item_names,
             notes: values.notes,
@@ -350,6 +431,224 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         });
         isHydratingCalculationRef.current = false;
     };
+
+    const handleExportPdfFromForm = async () => {
+        try {
+            const values = await form.validateFields();
+            const computedBreakdown = applyComputedBreakdown(values);
+            const selectedPrinter = printers.find((printer) => printer.id === values.printer_id);
+            const filamentOption = filamentTypeOptions.find((option) => option.value === values.filament_id);
+            const selectedFilament = filaments.find((filament) => filament.id === values.filament_id);
+            const filamentLabel = typeof filamentOption?.label === "string"
+                ? filamentOption.label
+                : formatFilamentLabel(selectedFilament);
+
+            setExportData({
+                issuedAt: dayjs().format("YYYY-MM-DD"),
+                printerName: selectedPrinter?.name ?? "-",
+                filamentName: filamentLabel,
+                printTimeHours: values.print_time_hours,
+                laborTimeHours: values.labor_time_hours,
+                filamentWeightG: values.filament_weight_g,
+                energyCostPerKwh: values.energy_cost_per_kwh ?? defaultEnergy,
+                laborCostPerHour: values.labor_cost_per_hour ?? defaultLabor,
+                consumablesCost: values.consumables_cost ?? defaultConsumables,
+                failureRate: values.failure_rate ?? defaultFailure,
+                markupRate: values.markup_rate ?? defaultMarkup,
+                itemNames: values.item_names,
+                notes: values.notes,
+                breakdown: computedBreakdown,
+                currency,
+            });
+        } catch (error) {
+            return;
+        }
+    };
+
+    const handleExportPdfFromRecord = (calculation: ICostCalculation) => {
+        setExportData({
+            issuedAt: calculation.created ? dayjs(calculation.created).format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD"),
+            printerName: calculation.printer?.name ?? "-",
+            filamentName: formatFilamentLabel(calculation.filament),
+            printTimeHours: calculation.print_time_hours,
+            laborTimeHours: calculation.labor_time_hours,
+            filamentWeightG: calculation.filament_weight_g,
+            energyCostPerKwh: calculation.energy_cost_per_kwh ?? defaultEnergy,
+            laborCostPerHour: calculation.labor_cost_per_hour ?? defaultLabor,
+            consumablesCost: calculation.consumables_cost ?? defaultConsumables,
+            failureRate: calculation.failure_rate ?? defaultFailure,
+            markupRate: calculation.markup_rate ?? defaultMarkup,
+            itemNames: calculation.item_names,
+            notes: calculation.notes,
+            breakdown: {
+                material: calculation.material_cost ?? 0,
+                energy: calculation.energy_cost ?? 0,
+                depreciation: calculation.depreciation_cost ?? 0,
+                labor: calculation.labor_cost ?? 0,
+                consumables: calculation.consumables_cost ?? 0,
+                base: calculation.base_price ?? 0,
+                uplifted: calculation.uplifted_price ?? 0,
+                final: calculation.final_price ?? 0,
+            },
+            currency: calculation.currency ?? currency,
+        });
+    };
+
+    const CostingInvoice = forwardRef<HTMLDivElement, { data: CostingInvoiceData }>(({data}, ref) => (
+        <div
+            ref={ref}
+            style={{
+                fontFamily: "Arial, sans-serif",
+                color: "#1f1f1f",
+                padding: "32px",
+                maxWidth: "900px",
+                margin: "0 auto",
+            }}
+        >
+            <style>{`
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            `}</style>
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "24px"
+            }}>
+                <div>
+                    <h1 style={{margin: 0, fontSize: "28px"}}>
+                        {t("cost.pdf.title")}
+                        {data.itemNames ? ` für` : ""}
+                    </h1>
+                    <p style={{
+                        margin: "4px 0",
+                        fontSize: "20px",
+                        color: "#555"
+                    }}>{data.itemNames ? `${data.itemNames}` : ""}</p>
+                </div>
+                <div style={{textAlign: "right"}}>
+                    <div style={{fontSize: "14px", color: "#555"}}>{t("cost.pdf.issued_at")}</div>
+                    <div style={{fontWeight: 600}}>{data.issuedAt}</div>
+                    <div style={{marginTop: "8px", fontSize: "13px", color: "#555"}}>{data.currency}</div>
+                </div>
+            </div>
+
+            <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px"}}>
+                <div>
+                    <h2 style={{margin: "0 0 8px", fontSize: "18px"}}>{t("cost.pdf.details_title")}</h2>
+                    <div style={{fontSize: "14px", lineHeight: 1.6}}>
+                        <div><strong>{t("cost.pdf.printer")}:</strong> {data.printerName}</div>
+                        <div><strong>{t("cost.pdf.filament")}:</strong> {data.filamentName}</div>
+                        <div>
+                            <strong>{t("cost.pdf.print_time_hours")}:</strong> {data.printTimeHours != null ? `${numberFormatter.format(data.printTimeHours)} h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.labor_time_hours")}:</strong> {data.laborTimeHours != null ? `${numberFormatter.format(data.laborTimeHours)} h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.filament_weight_g")}:</strong> {data.filamentWeightG != null ? `${numberFormatter.format(data.filamentWeightG)} g` : "-"}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h2 style={{margin: "0 0 8px", fontSize: "18px"}}>{t("cost.pdf.rates_title")}</h2>
+                    <div style={{fontSize: "14px", lineHeight: 1.6}}>
+                        <div>
+                            <strong>{t("cost.pdf.energy_cost_per_kwh")}:</strong> {data.energyCostPerKwh != null ? `${formatter.format(data.energyCostPerKwh)}/kWh` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.labor_cost_per_hour")}:</strong> {data.laborCostPerHour != null ? `${formatter.format(data.laborCostPerHour)}/h` : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.consumables_cost")}:</strong> {data.consumablesCost != null ? formatter.format(data.consumablesCost) : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.failure_rate")}:</strong> {data.failureRate != null ? percentFormatter.format(data.failureRate) : "-"}
+                        </div>
+                        <div>
+                            <strong>{t("cost.pdf.markup_rate")}:</strong> {data.markupRate != null ? percentFormatter.format(data.markupRate) : "-"}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {data.notes && (
+                <div style={{marginBottom: "24px", fontSize: "14px", lineHeight: 1.6}}>
+                    {data.notes && (
+                        <div>
+                            <strong>{t("cost.pdf.notes")}:</strong> {data.notes}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <h2 style={{margin: "0 0 12px", fontSize: "18px"}}>{t("cost.pdf.line_items_title")}</h2>
+            <table style={{width: "100%", borderCollapse: "collapse", marginBottom: "24px"}}>
+                <thead>
+                <tr style={{backgroundColor: "#f5f5f5"}}>
+                    <th style={{
+                        textAlign: "left",
+                        padding: "10px",
+                        border: "1px solid #e0e0e0"
+                    }}>{t("cost.breakdown.title")}</th>
+                    <th style={{
+                        textAlign: "right",
+                        padding: "10px",
+                        border: "1px solid #e0e0e0"
+                    }}>{t("cost.fields.final_price")}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {[
+                    {label: t("cost.breakdown.material"), value: data.breakdown.material},
+                    {label: t("cost.breakdown.energy"), value: data.breakdown.energy},
+                    {label: t("cost.breakdown.depreciation"), value: data.breakdown.depreciation},
+                    {label: t("cost.breakdown.labor"), value: data.breakdown.labor},
+                    {label: t("cost.breakdown.consumables"), value: data.breakdown.consumables},
+                ].map((row) => (
+                    <tr key={row.label}>
+                        <td style={{padding: "10px", border: "1px solid #e0e0e0"}}>{row.label}</td>
+                        <td style={{padding: "10px", border: "1px solid #e0e0e0", textAlign: "right"}}>
+                            {formatter.format(row.value)}
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+
+            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                <div style={{minWidth: "280px", fontSize: "14px"}}>
+                    <h2 style={{
+                        margin: "0 0 12px",
+                        fontSize: "18px",
+                        textAlign: "right"
+                    }}>{t("cost.pdf.summary_title")}</h2>
+                    <div style={{display: "flex", justifyContent: "space-between", padding: "6px 0"}}>
+                        <span>{t("cost.pdf.base_price")}</span>
+                        <strong>{formatter.format(data.breakdown.base)}</strong>
+                    </div>
+                    <div style={{display: "flex", justifyContent: "space-between", padding: "6px 0"}}>
+                        <span>{t("cost.pdf.uplifted_price")}</span>
+                        <strong>{formatter.format(data.breakdown.uplifted)}</strong>
+                    </div>
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderTop: "1px solid #e0e0e0",
+                        marginTop: "8px"
+                    }}>
+                        <span>{t("cost.pdf.final_price")}</span>
+                        <strong>{formatter.format(data.breakdown.final)}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ));
 
     const resetEditing = () => {
         setEditingCalculation(null);
@@ -664,12 +963,21 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                 {editingCalculation && (
                                     <Button onClick={resetEditing}>{t("cost.actions.cancel_edit")}</Button>
                                 )}
+                                <Button icon={<FilePdfOutlined/>} onClick={handleExportPdfFromForm}>
+                                    {t("cost.actions.export_pdf")}
+                                </Button>
                                 {message && <Alert type="success" message={message} showIcon/>}
                             </Space>
                         </Col>
                     </Row>
                 </Form>
             </Card>
+
+            {exportData && (
+                <div style={{position: "absolute", left: "-9999px", top: 0}}>
+                    <CostingInvoice ref={printRef} data={exportData}/>
+                </div>
+            )}
 
             <List
                 title={t("cost.history.title")}
@@ -733,7 +1041,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                 }
 
                                 return [vendor, material].filter(Boolean).join(" - ");
-                            },                        },
+                            },
+                        },
                         {
                             title: t("cost.fields.base_price"),
                             dataIndex: "base_price",
@@ -767,6 +1076,13 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             dataIndex: "actions",
                             render: (_value, record) => (
                                 <Space>
+                                    <Button
+                                        size="small"
+                                        icon={<FilePdfOutlined/>}
+                                        onClick={() => handleExportPdfFromRecord(record)}
+                                    >
+                                        {t("cost.actions.export_pdf")}
+                                    </Button>
                                     <Button size="small" icon={<EditOutlined/>} onClick={() => handleEdit(record)}>
                                         {t("buttons.edit")}
                                     </Button>
