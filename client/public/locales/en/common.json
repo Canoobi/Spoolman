@@ -318,6 +318,7 @@
   },
   "cost": {
     "cost": "Cost calculation",
+    "title": "Cost calculation",
     "description": "Estimate print costs using your default settings and saved equipment.",
     "fields": {
       "printer_id": "Printer",

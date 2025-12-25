@@ -454,7 +454,8 @@
     }
   },
   "cost": {
-    "cost": "Kosten Kalkulation",
+    "cost": "Kostenberechnung",
+    "title": "Kostenberechnung",
     "description": "Schätze Druckkosten mit deinen Standardwerten und gespeicherten Geräten.",
     "fields": {
       "printer_id": "Drucker",
