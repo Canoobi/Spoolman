@@ -522,8 +522,13 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 <div>
                     <h1 style={{margin: 0, fontSize: "28px"}}>
                         {t("cost.pdf.title")}
-                        {data.itemNames ? ` für ${data.itemNames}` : ""}
+                        {data.itemNames ? ` für` : ""}
                     </h1>
+                    <p style={{
+                        margin: "4px 0",
+                        fontSize: "20px",
+                        color: "#555"
+                    }}>{data.itemNames ? `${data.itemNames}` : ""}</p>
                 </div>
                 <div style={{textAlign: "right"}}>
                     <div style={{fontSize: "14px", color: "#555"}}>{t("cost.pdf.issued_at")}</div>
