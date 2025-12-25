@@ -1031,6 +1031,13 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             dataIndex: "actions",
                             render: (_value, record) => (
                                 <Space>
+                                    <Button
+                                        size="small"
+                                        icon={<FilePdfOutlined/>}
+                                        onClick={() => handleExportPdfFromRecord(record)}
+                                    >
+                                        {t("cost.actions.export_pdf")}
+                                    </Button>
                                     <Button size="small" icon={<EditOutlined/>} onClick={() => handleEdit(record)}>
                                         {t("buttons.edit")}
                                     </Button>
@@ -1045,13 +1052,6 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                             {t("buttons.delete")}
                                         </Button>
                                     </Popconfirm>
-                                    <Button
-                                        size="small"
-                                        icon={<FilePdfOutlined/>}
-                                        onClick={() => handleExportPdfFromRecord(record)}
-                                    >
-                                        {t("cost.actions.export_pdf")}
-                                    </Button>
                                 </Space>
                             ),
                         },
