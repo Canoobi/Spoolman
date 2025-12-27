@@ -31,6 +31,9 @@
     "hideColumns": "Hide Columns",
     "clearFilters": "Clear Filters"
   },
+  "ams_connect": {
+    "label": "AMS-Connect"
+  },
   "warnWhenUnsavedChanges": "Are you sure you want to leave? You have unsaved changes.",
   "notifications": {
     "success": "Successful",

@@ -31,6 +31,9 @@
     "saveAndAdd": "Speichern und hinzufügen",
     "continue": "Weiter"
   },
+  "ams_connect": {
+    "label": "AMS-Connect"
+  },
   "warnWhenUnsavedChanges": "Bist du sicher, dass du die Seite verlassen willst? Du hast ungespeicherte Änderungen.",
   "notifications": {
     "success": "Erfolgreich",

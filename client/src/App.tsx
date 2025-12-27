@@ -5,7 +5,7 @@ import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 import {ErrorComponent} from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
-import {DollarCircleOutlined, HighlightOutlined, TableOutlined, ToolOutlined,} from "@ant-design/icons";
+import {DollarCircleOutlined, HighlightOutlined, LinkOutlined, TableOutlined, ToolOutlined,} from "@ant-design/icons";
 import loadable from "@loadable/component";
 import routerBindings, {DocumentTitleHandler, UnsavedChangesNotifier} from "@refinedev/react-router";
 import {ConfigProvider} from "antd";
@@ -188,6 +188,15 @@ function App() {
                                     },
                                 },
                                 {
+                                    name: "ams-connect",
+                                    list: "/ams-connect",
+                                    meta: {
+                                        canDelete: false,
+                                        icon: <LinkOutlined/>,
+                                        label: t("ams_connect.label"),
+                                    },
+                                },
+                                {
                                     name: "settings",
                                     list: "/settings",
                                     meta: {
@@ -280,6 +289,7 @@ function App() {
                                     <Route path="/costing" element={<LoadablePage name="costing"/>}/>
                                     <Route path="/help" element={<LoadablePage name="help"/>}/>
                                     <Route path="/locations" element={<LoadablePage name="locations"/>}/>
+                                    <Route path="/ams-connect" element={<LoadablePage name="ams-connect"/>}/>
                                     <Route path="*" element={<ErrorComponent/>}/>
                                 </Route>
                             </Routes>
