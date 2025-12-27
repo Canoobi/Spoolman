@@ -20,7 +20,7 @@ export const AmsConnect: React.FC<IResourceComponentsProps> = () => {
             >
                 <iframe
                     title="AMS-Connect"
-                    src="https://192.168.1.99:30169"
+                    src="http://192.168.1.99:30169"
                     style={{border: 0, width: "100%", height: "100%"}}
                 />
             </div>
