@@ -188,7 +188,7 @@ async def find(  # noqa: C901, PLR0912
             elif fieldstr == "filament.combined_name":
                 sorts.append(models.Vendor.name)
                 sorts.append(models.Filament.name)
-            elif fieldstr == "material":
+            elif fieldstr == "filament.material":
                 sorts.append(models.Filament.material)
                 sorts.append(models.Vendor.name)
                 sorts.append(models.Filament.name)
