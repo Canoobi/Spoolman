@@ -157,3 +157,69 @@ class CostCalculation(Base):
     currency: Mapped[Optional[str]] = mapped_column(String(8))
     item_names: Mapped[Optional[str]] = mapped_column(String(512))
     notes: Mapped[Optional[str]] = mapped_column(String(1024))
+
+
+class PrintRequest(Base):
+    __tablename__ = "print_request"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    requester_name: Mapped[Optional[str]] = mapped_column(String(128))
+    delivery_preference: Mapped[Optional[str]] = mapped_column(String(64))
+    delivery_notes: Mapped[Optional[str]] = mapped_column(String(1024))
+    title: Mapped[str] = mapped_column(String(256))
+    description: Mapped[str] = mapped_column(Text)
+    makerworld_link: Mapped[Optional[str]] = mapped_column(String(1024))
+    color_assignment: Mapped[Optional[str]] = mapped_column(String(1024))
+    due_date: Mapped[Optional[datetime]] = mapped_column()
+    comment: Mapped[Optional[str]] = mapped_column(String(1024))
+    other_filament_requested: Mapped[bool] = mapped_column(default=False)
+    other_filament_notes: Mapped[Optional[str]] = mapped_column(String(1024))
+    status: Mapped[str] = mapped_column(String(32), default="requested")
+    public_token: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    links: Mapped[list["PrintRequestLink"]] = relationship(
+        back_populates="request",
+        cascade="save-update, merge, delete, delete-orphan",
+    )
+    files: Mapped[list["PrintRequestFile"]] = relationship(
+        back_populates="request",
+        cascade="save-update, merge, delete, delete-orphan",
+    )
+    filaments: Mapped[list["PrintRequestFilament"]] = relationship(
+        back_populates="request",
+        cascade="save-update, merge, delete, delete-orphan",
+    )
+
+
+class PrintRequestLink(Base):
+    __tablename__ = "print_request_link"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    request_id: Mapped[int] = mapped_column(ForeignKey("print_request.id", ondelete="CASCADE"), index=True)
+    request: Mapped["PrintRequest"] = relationship(back_populates="links")
+    url: Mapped[str] = mapped_column(String(1024))
+    label: Mapped[Optional[str]] = mapped_column(String(128))
+
+
+class PrintRequestFile(Base):
+    __tablename__ = "print_request_file"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    request_id: Mapped[int] = mapped_column(ForeignKey("print_request.id", ondelete="CASCADE"), index=True)
+    request: Mapped["PrintRequest"] = relationship(back_populates="files")
+    original_filename: Mapped[str] = mapped_column(String(512))
+    stored_filename: Mapped[str] = mapped_column(String(512), unique=True)
+    content_type: Mapped[Optional[str]] = mapped_column(String(256))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+    uploaded_at: Mapped[datetime] = mapped_column()
+
+
+class PrintRequestFilament(Base):
+    __tablename__ = "print_request_filament"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    request_id: Mapped[int] = mapped_column(ForeignKey("print_request.id", ondelete="CASCADE"), index=True)
+    request: Mapped["PrintRequest"] = relationship(back_populates="filaments")
+    filament_id: Mapped[int] = mapped_column(ForeignKey("filament.id"), index=True)
+    filament: Mapped["Filament"] = relationship()

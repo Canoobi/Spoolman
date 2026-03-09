@@ -5,7 +5,7 @@ import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 import {ErrorComponent} from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
-import {DollarCircleOutlined, HighlightOutlined, LinkOutlined, TableOutlined, ToolOutlined,} from "@ant-design/icons";
+import {DollarCircleOutlined, FileTextOutlined, HighlightOutlined, LinkOutlined, TableOutlined, ToolOutlined,} from "@ant-design/icons";
 import loadable from "@loadable/component";
 import routerBindings, {DocumentTitleHandler, UnsavedChangesNotifier} from "@refinedev/react-router";
 import {ConfigProvider} from "antd";
@@ -197,6 +197,15 @@ function App() {
                                     },
                                 },
                                 {
+                                    name: "print-request",
+                                    list: "/print-request",
+                                    meta: {
+                                        canDelete: false,
+                                        icon: <FileTextOutlined/>,
+                                        label: "Aufträge",
+                                    },
+                                },
+                                {
                                     name: "settings",
                                     list: "/settings",
                                     meta: {
@@ -290,6 +299,7 @@ function App() {
                                     <Route path="/help" element={<LoadablePage name="help"/>}/>
                                     <Route path="/locations" element={<LoadablePage name="locations"/>}/>
                                     <Route path="/ams-connect" element={<LoadablePage name="ams-connect"/>}/>
+                                    <Route path="/print-request" element={<LoadablePage name="print-requests"/>}/>
                                     <Route path="*" element={<ErrorComponent/>}/>
                                 </Route>
                             </Routes>
