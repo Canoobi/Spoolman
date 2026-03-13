@@ -222,10 +222,16 @@ async def get_print_request(
 @router.patch("/{public_id}")
 async def update_print_request(
         public_id: str,
-        body: api_models.PublicPrintRequestUpdate,
+        request: Request,
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    payload = _load_json_with_whitespace_escapes(await request.body())
+    try:
+        body = api_models.PublicPrintRequestUpdate.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
     try:
         obj = await print_request_db.update_print_request_public(db, public_id, body)
     except ValueError as exc:
