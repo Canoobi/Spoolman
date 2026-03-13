@@ -467,3 +467,13 @@ def get_base_path() -> str:
 
     # Ensure it starts with / and does not end with /
     return "/" + path.strip("/")
+
+
+def get_print_request_public_password() -> Optional[str]:
+    """Get the password required for the public print request pages."""
+    return os.getenv("SPOOLMAN_PRINT_REQUEST_PASSWORD")
+
+
+def get_print_request_cookie_secret() -> Optional[str]:
+    """Get the secret used to sign the public print request session cookie."""
+    return os.getenv("SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET")

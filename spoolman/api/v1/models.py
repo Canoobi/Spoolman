@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel, Field, PlainSerializer
+from pydantic import BaseModel, Field, PlainSerializer, SecretStr, field_validator
 
 from spoolman.database import models
 from spoolman.math import length_from_weight
@@ -535,3 +535,227 @@ class CostEvent(Event):
 
     payload: CostCalculation = Field(description="Updated cost calculation.")
     resource: Literal["cost"] = Field(description="Resource type.")
+
+
+PRINT_REQUEST_STATUS_VALUES = [
+    "Angefragt",
+    "In Klärung",
+    "Offen",
+    "In Bearbeitung",
+    "Hergestellt",
+    "Abgeschlossen",
+    "Abgelehnt",
+]
+
+PRINT_REQUEST_PUBLIC_EDITABLE_STATUS_VALUES = [
+    "Angefragt",
+    "In Klärung",
+    "Offen",
+    "In Bearbeitung",
+]
+
+PRINT_REQUEST_DELIVERY_VALUES = [
+    "Abholung",
+    "Versand",
+    "Andere Vereinbarung",
+]
+
+PRINT_REQUEST_PRIORITY_VALUES = [
+    "niedrig",
+    "normal",
+    "hoch",
+]
+
+
+class PrintRequestFilamentInfo(BaseModel):
+    id: int
+    display_name: str
+
+
+class PrintRequestBase(BaseModel):
+    requester_name: str = Field(min_length=1, max_length=128)
+    requester_contact: Optional[str] = Field(default=None, max_length=256)
+
+    delivery_type: Optional[str] = Field(default=None, max_length=32)
+    delivery_details: Optional[str] = Field(default=None, max_length=1024)
+
+    title: str = Field(min_length=1, max_length=256)
+    description: str = Field(min_length=1)
+
+    makerworld_url: Optional[str] = Field(default=None, max_length=2048)
+    additional_links_text: Optional[str] = None
+
+    wanted_date: Optional[datetime] = None
+    priority: Optional[str] = Field(default=None, max_length=16)
+
+    other_filament_requested: bool = False
+    other_filament_description: Optional[str] = Field(default=None, max_length=1024)
+
+    color_assignment: Optional[str] = Field(default=None, max_length=2048)
+    comment: Optional[str] = None
+
+    filament_ids: list[int] = Field(default_factory=list)
+
+    @field_validator("delivery_type")
+    @classmethod
+    def validate_delivery_type(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and value not in PRINT_REQUEST_DELIVERY_VALUES:
+            raise ValueError("Invalid delivery_type.")
+        return value
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and value not in PRINT_REQUEST_PRIORITY_VALUES:
+            raise ValueError("Invalid priority.")
+        return value
+
+
+class PublicPrintRequestCreate(PrintRequestBase):
+    pass
+
+
+class PublicPrintRequestUpdate(PrintRequestBase):
+    pass
+
+
+class PrintRequestRejectRequest(BaseModel):
+    rejection_reason: Optional[str] = None
+
+
+class PrintRequestInternalPatch(BaseModel):
+    requester_name: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    requester_contact: Optional[str] = Field(default=None, max_length=256)
+
+    delivery_type: Optional[str] = Field(default=None, max_length=32)
+    delivery_details: Optional[str] = Field(default=None, max_length=1024)
+
+    title: Optional[str] = Field(default=None, min_length=1, max_length=256)
+    description: Optional[str] = None
+
+    makerworld_url: Optional[str] = Field(default=None, max_length=2048)
+    additional_links_text: Optional[str] = None
+
+    wanted_date: Optional[datetime] = None
+    priority: Optional[str] = Field(default=None, max_length=16)
+
+    other_filament_requested: Optional[bool] = None
+    other_filament_description: Optional[str] = Field(default=None, max_length=1024)
+
+    color_assignment: Optional[str] = Field(default=None, max_length=2048)
+    comment: Optional[str] = None
+
+    filament_ids: Optional[list[int]] = None
+
+    status: Optional[str] = None
+    internal_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
+
+    @field_validator("delivery_type")
+    @classmethod
+    def validate_delivery_type(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and value not in PRINT_REQUEST_DELIVERY_VALUES:
+            raise ValueError("Invalid delivery_type.")
+        return value
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and value not in PRINT_REQUEST_PRIORITY_VALUES:
+            raise ValueError("Invalid priority.")
+        return value
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and value not in PRINT_REQUEST_STATUS_VALUES:
+            raise ValueError("Invalid status.")
+        return value
+
+
+class PrintRequestResponse(BaseModel):
+    id: int
+    public_id: str
+
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    requester_name: str
+    requester_contact: Optional[str]
+
+    delivery_type: Optional[str]
+    delivery_details: Optional[str]
+
+    title: str
+    description: str
+
+    makerworld_url: Optional[str]
+    additional_links_text: Optional[str]
+
+    wanted_date: Optional[datetime]
+    priority: Optional[str]
+
+    other_filament_requested: bool
+    other_filament_description: Optional[str]
+
+    color_assignment: Optional[str]
+    comment: Optional[str]
+
+    status: str
+
+    accepted_at: Optional[datetime]
+    rejected_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    rejection_reason: Optional[str]
+    internal_notes: Optional[str]
+
+    filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+
+
+class PublicPrintRequestResponse(BaseModel):
+    public_id: str
+
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    requester_name: str
+    requester_contact: Optional[str]
+
+    delivery_type: Optional[str]
+    delivery_details: Optional[str]
+
+    title: str
+    description: str
+
+    makerworld_url: Optional[str]
+    additional_links_text: Optional[str]
+
+    wanted_date: Optional[datetime]
+    priority: Optional[str]
+
+    other_filament_requested: bool
+    other_filament_description: Optional[str]
+
+    color_assignment: Optional[str]
+    comment: Optional[str]
+
+    status: str
+
+    accepted_at: Optional[datetime]
+    rejected_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    rejection_reason: Optional[str]
+
+    filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+
+
+class PublicPrintRequestFormDataResponse(BaseModel):
+    delivery_types: list[str]
+    priorities: list[str]
+    filaments: list[PrintRequestFilamentInfo]
+
+
+class PublicPrintRequestLoginRequest(BaseModel):
+    password: SecretStr
