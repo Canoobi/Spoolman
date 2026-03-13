@@ -1,10 +1,12 @@
 import base64
 import hashlib
 import hmac
+import json
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +16,6 @@ from spoolman.api.v1 import models as api_models
 from spoolman.database import models
 from spoolman.database.database import get_db_session
 from spoolman.database import print_request as print_request_db
-from spoolman.database import filament as filament_db
 
 
 COOKIE_NAME = "spoolman_pr_session"
@@ -58,6 +59,30 @@ def require_public_session(request: Request) -> None:
     token = request.cookies.get(COOKIE_NAME)
     if not token or not _verify_cookie_token(token):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+
+def _load_json_with_whitespace_escapes(raw_body: bytes):
+    try:
+        return json.loads(raw_body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        text_body = None
+
+        for encoding in ("utf-8", "cp1252", "latin-1"):
+            try:
+                text_body = raw_body.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+
+        if text_body is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There was an error parsing the body")
+
+        normalized_body = text_body.replace("\\r", "\r").replace("\\n", "\n").replace("\\t", "\t")
+
+        try:
+            return json.loads(normalized_body)
+        except json.JSONDecodeError as second_exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There was an error parsing the body") from second_exc
 
 
 def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
@@ -149,7 +174,6 @@ async def get_form_data(
         select(models.Filament)
         .options(
             selectinload(models.Filament.vendor),
-            selectinload(models.Filament.material),
         )
         .order_by(models.Filament.id.asc())
     )
@@ -168,10 +192,16 @@ async def get_form_data(
 
 @router.post("")
 async def create_print_request(
-        body: api_models.PublicPrintRequestCreate,
+        request: Request,
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    payload = _load_json_with_whitespace_escapes(await request.body())
+    try:
+        body = api_models.PublicPrintRequestCreate.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
     obj = await print_request_db.create_print_request(db, body)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,

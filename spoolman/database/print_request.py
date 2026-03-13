@@ -2,7 +2,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,7 +34,7 @@ async def _get_filaments_by_ids(db: AsyncSession, filament_ids: list[int]) -> li
     result = await db.execute(
         select(models.Filament).where(models.Filament.id.in_(filament_ids))
     )
-    filaments = list(result.scalars().all())
+    filaments = list(result.unique().scalars().all())
 
     if len(filaments) != len(set(filament_ids)):
         raise ValueError("One or more filament IDs are invalid.")
@@ -48,11 +48,14 @@ async def _set_filaments(
         filament_ids: list[int],
 ) -> None:
     await _get_filaments_by_ids(db, filament_ids)
-    request_obj.filaments.clear()
+
+    await db.execute(
+        delete(models.PrintRequestFilament).where(models.PrintRequestFilament.request_id == request_obj.id)
+    )
 
     now = utcnow()
     for filament_id in sorted(set(filament_ids)):
-        request_obj.filaments.append(
+        db.add(
             models.PrintRequestFilament(
                 request_id=request_obj.id,
                 filament_id=filament_id,
