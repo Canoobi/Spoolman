@@ -128,7 +128,9 @@ async def get_print_request(db: AsyncSession, request_id: int) -> models.PrintRe
         select(models.PrintRequest)
         .where(models.PrintRequest.id == request_id)
         .options(
-            selectinload(models.PrintRequest.filaments).selectinload(models.PrintRequestFilament.filament)
+            selectinload(models.PrintRequest.filaments)
+            .selectinload(models.PrintRequestFilament.filament)
+            .selectinload(models.Filament.vendor)
         )
     )
     obj = result.scalar_one_or_none()
@@ -142,7 +144,9 @@ async def get_print_request_by_public_id(db: AsyncSession, public_id: str) -> mo
         select(models.PrintRequest)
         .where(models.PrintRequest.public_id == public_id)
         .options(
-            selectinload(models.PrintRequest.filaments).selectinload(models.PrintRequestFilament.filament)
+            selectinload(models.PrintRequest.filaments)
+            .selectinload(models.PrintRequestFilament.filament)
+            .selectinload(models.Filament.vendor)
         )
     )
     obj = result.scalar_one_or_none()
@@ -162,7 +166,9 @@ async def list_print_requests(
     result = await db.execute(
         select(models.PrintRequest)
         .options(
-            selectinload(models.PrintRequest.filaments).selectinload(models.PrintRequestFilament.filament)
+            selectinload(models.PrintRequest.filaments)
+            .selectinload(models.PrintRequestFilament.filament)
+            .selectinload(models.Filament.vendor)
         )
         .order_by(models.PrintRequest.created_at.desc())
         .offset(skip)
