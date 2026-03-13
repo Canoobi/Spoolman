@@ -205,3 +205,6 @@ data/
 .pdm-python
 .history
 /.idea/
+/public-print-request/node_modules/
+/public-print-request/.env
+/.env
