@@ -84,7 +84,7 @@ export function RequestPage() {
                         </Typography.Paragraph>
 
                         <div className="success-link-box">
-                            <Typography.Text strong>Statuslink:</Typography.Text>
+                            <Typography.Text strong>Statuslink (bitte speichern):</Typography.Text>
                             <div style={{ marginTop: 8, wordBreak: "break-all" }}>
                                 <a
                                     href={buildStatusUrl(createdRequest.public_id)}

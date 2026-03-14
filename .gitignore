@@ -208,3 +208,4 @@ data/
 /public-print-request/node_modules/
 /public-print-request/.env
 /.env
+/public-print-request/config/
