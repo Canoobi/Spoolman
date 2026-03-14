@@ -11,7 +11,7 @@ export function formatDate(value?: string | null): string {
 }
 
 export function buildStatusUrl(publicId: string): string {
-    return `${window.location.origin}/status/${publicId}`;
+    return `${window.location.origin}/request/status/${publicId}`;
 }
 
 export function normalizeTextareaUrls(value?: string): string | undefined {

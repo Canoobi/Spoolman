@@ -12,7 +12,7 @@ export const router = createBrowserRouter([
         children: [
             { index: true, element: <LoginPage /> },
             { path: "request", element: <RequestPage /> },
-            { path: "status/:publicId", element: <StatusPage /> },
+            { path: "request/status/:publicId", element: <StatusPage /> },
             { path: "404", element: <NotFoundPage /> },
             { path: "*", element: <Navigate to="/404" replace /> },
         ],

@@ -25,9 +25,7 @@ services:
     depends_on:
       - spoolman
     ports:
-      - "30170:443"
-    volumes:
-      - /volume1/docker/Spoolman/public-print-request:/usr/local/app
+      - "30170:80"
 
   bambulab-ams-filamentstatus:
     depends_on:

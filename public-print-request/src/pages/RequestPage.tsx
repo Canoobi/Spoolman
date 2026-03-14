@@ -97,7 +97,7 @@ export function RequestPage() {
                         </div>
 
                         <div style={{ marginTop: 16 }}>
-                            <Link to={`/status/${createdRequest.public_id}`}>
+                            <Link to={`/request/status/${createdRequest.public_id}`}>
                                 <Button type="primary">Zur Statusseite</Button>
                             </Link>
                         </div>
