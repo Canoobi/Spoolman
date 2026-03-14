@@ -7,15 +7,14 @@ from spoolman.api.v1 import models as api_models
 from spoolman.database.database import get_db_session
 from spoolman.database import print_request as print_request_db
 
-
 router = APIRouter(prefix="/print-request", tags=["print-request"])
 
 
 def _to_filament_info(filament_link) -> api_models.PrintRequestFilamentInfo:
     filament = filament_link.filament
     vendor_name = getattr(getattr(filament, "vendor", None), "name", None)
-    material = getattr(getattr(filament, "material", None), "name", None)
-
+    material = getattr(filament, "material", None)
+    if not isinstance(material, str): material = getattr(material, "name", None)
     display_parts = [part for part in [vendor_name, material, filament.name] if part]
     display_name = " – ".join(display_parts) if display_parts else str(filament.id)
 
