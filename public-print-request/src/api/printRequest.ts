@@ -16,7 +16,7 @@ export async function createPrintRequest(
     payload: PublicPrintRequestPayload
 ): Promise<PublicPrintRequestResponse> {
     const { data } = await api.post<PublicPrintRequestResponse>(
-        "/print-request/public",
+        "/print-request/public/",
         payload
     );
     return data;

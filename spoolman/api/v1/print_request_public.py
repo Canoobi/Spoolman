@@ -191,7 +191,7 @@ async def get_form_data(
     )
 
 
-@router.post("")
+@router.post("/")
 async def create_print_request(
         request: Request,
         _session: None = Depends(require_public_session),
