@@ -96,7 +96,7 @@ export function RequestForm({
             description: values.description.trim(),
             makerworld_url: values.makerworld_url?.trim() || undefined,
             additional_links_text: values.additional_links_text?.trim() || undefined,
-            wanted_date: values.wanted_date ? values.wanted_date.toISOString() : null,
+            wanted_date: values.wanted_date ? values.wanted_date.startOf("day").format("YYYY-MM-DDTHH:mm:ss") : null,
             priority: values.priority as PublicPrintRequestPayload["priority"],
             other_filament_requested: Boolean(values.other_filament_requested),
             other_filament_description:
