@@ -138,7 +138,7 @@ def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
 
 
 @router.post("/login")
-async def login(body: api_models.PublicPrintRequestLoginRequest):
+async def login(request: Request, body: api_models.PublicPrintRequestLoginRequest):
     expected_password = env.get_print_request_public_password()
     if not expected_password:
         raise HTTPException(status_code=500, detail="Public print request password is not configured.")
@@ -147,11 +147,12 @@ async def login(body: api_models.PublicPrintRequestLoginRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     response = JSONResponse(content={"message": "OK"})
+    is_https_request = request.url.scheme == "https"
     response.set_cookie(
         key=COOKIE_NAME,
         value=_make_cookie_token(),
         httponly=True,
-        secure=not env.is_debug_mode(),
+        secure=is_https_request,
         samesite="lax",
         path="/",
     )
