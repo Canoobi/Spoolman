@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
     Alert,
+    Button,
     Divider,
     Space,
     Typography,
@@ -113,7 +114,22 @@ export function StatusPage() {
         >
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 {loading && <Alert type="info" showIcon message="Auftrag wird geladen ..." />}
-                {error && <Alert type="error" showIcon message={error} />}
+                {error && (
+                    <Alert
+                        type="error"
+                        showIcon
+                        message={error}
+                        action={
+                            error.includes("Nicht angemeldet") ? (
+                                <Link to="/">
+                                    <Button type="primary" size="small">
+                                        Zur Anmeldung
+                                    </Button>
+                                </Link>
+                            ) : undefined
+                        }
+                    />
+                )}
                 {saveSuccess && <Alert type="success" showIcon message={saveSuccess} />}
 
                 {!loading && request && (
