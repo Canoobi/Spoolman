@@ -5,7 +5,7 @@ import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 import {ErrorComponent} from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
-import {DollarCircleOutlined, HighlightOutlined, LinkOutlined, TableOutlined, ToolOutlined,} from "@ant-design/icons";
+import {DollarCircleOutlined, HighlightOutlined, LinkOutlined, ToolOutlined,} from "@ant-design/icons";
 import loadable from "@loadable/component";
 import routerBindings, {DocumentTitleHandler, UnsavedChangesNotifier} from "@refinedev/react-router";
 import {ConfigProvider} from "antd";
@@ -21,6 +21,7 @@ import SpoolmanNotificationProvider from "./components/notificationProvider";
 import {ColorModeContextProvider} from "./contexts/color-mode";
 import {languages} from "./i18n";
 import {getAPIURL, getBasePath} from "./utils/url";
+import {PrintRequestList, PrintRequestShow} from "./pages/print_requests";
 
 interface ResourcePageProps {
     resource: "spools" | "filaments" | "vendors" | "printers";
@@ -77,7 +78,7 @@ function App() {
             const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language);
             const locale = await import(
                 `./../node_modules/antd/es/locale/${languages[language].fullCode.replace("-", "_")}.js`
-            );
+                );
             setAntdLocale(locale.default);
         };
         fetchLocale().catch(console.error);
@@ -146,6 +147,15 @@ function App() {
                                     meta: {
                                         canDelete: true,
                                         icon: <HighlightOutlined/>,
+                                    },
+                                },
+                                {
+                                    name: "print-request",
+                                    list: "/print-request",
+                                    show: "/print-request/show/:id",
+                                    meta: {
+                                        label: "Druckaufträge",
+                                        icon: <img src="/order.png" width={12} height={15} alt="order"/>,
                                     },
                                 },
                                 {
@@ -284,6 +294,10 @@ function App() {
                                                element={<LoadableResourcePage resource="printers" page="edit"/>}/>
                                         <Route path="show/:id"
                                                element={<LoadableResourcePage resource="printers" page="show"/>}/>
+                                    </Route>
+                                    <Route path="/print-request">
+                                        <Route index element={<PrintRequestList/>}/>
+                                        <Route path="show/:id" element={<PrintRequestShow/>}/>
                                     </Route>
                                     <Route path="/settings/*" element={<LoadablePage name="settings"/>}/>
                                     <Route path="/costing" element={<LoadablePage name="costing"/>}/>

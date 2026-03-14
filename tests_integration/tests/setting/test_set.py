@@ -87,7 +87,7 @@ def test_set_currency_wrong_type():
 
 def test_set_big_value():
     """Test setting a setting to a long string which should be saved correctly."""
-    long_string = "a" * (2**16 - 1 - 2)  # Backend guarantees that it can handle strings up to 65535 characters long.
+    long_string = "a" * (2 ** 16 - 1 - 2)  # Backend guarantees that it can handle strings up to 65535 characters long.
     # Remove 2 characters to account for the quotes.
 
     # Execute

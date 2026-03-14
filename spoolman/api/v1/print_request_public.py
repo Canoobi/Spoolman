@@ -1,0 +1,242 @@
+import base64
+import hashlib
+import hmac
+import json
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from spoolman import env
+from spoolman.api.v1 import models as api_models
+from spoolman.database import models
+from spoolman.database import print_request as print_request_db
+from spoolman.database.database import get_db_session
+
+COOKIE_NAME = "spoolman_pr_session"
+
+router = APIRouter(prefix="/print-request/public", tags=["print-request-public"])
+
+
+def _b64u(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
+
+
+def _sign(secret: str, payload: str) -> str:
+    return _b64u(hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest())
+
+
+def _get_cookie_secret() -> str:
+    secret = env.get_print_request_cookie_secret()
+    if not secret:
+        raise RuntimeError("SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET is not configured.")
+    return secret
+
+
+def _make_cookie_token() -> str:
+    secret = _get_cookie_secret()
+    payload = _b64u(secrets.token_bytes(32))
+    signature = _sign(secret, payload)
+    return f"{payload}.{signature}"
+
+
+def _verify_cookie_token(token: str) -> bool:
+    try:
+        payload, signature = token.rsplit(".", 1)
+    except ValueError:
+        return False
+
+    expected = _sign(_get_cookie_secret(), payload)
+    return hmac.compare_digest(signature, expected)
+
+
+def require_public_session(request: Request) -> None:
+    token = request.cookies.get(COOKIE_NAME)
+    if not token or not _verify_cookie_token(token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+
+def _load_json_with_whitespace_escapes(raw_body: bytes):
+    try:
+        return json.loads(raw_body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        text_body = None
+
+        for encoding in ("utf-8", "cp1252", "latin-1"):
+            try:
+                text_body = raw_body.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+
+        if text_body is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There was an error parsing the body")
+
+        normalized_body = text_body.replace("\\r", "\r").replace("\\n", "\n").replace("\\t", "\t")
+
+        try:
+            return json.loads(normalized_body)
+        except json.JSONDecodeError as second_exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="There was an error parsing the body") from second_exc
+
+
+def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
+    vendor_name = None
+    material_name = None
+    filament_name = getattr(filament, "name", None)
+
+    vendor = getattr(filament, "vendor", None)
+    if vendor is not None:
+        vendor_name = getattr(vendor, "name", None)
+
+    material = getattr(filament, "material", None)
+    if isinstance(material, str):
+        material_name = material
+    elif material is not None:
+        material_name = getattr(material, "name", None)
+
+    display_parts = [part for part in [vendor_name, material_name, filament_name] if part]
+    display_name = " – ".join(display_parts) if display_parts else str(filament.id)
+
+    return api_models.PrintRequestFilamentInfo(
+        id=filament.id,
+        display_name=display_name,
+    )
+
+
+def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
+    return api_models.PublicPrintRequestResponse(
+        public_id=obj.public_id,
+        created_at=obj.created_at,
+        updated_at=obj.updated_at,
+        requester_name=obj.requester_name,
+        requester_contact=obj.requester_contact,
+        delivery_type=obj.delivery_type,
+        delivery_details=obj.delivery_details,
+        title=obj.title,
+        description=obj.description,
+        makerworld_url=obj.makerworld_url,
+        additional_links_text=obj.additional_links_text,
+        wanted_date=obj.wanted_date,
+        priority=obj.priority,
+        other_filament_requested=obj.other_filament_requested,
+        other_filament_description=obj.other_filament_description,
+        color_assignment=obj.color_assignment,
+        comment=obj.comment,
+        status=obj.status,
+        accepted_at=obj.accepted_at,
+        rejected_at=obj.rejected_at,
+        completed_at=obj.completed_at,
+        rejection_reason=obj.rejection_reason,
+        filaments=[_to_filament_info(item.filament) for item in obj.filaments],
+    )
+
+
+@router.post("/login")
+async def login(request: Request, body: api_models.PublicPrintRequestLoginRequest):
+    expected_password = env.get_print_request_public_password()
+    if not expected_password:
+        raise HTTPException(status_code=500, detail="Public print request password is not configured.")
+
+    if body.password.get_secret_value() != expected_password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    response = JSONResponse(content={"message": "OK"})
+    is_https_request = request.url.scheme == "https"
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=_make_cookie_token(),
+        httponly=True,
+        secure=is_https_request,
+        samesite="lax",
+        path="/",
+    )
+    return response
+
+
+@router.post("/logout")
+async def logout():
+    response = JSONResponse(content={"message": "OK"})
+    response.delete_cookie(key=COOKIE_NAME, path="/")
+    return response
+
+
+@router.get("/form-data")
+async def get_form_data(
+        _session: None = Depends(require_public_session),
+        db: AsyncSession = Depends(get_db_session),
+):
+    result = await db.execute(
+        select(models.Filament)
+        .options(
+            selectinload(models.Filament.vendor),
+        )
+        .order_by(models.Filament.id.asc())
+    )
+    filaments = list(result.unique().scalars().all())
+
+    return JSONResponse(
+        content=jsonable_encoder(
+            api_models.PublicPrintRequestFormDataResponse(
+                delivery_types=api_models.PRINT_REQUEST_DELIVERY_VALUES,
+                priorities=api_models.PRINT_REQUEST_PRIORITY_VALUES,
+                filaments=[_to_filament_info(f) for f in filaments],
+            )
+        )
+    )
+
+
+@router.post("/")
+async def create_print_request(
+        request: Request,
+        _session: None = Depends(require_public_session),
+        db: AsyncSession = Depends(get_db_session),
+):
+    payload = _load_json_with_whitespace_escapes(await request.body())
+    try:
+        body = api_models.PublicPrintRequestCreate.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
+    obj = await print_request_db.create_print_request(db, body)
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content=jsonable_encoder(_to_public_response(obj)),
+    )
+
+
+@router.get("/{public_id}")
+async def get_print_request(
+        public_id: str,
+        _session: None = Depends(require_public_session),
+        db: AsyncSession = Depends(get_db_session),
+):
+    obj = await print_request_db.get_print_request_by_public_id(db, public_id)
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
+
+
+@router.patch("/{public_id}")
+async def update_print_request(
+        public_id: str,
+        request: Request,
+        _session: None = Depends(require_public_session),
+        db: AsyncSession = Depends(get_db_session),
+):
+    payload = _load_json_with_whitespace_escapes(await request.body())
+    try:
+        body = api_models.PublicPrintRequestUpdate.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
+    try:
+        obj = await print_request_db.update_print_request_public(db, public_id, body)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))

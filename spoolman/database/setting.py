@@ -12,14 +12,14 @@ from spoolman.exceptions import ItemNotFoundError
 from spoolman.settings import SettingDefinition
 from spoolman.ws import websocket_manager
 
-SETTING_MAX_LENGTH = 2**16 - 1
+SETTING_MAX_LENGTH = 2 ** 16 - 1
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    definition: SettingDefinition,
-    value: str,
+        *,
+        db: AsyncSession,
+        definition: SettingDefinition,
+        value: str,
 ) -> None:
     """Set a setting in the database."""
     if len(value) > SETTING_MAX_LENGTH:

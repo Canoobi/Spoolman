@@ -17,7 +17,6 @@ router = APIRouter(
     tags=["other"],
 )
 
-# ruff: noqa: D103, B008
 
 
 @router.get(
@@ -41,8 +40,8 @@ router = APIRouter(
     },
 )
 async def find_materials(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> list[str]:
     return await filament.find_materials(db=db)
 
@@ -67,8 +66,8 @@ async def find_materials(
     },
 )
 async def find_article_numbers(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> list[str]:
     return await filament.find_article_numbers(db=db)
 
@@ -93,8 +92,8 @@ async def find_article_numbers(
     },
 )
 async def find_lot_numbers(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> list[str]:
     return await spool.find_lot_numbers(db=db)
 
@@ -120,8 +119,8 @@ async def find_lot_numbers(
     },
 )
 async def find_locations(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> list[str]:
     return await spool.find_locations(db=db)
 
@@ -138,10 +137,10 @@ class RenameLocationBody(BaseModel):
     response_model=RootModel[str],
 )
 async def rename_location(
-    location: str,
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: RenameLocationBody,
+        location: str,
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: RenameLocationBody,
 ) -> str:
     logger.info("Renaming location %s to %s", location, body.name)
     await spool.rename_location(db=db, current_name=location, new_name=body.name)

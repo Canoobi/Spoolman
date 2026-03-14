@@ -25,7 +25,6 @@ router = APIRouter(
     tags=["filament"],
 )
 
-# ruff: noqa: D103, B008
 
 
 class FilamentParameters(BaseModel):
@@ -189,9 +188,9 @@ class FilamentUpdateParameters(FilamentParameters):
     "",
     name="Find filaments",
     description=(
-        "Get a list of filaments that matches the search query. "
-        "A websocket is served on the same path to listen for updates to any filament, or added or deleted filaments. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a list of filaments that matches the search query. "
+            "A websocket is served on the same path to listen for updates to any filament, or added or deleted filaments. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={
@@ -200,125 +199,126 @@ class FilamentUpdateParameters(FilamentParameters):
     },
 )
 async def find(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    vendor_name_old: Annotated[
-        Optional[str],
-        Query(alias="vendor_name", title="Vendor Name", description="See vendor.name.", deprecated=True),
-    ] = None,
-    vendor_id_old: Annotated[
-        Optional[str],
-        Query(
-            alias="vendor_id",
-            title="Vendor ID",
-            description="See vendor.id.",
-            deprecated=True,
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    vendor_name: Annotated[
-        Optional[str],
-        Query(
-            alias="vendor.name",
-            title="Vendor Name",
-            description=(
-                "Partial case-insensitive search term for the filament vendor name. "
-                "Separate multiple terms with a comma. Specify an empty string to match filaments with no vendor name. "
-                "Surround a term with quotes to search for the exact term."
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        vendor_name_old: Annotated[
+            Optional[str],
+            Query(alias="vendor_name", title="Vendor Name", description="See vendor.name.", deprecated=True),
+        ] = None,
+        vendor_id_old: Annotated[
+            Optional[str],
+            Query(
+                alias="vendor_id",
+                title="Vendor ID",
+                description="See vendor.id.",
+                deprecated=True,
+                pattern=r"^-?\d+(,-?\d+)*$",
             ),
-        ),
-    ] = None,
-    vendor_id: Annotated[
-        Optional[str],
-        Query(
-            alias="vendor.id",
-            title="Vendor ID",
-            description=(
-                "Match an exact vendor ID. Separate multiple IDs with a comma. "
-                "Specify -1 to match filaments with no vendor."
+        ] = None,
+        vendor_name: Annotated[
+            Optional[str],
+            Query(
+                alias="vendor.name",
+                title="Vendor Name",
+                description=(
+                        "Partial case-insensitive search term for the filament vendor name. "
+                        "Separate multiple terms with a comma. Specify an empty string to match filaments with no vendor name. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-            pattern=r"^-?\d+(,-?\d+)*$",
-            examples=["1", "1,2"],
-        ),
-    ] = None,
-    name: Annotated[
-        Optional[str],
-        Query(
-            title="Filament Name",
-            description=(
-                "Partial case-insensitive search term for the filament name. Separate multiple terms with a comma. "
-                "Specify an empty string to match filaments with no name. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        vendor_id: Annotated[
+            Optional[str],
+            Query(
+                alias="vendor.id",
+                title="Vendor ID",
+                description=(
+                        "Match an exact vendor ID. Separate multiple IDs with a comma. "
+                        "Specify -1 to match filaments with no vendor."
+                ),
+                pattern=r"^-?\d+(,-?\d+)*$",
+                examples=["1", "1,2"],
             ),
-        ),
-    ] = None,
-    material: Annotated[
-        Optional[str],
-        Query(
-            title="Filament Material",
-            description=(
-                "Partial case-insensitive search term for the filament material. Separate multiple terms with a comma. "
-                "Specify an empty string to match filaments with no material. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        name: Annotated[
+            Optional[str],
+            Query(
+                title="Filament Name",
+                description=(
+                        "Partial case-insensitive search term for the filament name. Separate multiple terms with a comma. "
+                        "Specify an empty string to match filaments with no name. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    article_number: Annotated[
-        Optional[str],
-        Query(
-            title="Filament Article Number",
-            description=(
-                "Partial case-insensitive search term for the filament article number. "
-                "Separate multiple terms with a comma. "
-                "Specify an empty string to match filaments with no article number. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        material: Annotated[
+            Optional[str],
+            Query(
+                title="Filament Material",
+                description=(
+                        "Partial case-insensitive search term for the filament material. Separate multiple terms with a comma. "
+                        "Specify an empty string to match filaments with no material. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    color_hex: Annotated[
-        Optional[str],
-        Query(
-            title="Filament Color",
-            description="Match filament by similar color. Slow operation!",
-        ),
-    ] = None,
-    color_similarity_threshold: Annotated[
-        float,
-        Query(
-            description=(
-                "The similarity threshold for color matching. "
-                "A value between 0.0-100.0, where 0 means match only exactly the same color."
+        ] = None,
+        article_number: Annotated[
+            Optional[str],
+            Query(
+                title="Filament Article Number",
+                description=(
+                        "Partial case-insensitive search term for the filament article number. "
+                        "Separate multiple terms with a comma. "
+                        "Specify an empty string to match filaments with no article number. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-            example=20.0,
-        ),
-    ] = 20.0,
-    external_id: Annotated[
-        Optional[str],
-        Query(
-            description=(
-                "Find filaments imported by the given external ID. "
-                "Separate multiple IDs with a comma. "
-                "Specify empty string to match filaments with no external ID. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        color_hex: Annotated[
+            Optional[str],
+            Query(
+                title="Filament Color",
+                description="Match filament by similar color. Slow operation!",
             ),
-            example="polymaker_pla_polysonicblack_1000_175",
-        ),
-    ] = None,
-    sort: Annotated[
-        Optional[str],
-        Query(
-            title="Sort",
-            description=(
-                'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+        ] = None,
+        color_similarity_threshold: Annotated[
+            float,
+            Query(
+                description=(
+                        "The similarity threshold for color matching. "
+                        "A value between 0.0-100.0, where 0 means match only exactly the same color."
+                ),
+                example=20.0,
             ),
-            example="vendor.name:asc,spool_weight:desc",
-        ),
-    ] = None,
-    limit: Annotated[
-        Optional[int],
-        Query(title="Limit", description="Maximum number of items in the response."),
-    ] = None,
-    offset: Annotated[int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
+        ] = 20.0,
+        external_id: Annotated[
+            Optional[str],
+            Query(
+                description=(
+                        "Find filaments imported by the given external ID. "
+                        "Separate multiple IDs with a comma. "
+                        "Specify empty string to match filaments with no external ID. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
+                example="polymaker_pla_polysonicblack_1000_175",
+            ),
+        ] = None,
+        sort: Annotated[
+            Optional[str],
+            Query(
+                title="Sort",
+                description=(
+                        'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+                ),
+                example="vendor.name:asc,spool_weight:desc",
+            ),
+        ] = None,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit", description="Maximum number of items in the response."),
+        ] = None,
+        offset: Annotated[
+            int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
 ) -> JSONResponse:
     sort_by: dict[str, SortOrder] = {}
     if sort is not None:
@@ -371,7 +371,7 @@ async def find(
     name="Listen to filament changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("filament",), websocket)
@@ -388,15 +388,15 @@ async def notify_any(
     "/{filament_id}",
     name="Get filament",
     description=(
-        "Get a specific filament. A websocket is served on the same path to listen for changes to the filament. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific filament. A websocket is served on the same path to listen for changes to the filament. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={404: {"model": Message}, 299: {"model": FilamentEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    filament_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        filament_id: int,
 ) -> Filament:
     db_item = await filament.get_by_id(db, filament_id)
     return Filament.from_db(db_item)
@@ -407,8 +407,8 @@ async def get(
     name="Listen to filament changes",
 )
 async def notify(
-    websocket: WebSocket,
-    filament_id: int,
+        websocket: WebSocket,
+        filament_id: int,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("filament", str(filament_id)), websocket)
@@ -430,8 +430,8 @@ async def notify(
     responses={400: {"model": Message}},
 )
 async def create(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: FilamentParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: FilamentParameters,
 ):
     if body.extra:
         all_fields = await get_extra_fields(db, EntityType.filament)
@@ -468,8 +468,8 @@ async def create(  # noqa: ANN201
     "/{filament_id}",
     name="Update filament",
     description=(
-        "Update any attribute of a filament. Only fields specified in the request will be affected. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+            "Update any attribute of a filament. Only fields specified in the request will be affected. "
+            "If extra is set, all existing extra fields will be removed and replaced with the new ones."
     ),
     response_model_exclude_none=True,
     response_model=Filament,
@@ -479,9 +479,9 @@ async def create(  # noqa: ANN201
     },
 )
 async def update(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    filament_id: int,
-    body: FilamentUpdateParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        filament_id: int,
+        body: FilamentUpdateParameters,
 ):
     patch_data = body.model_dump(exclude_unset=True)
 
@@ -512,8 +512,8 @@ async def update(  # noqa: ANN201
     },
 )
 async def delete(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    filament_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        filament_id: int,
 ):
     try:
         await filament.delete(db, filament_id)

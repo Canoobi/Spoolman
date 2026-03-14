@@ -56,12 +56,12 @@ jobs:
         uses: actions/setup-python@v5.2.0
         with:
           python-version: "3.9"
-    
+
       - name: Export requirements
         run: |
           pip install pdm
           pdm export -o requirements.txt --without-hashes
-    
+
       - name: Install client dependencies
         run: |
           cd client
@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "GIT_COMMIT=$(git rev-parse --short HEAD)" > build.txt
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> build.txt
-  
+
       # Remove client source and keep only the built dist
       - name: Clean
         run: |
@@ -91,7 +91,7 @@ jobs:
       - name: Fix permissions
         run: |
           chmod +x scripts/*.sh
-      
+
       - name: Upload client Spoolman artifact
         uses: actions/upload-artifact@v4.4.0
         with:
@@ -108,7 +108,7 @@ jobs:
   # Build native image for integration tests
   #
   build-amd64:
-    needs: [build-client]
+    needs: [ build-client ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -207,10 +207,10 @@ jobs:
   # Perform integration tests
   #
   test:
-    needs: [build-amd64, build-tester]
+    needs: [ build-amd64, build-tester ]
     strategy:
       matrix:
-        dbtype: ["postgres", "sqlite", "mariadb", "cockroachdb"]
+        dbtype: [ "postgres", "sqlite", "mariadb", "cockroachdb" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -240,7 +240,7 @@ jobs:
   #
   build-arm64:
     if: ${{ github.event_name != 'pull_request' }}
-    needs: [build-client]
+    needs: [ build-client ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -281,7 +281,7 @@ jobs:
   #
   build-armv7:
     if: ${{ github.event_name != 'pull_request' }}
-    needs: [build-client]
+    needs: [ build-client ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -321,7 +321,7 @@ jobs:
   #
   publish-images:
     if: ${{ github.event_name != 'pull_request' }}
-    needs: [test, build-amd64, build-arm64, build-armv7, style, build-client]
+    needs: [ test, build-amd64, build-arm64, build-armv7, style, build-client ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -378,7 +378,7 @@ jobs:
           registry: ${{ vars.REMOTE_REGISTRY_URL }}
           username: ${{ secrets.REMOTE_REGISTRY_USERNAME }}
           password: ${{ secrets.REMOTE_REGISTRY_PASSWORD }}
-    
+
       - name: Store git commit and build date
         run: |
           echo "GIT_COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
@@ -406,7 +406,7 @@ jobs:
   #
   publish-release:
     if: ${{ (github.event_name != 'pull_request') && startsWith(github.event.ref, 'refs/tags/v') }}
-    needs: [publish-images]
+    needs: [ publish-images ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -416,7 +416,7 @@ jobs:
         with:
           name: spoolman
           path: /tmp/spoolman
-      
+
       - name: Generate release info
         run: |
           cd /tmp/spoolman

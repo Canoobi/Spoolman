@@ -14,8 +14,8 @@ from spoolman import env
 from spoolman.database.database import backup_global_db
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.ws import websocket_manager
-
-from . import cost, export, externaldb, field, filament, models, other, printer, setting, spool, vendor
+from . import cost, export, externaldb, field, filament, models, other, print_request, print_request_public, printer, \
+    setting, spool, vendor
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ async def backup():  # noqa: ANN201
     name="Listen to any changes",
 )
 async def notify(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect((), websocket)
@@ -114,3 +114,5 @@ app.include_router(field.router)
 app.include_router(other.router)
 app.include_router(externaldb.router)
 app.include_router(export.router)
+app.include_router(print_request.router)
+app.include_router(print_request_public.router)

@@ -64,9 +64,9 @@ def _parse_int_csv(value: Optional[str]) -> Optional[list[int]]:
     "",
     name="Find cost calculations",
     description=(
-        "Get a list of cost calculations. "
-        "A websocket is served on the same path to listen for updates to any cost entry, or added or deleted entries. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a list of cost calculations. "
+            "A websocket is served on the same path to listen for updates to any cost entry, or added or deleted entries. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={
@@ -75,40 +75,41 @@ def _parse_int_csv(value: Optional[str]) -> Optional[list[int]]:
     },
 )
 async def find(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    printer_id: Annotated[
-        Optional[str],
-        Query(
-            title="Printer ID",
-            description="Match an exact printer ID. Separate multiple IDs with a comma. Set it to -1 to match empty.",
-            examples=["1", "1,2"],
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    filament_id: Annotated[
-        Optional[str],
-        Query(
-            title="Filament ID",
-            description="Match an exact filament ID. Separate multiple IDs with a comma. Set it to -1 to match empty.",
-            examples=["1", "1,2"],
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    sort: Annotated[
-        Optional[str],
-        Query(
-            title="Sort",
-            description=(
-                'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        printer_id: Annotated[
+            Optional[str],
+            Query(
+                title="Printer ID",
+                description="Match an exact printer ID. Separate multiple IDs with a comma. Set it to -1 to match empty.",
+                examples=["1", "1,2"],
+                pattern=r"^-?\d+(,-?\d+)*$",
             ),
-            example="created:desc,id:desc",
-        ),
-    ] = None,
-    limit: Annotated[
-        Optional[int],
-        Query(title="Limit", description="Maximum number of items in the response."),
-    ] = None,
-    offset: Annotated[int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
+        ] = None,
+        filament_id: Annotated[
+            Optional[str],
+            Query(
+                title="Filament ID",
+                description="Match an exact filament ID. Separate multiple IDs with a comma. Set it to -1 to match empty.",
+                examples=["1", "1,2"],
+                pattern=r"^-?\d+(,-?\d+)*$",
+            ),
+        ] = None,
+        sort: Annotated[
+            Optional[str],
+            Query(
+                title="Sort",
+                description=(
+                        'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+                ),
+                example="created:desc,id:desc",
+            ),
+        ] = None,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit", description="Maximum number of items in the response."),
+        ] = None,
+        offset: Annotated[
+            int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
 ) -> JSONResponse:
     sort_by: dict[str, SortOrder] = {}
     if sort is not None:
@@ -146,7 +147,7 @@ async def find(
     name="Listen to cost changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("cost",), websocket)
@@ -163,15 +164,15 @@ async def notify_any(
     "/{calculation_id}",
     name="Get cost calculation",
     description=(
-        "Get a specific cost calculation. A websocket is served on the same path to listen for changes to the entry. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific cost calculation. A websocket is served on the same path to listen for changes to the entry. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={299: {"model": CostEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    calculation_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        calculation_id: int,
 ) -> JSONResponse:
     try:
         db_item = await cost_db.get_by_id(db, calculation_id)
@@ -190,8 +191,8 @@ async def get(
     name="Listen to cost calculation changes",
 )
 async def notify(
-    websocket: WebSocket,
-    calculation_id: str,
+        websocket: WebSocket,
+        calculation_id: str,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("cost", str(calculation_id)), websocket)
@@ -212,8 +213,8 @@ async def notify(
     responses={201: {"model": CostCalculation}, 400: {"model": Message}},
 )
 async def create(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: CostCalculationParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: CostCalculationParameters,
 ) -> JSONResponse:
     try:
         calculation = await cost_db.create(
@@ -259,9 +260,9 @@ async def create(
     responses={404: {"model": Message}},
 )
 async def update(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    calculation_id: int,
-    body: CostCalculationUpdateParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        calculation_id: int,
+        body: CostCalculationUpdateParameters,
 ) -> JSONResponse:
     try:
         calculation = await cost_db.update(
@@ -306,8 +307,8 @@ async def update(
     responses={404: {"model": Message}},
 )
 async def delete(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    calculation_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        calculation_id: int,
 ) -> JSONResponse:
     try:
         await cost_db.delete(db, calculation_id)

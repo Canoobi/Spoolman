@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 async def create(
-    *,
-    db: AsyncSession,
-    name: str,
-    power_watts: Optional[float] = None,
-    depreciation_cost_per_hour: Optional[float] = None,
-    comment: Optional[str] = None,
+        *,
+        db: AsyncSession,
+        name: str,
+        power_watts: Optional[float] = None,
+        depreciation_cost_per_hour: Optional[float] = None,
+        comment: Optional[str] = None,
 ) -> models.Printer:
     """Add a new printer to the database."""
     printer = models.Printer(
@@ -54,12 +54,12 @@ async def get_by_id(db: AsyncSession, printer_id: int) -> models.Printer:
 
 
 async def find(
-    *,
-    db: AsyncSession,
-    name: Optional[str] = None,
-    sort_by: Optional[dict[str, SortOrder]] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
+        *,
+        db: AsyncSession,
+        name: Optional[str] = None,
+        sort_by: Optional[dict[str, SortOrder]] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
 ) -> tuple[list[models.Printer], int]:
     """Find a list of printer objects by search criteria."""
     stmt = sqlalchemy.select(models.Printer)
@@ -90,13 +90,13 @@ async def find(
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    printer_id: int,
-    name: Optional[str] = None,
-    power_watts: Optional[float] = None,
-    depreciation_cost_per_hour: Optional[float] = None,
-    comment: Optional[str] = None,
+        *,
+        db: AsyncSession,
+        printer_id: int,
+        name: Optional[str] = None,
+        power_watts: Optional[float] = None,
+        depreciation_cost_per_hour: Optional[float] = None,
+        comment: Optional[str] = None,
 ) -> models.Printer:
     """Update a printer."""
     printer = await get_by_id(db, printer_id)

@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
     response_model_exclude_none=True,
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
 ) -> list[ExtraField]:
     return await get_extra_fields(db, entity_type)
 
@@ -46,18 +46,18 @@ async def get(
     "/{entity_type}/{key}",
     name="Add or update extra field",
     description=(
-        "Add or update an extra field for a specific entity type. "
-        "Returns the full list of extra fields for the entity type."
+            "Add or update an extra field for a specific entity type. "
+            "Returns the full list of extra fields for the entity type."
     ),
     response_model_exclude_none=True,
     response_model=list[ExtraField],
     responses={400: {"model": Message}},
 )
 async def update(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
-    key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
-    body: ExtraFieldParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
+        key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
+        body: ExtraFieldParameters,
 ) -> Union[list[ExtraField], JSONResponse]:
     dict_body = body.model_dump()
     dict_body["key"] = key
@@ -76,17 +76,17 @@ async def update(
     "/{entity_type}/{key}",
     name="Delete extra field",
     description=(
-        "Delete an extra field for a specific entity type. "
-        "Returns the full list of extra fields for the entity type."
+            "Delete an extra field for a specific entity type. "
+            "Returns the full list of extra fields for the entity type."
     ),
     response_model_exclude_none=True,
     response_model=list[ExtraField],
     responses={404: {"model": Message}},
 )
 async def delete(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
-    key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
+        key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
 ) -> Union[list[ExtraField], JSONResponse]:
     try:
         await delete_extra_field(db, entity_type, key)

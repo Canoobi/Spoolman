@@ -83,7 +83,7 @@ def test_use_spool_length(random_filament: dict[str, Any], use_length: float):
     # Verify
     spool = result.json()
     use_weight = (
-        random_filament["density"] * (use_length * 1e-1) * math.pi * ((random_filament["diameter"] * 1e-1 / 2) ** 2)
+            random_filament["density"] * (use_length * 1e-1) * math.pi * ((random_filament["diameter"] * 1e-1 / 2) ** 2)
     )
     # remaining_weight should be clamped so it's never negative, but used_weight should not be clamped to the net weight
     assert spool["used_weight"] == pytest.approx(max(use_weight, 0))

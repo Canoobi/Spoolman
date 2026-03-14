@@ -27,25 +27,25 @@ from spoolman.ws import websocket_manager
 
 
 async def create(
-    *,
-    db: AsyncSession,
-    density: float,
-    diameter: float,
-    name: Optional[str] = None,
-    vendor_id: Optional[int] = None,
-    material: Optional[str] = None,
-    price: Optional[float] = None,
-    weight: Optional[float] = None,
-    spool_weight: Optional[float] = None,
-    article_number: Optional[str] = None,
-    comment: Optional[str] = None,
-    settings_extruder_temp: Optional[int] = None,
-    settings_bed_temp: Optional[int] = None,
-    color_hex: Optional[str] = None,
-    multi_color_hexes: Optional[str] = None,
-    multi_color_direction: Optional[MultiColorDirection] = None,
-    external_id: Optional[str] = None,
-    extra: Optional[dict[str, str]] = None,
+        *,
+        db: AsyncSession,
+        density: float,
+        diameter: float,
+        name: Optional[str] = None,
+        vendor_id: Optional[int] = None,
+        material: Optional[str] = None,
+        price: Optional[float] = None,
+        weight: Optional[float] = None,
+        spool_weight: Optional[float] = None,
+        article_number: Optional[str] = None,
+        comment: Optional[str] = None,
+        settings_extruder_temp: Optional[int] = None,
+        settings_bed_temp: Optional[int] = None,
+        color_hex: Optional[str] = None,
+        multi_color_hexes: Optional[str] = None,
+        multi_color_direction: Optional[MultiColorDirection] = None,
+        external_id: Optional[str] = None,
+        extra: Optional[dict[str, str]] = None,
 ) -> models.Filament:
     """Add a new filament to the database."""
     vendor_item: Optional[models.Vendor] = None
@@ -94,18 +94,18 @@ async def get_by_id(db: AsyncSession, filament_id: int) -> models.Filament:
 
 
 async def find(
-    *,
-    db: AsyncSession,
-    ids: Optional[list[int]] = None,
-    vendor_name: Optional[str] = None,
-    vendor_id: Optional[Union[int, Sequence[int]]] = None,
-    name: Optional[str] = None,
-    material: Optional[str] = None,
-    article_number: Optional[str] = None,
-    external_id: Optional[str] = None,
-    sort_by: Optional[dict[str, SortOrder]] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
+        *,
+        db: AsyncSession,
+        ids: Optional[list[int]] = None,
+        vendor_name: Optional[str] = None,
+        vendor_id: Optional[Union[int, Sequence[int]]] = None,
+        name: Optional[str] = None,
+        material: Optional[str] = None,
+        article_number: Optional[str] = None,
+        external_id: Optional[str] = None,
+        sort_by: Optional[dict[str, SortOrder]] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
 ) -> tuple[list[models.Filament], int]:
     """Find a list of filament objects by search criteria.
 
@@ -156,10 +156,10 @@ async def find(
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    filament_id: int,
-    data: dict,
+        *,
+        db: AsyncSession,
+        filament_id: int,
+        data: dict,
 ) -> models.Filament:
     """Update the fields of a filament object."""
     filament = await get_by_id(db, filament_id)
@@ -203,8 +203,8 @@ logger = logging.getLogger(__name__)
 
 
 async def find_materials(
-    *,
-    db: AsyncSession,
+        *,
+        db: AsyncSession,
 ) -> list[str]:
     """Find a list of filament materials by searching for distinct values in the filament table."""
     stmt = select(models.Filament.material).distinct()
@@ -213,8 +213,8 @@ async def find_materials(
 
 
 async def find_article_numbers(
-    *,
-    db: AsyncSession,
+        *,
+        db: AsyncSession,
 ) -> list[str]:
     """Find a list of filament article numbers by searching for distinct values in the filament table."""
     stmt = select(models.Filament.article_number).distinct()
@@ -223,10 +223,10 @@ async def find_article_numbers(
 
 
 async def find_by_color(
-    *,
-    db: AsyncSession,
-    color_query_hex: str,
-    similarity_threshold: float = 25,
+        *,
+        db: AsyncSession,
+        color_query_hex: str,
+        similarity_threshold: float = 25,
 ) -> list[models.Filament]:
     """Find a list of filament objects by similarity to a color.
 

@@ -18,9 +18,9 @@ class Fixture:
 
 @pytest.fixture(scope="module")
 def spools(
-    random_filament_mod: dict[str, Any],
-    random_empty_filament_mod: dict[str, Any],
-    random_empty_filament_empty_vendor_mod: dict[str, Any],
+        random_filament_mod: dict[str, Any],
+        random_empty_filament_mod: dict[str, Any],
+        random_empty_filament_empty_vendor_mod: dict[str, Any],
 ) -> Iterable[Fixture]:
     """Add some spools to the database."""
     result = httpx.post(

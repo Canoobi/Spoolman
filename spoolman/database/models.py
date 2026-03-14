@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -157,3 +157,69 @@ class CostCalculation(Base):
     currency: Mapped[Optional[str]] = mapped_column(String(8))
     item_names: Mapped[Optional[str]] = mapped_column(String(512))
     notes: Mapped[Optional[str]] = mapped_column(String(1024))
+
+
+class PrintRequest(Base):
+    __tablename__ = "print_request"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    public_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    requester_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    requester_contact: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+
+    delivery_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    delivery_details: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    makerworld_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    additional_links_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    wanted_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    priority: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+
+    other_filament_requested: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    other_filament_description: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+
+    color_assignment: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    rejected_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    internal_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    filaments: Mapped[list["PrintRequestFilament"]] = relationship(
+        "PrintRequestFilament",
+        back_populates="request",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class PrintRequestFilament(Base):
+    __tablename__ = "print_request_filament"
+
+    request_id: Mapped[int] = mapped_column(
+        ForeignKey("print_request.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    filament_id: Mapped[int] = mapped_column(
+        ForeignKey("filament.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+    request: Mapped["PrintRequest"] = relationship("PrintRequest", back_populates="filaments")
+    filament: Mapped["Filament"] = relationship("Filament", lazy="joined")

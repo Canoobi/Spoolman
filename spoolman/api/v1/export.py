@@ -31,11 +31,10 @@ class ExportFormat(Enum):
     description="Export the list of spools in various formats. Filament and vendor data is included.",
 )
 async def export_spools(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    fmt: ExportFormat,
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        fmt: ExportFormat,
 ) -> Response:
-
     all_spools, _ = await spool.find(db=db)
     return await _export(all_spools, fmt)
 
@@ -46,9 +45,9 @@ async def export_spools(
     description="Export the list of filaments in various formats. Vendor data is included.",
 )
 async def export_filaments(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    fmt: ExportFormat,
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        fmt: ExportFormat,
 ) -> Response:
     all_filaments, _ = await filament.find(db=db)
     return await _export(all_filaments, fmt)
@@ -60,9 +59,9 @@ async def export_filaments(
     description="Export the list of vendors in various formats.",
 )
 async def export_vendors(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    fmt: ExportFormat,
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        fmt: ExportFormat,
 ) -> Response:
     all_vendors, _ = await vendor.find(db=db)
     return await _export(all_vendors, fmt)

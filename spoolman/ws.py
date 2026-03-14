@@ -48,8 +48,8 @@ class SubscriptionTree:
         # Broadcast to all subscribers on this level
         for websocket in self.subscribers:
             if (
-                websocket.client_state == WebSocketState.DISCONNECTED  # noqa: PLR1714
-                or websocket.application_state == WebSocketState.DISCONNECTED
+                    websocket.client_state == WebSocketState.DISCONNECTED  # noqa: PLR1714
+                    or websocket.application_state == WebSocketState.DISCONNECTED
             ):
                 # A bad disconnection may have occurred
                 self.remove(path, websocket)
@@ -59,8 +59,8 @@ class SubscriptionTree:
                     ",".join(path),
                 )
             elif (
-                websocket.client_state == WebSocketState.CONNECTED
-                and websocket.application_state == WebSocketState.CONNECTED
+                    websocket.client_state == WebSocketState.CONNECTED
+                    and websocket.application_state == WebSocketState.CONNECTED
             ):
                 await websocket.send_text(evt.json())
 

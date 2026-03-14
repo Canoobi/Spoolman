@@ -66,9 +66,9 @@ class Database:
     def is_file_based_sqlite(self) -> bool:
         """Return True if the database is file based."""
         return (
-            self.connection_url.drivername[:6] == "sqlite"
-            and self.connection_url.database is not None
-            and self.connection_url.database != ":memory:"
+                self.connection_url.drivername[:6] == "sqlite"
+                and self.connection_url.database is not None
+                and self.connection_url.database != ":memory:"
         )
 
     def connect(self) -> None:
@@ -111,9 +111,9 @@ class Database:
         logger.info("Backup complete.")
 
     def backup_and_rotate(
-        self,
-        backup_folder: Union[str, PathLike[str]],
-        num_backups: int = 5,
+            self,
+            backup_folder: Union[str, PathLike[str]],
+            num_backups: int = 5,
     ) -> Optional[Path]:
         """Backup the database and rotate existing backups.
 
