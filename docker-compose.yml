@@ -14,6 +14,8 @@ services:
       - 30168:8000
     environment:
       - TZ=Europe/Berlin
+      - SPOOLMAN_PRINT_REQUEST_PASSWORD=${SPOOLMAN_PRINT_REQUEST_PASSWORD}
+      - SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET=${SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET}
     container_name: Spoolman
 
   public-print-request:
