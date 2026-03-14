@@ -247,6 +247,15 @@ export const PrintRequestShow: React.FC = () => {
                                 <Descriptions.Item label="Public ID">
                                     {record.public_id}
                                 </Descriptions.Item>
+                                <Descriptions.Item label="Tracking-Link">
+                                    <a
+                                        href={`https://canoob.de/request/status/${record.public_id}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        https://canoob.de/request/status/{record.public_id}
+                                    </a>
+                                </Descriptions.Item>
                             </Descriptions>
                         </Card>
 
