@@ -543,6 +543,15 @@
       "base_price": "Basis gesamt",
       "uplifted_price": "Angepasster Gesamtpreis",
       "final_price": "Endpreis"
+    },
+    "print_request_notes": {
+      "description": "Beschreibung",
+      "delivery_date": "Lieferdatum",
+      "makerworld_link": "MakerWorld Link",
+      "additional_links": "Weitere Links",
+      "filaments": "Filamente",
+      "color_assignment": "Farbzuweisung",
+      "comment": "Kommentar"
     }
   }
 }
