@@ -406,6 +406,15 @@
       "base_price": "Base total",
       "uplifted_price": "Adjusted total",
       "final_price": "Final price"
+    },
+    "print_request_notes": {
+      "description": "Description",
+      "delivery_date": "Requested date",
+      "makerworld_link": "MakerWorld link",
+      "additional_links": "Additional links",
+      "filaments": "Filaments",
+      "color_assignment": "Color assignment",
+      "comment": "Comment"
     }
   },
   "home": {

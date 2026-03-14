@@ -1,12 +1,14 @@
 import dayjs from "dayjs";
 import type { PrintRequestRecord } from "../types/printRequest";
 
+type Translate = (key: string) => string;
+
 function formatDate(value?: string | null): string {
     if (!value) return "—";
     return dayjs(value).format("DD.MM.YYYY");
 }
 
-export function buildCostingNotesFromPrintRequest(record: PrintRequestRecord): string {
+export function buildCostingNotesFromPrintRequest(record: PrintRequestRecord, t: Translate): string {
     const filaments =
         record.filaments && record.filaments.length > 0
             ? record.filaments.map((f) => f.display_name).join(", ")
@@ -14,31 +16,31 @@ export function buildCostingNotesFromPrintRequest(record: PrintRequestRecord): s
 
     const sections = [
         {
-            label: "Beschreibung",
+            label: t("cost.print_request_notes.description"),
             value: record.description || "—",
         },
         {
-            label: "Lieferdatum",
+            label: t("cost.print_request_notes.delivery_date"),
             value: formatDate(record.wanted_date),
         },
         {
-            label: "MakerWorld Link",
+            label: t("cost.print_request_notes.makerworld_link"),
             value: record.makerworld_url || "—",
         },
         {
-            label: "Weitere Links",
+            label: t("cost.print_request_notes.additional_links"),
             value: record.additional_links_text || "—",
         },
         {
-            label: "Filamente",
+            label: t("cost.print_request_notes.filaments"),
             value: filaments,
         },
         {
-            label: "Farbzuweisung",
+            label: t("cost.print_request_notes.color_assignment"),
             value: record.color_assignment || "—",
         },
         {
-            label: "Kommentar",
+            label: t("cost.print_request_notes.comment"),
             value: record.comment || "—",
         },
     ];

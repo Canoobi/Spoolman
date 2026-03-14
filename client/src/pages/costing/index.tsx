@@ -338,9 +338,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
         form.setFieldsValue({
             item_names: printRequest.title,
-            notes: buildCostingNotesFromPrintRequest(printRequest),
+            notes: buildCostingNotesFromPrintRequest(printRequest, t),
         });
-    }, [printRequest, form]);
+    }, [printRequest, form, t]);
 
     useEffect(() => {
         if (settings.data) {
