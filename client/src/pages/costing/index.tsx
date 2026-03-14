@@ -1,5 +1,9 @@
 import {DeleteOutlined, EditOutlined, FilePdfOutlined, PlusOutlined} from "@ant-design/icons";
 import {List, useSelect, useTable} from "@refinedev/antd";
+import { useSearchParams } from "react-router-dom";
+import { useOne } from "@refinedev/core";
+import type { PrintRequestRecord } from "../../types/printRequest";
+import { buildCostingNotesFromPrintRequest } from "../../utils/printRequestToCosting";
 import {
     CrudFilter,
     CrudFilters,
@@ -94,7 +98,20 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const currencySymbol = useMemo(() => getCurrencySymbol(undefined, currency), [currency]);
     const formatter = useCurrencyFormatter();
 
-    const [form] = Form.useForm();
+    const [searchParams] = useSearchParams();
+    const printRequestId = searchParams.get("print_request_id");
+
+    const { data: printRequestData } = useOne<PrintRequestRecord>({
+        resource: "print-request",
+        id: printRequestId ?? "",
+        queryOptions: {
+            enabled: !!printRequestId,
+        },
+    });
+
+    const printRequest = printRequestData?.data;
+
+    const [form] = Form.useForm<CostFormValues>();
     const [message, setMessage] = useState<string | null>(null);
     const [editingCalculation, setEditingCalculation] = useState<ICostCalculation | null>(null);
     const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
@@ -315,6 +332,15 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             printHandler();
         }
     }, [exportData, printHandler]);
+
+    useEffect(() => {
+        if (!printRequest) return;
+
+        form.setFieldsValue({
+            item_names: printRequest.title,
+            notes: buildCostingNotesFromPrintRequest(printRequest),
+        });
+    }, [printRequest, form]);
 
     useEffect(() => {
         if (settings.data) {

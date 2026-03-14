@@ -1,46 +1,22 @@
-import React, { useMemo, useState } from "react";
-import {
-    Show,
-    useForm,
-} from "@refinedev/antd";
-import { useShow, HttpError } from "@refinedev/core";
-import { useCustomMutation, useInvalidate } from "@refinedev/core";
-import {
-    Alert,
-    Button,
-    Card,
-    Descriptions,
-    Form,
-    Input,
-    message,
-    Modal,
-    Select,
-    Space,
-    Typography,
-} from "antd";
-import type {
-    PrintRequestInternalPatch,
-    PrintRequestRecord,
-} from "../../types/printRequest";
-import { PRINT_REQUEST_STATUSES } from "../../types/printRequest";
-import {
-    formatDate,
-    formatDateTime,
-    renderMultilineText,
-    renderPrintRequestStatus,
-} from "../../utils/printRequest";
+import React, {useMemo, useState} from "react";
+import {Show, useForm,} from "@refinedev/antd";
+import {HttpError, useCustomMutation, useInvalidate, useShow} from "@refinedev/core";
+import {Alert, Button, Card, Descriptions, Form, Input, message, Modal, Select, Space, Typography,} from "antd";
+import type {PrintRequestInternalPatch, PrintRequestRecord,} from "../../types/printRequest";
+import {PRINT_REQUEST_STATUSES} from "../../types/printRequest";
+import {formatDate, formatDateTime, renderMultilineText, renderPrintRequestStatus,} from "../../utils/printRequest";
 
-const { TextArea } = Input;
+const {TextArea} = Input;
 
 export const PrintRequestShow: React.FC = () => {
-    const { queryResult } = useShow<PrintRequestRecord>({
+    const {query} = useShow<PrintRequestRecord>({
         resource: "print-request",
     });
 
-    const record = queryResult?.data?.data;
+    const record = query?.data?.data;
     const invalidate = useInvalidate();
 
-    const { mutate: customMutate, isLoading: customLoading } = useCustomMutation();
+    const {mutate: customMutate, isLoading: customLoading} = useCustomMutation();
 
     const [rejectOpen, setRejectOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState("");
@@ -59,7 +35,7 @@ export const PrintRequestShow: React.FC = () => {
         },
         onMutationSuccess: async () => {
             message.success("Änderungen gespeichert.");
-            await queryResult?.refetch();
+            await query?.refetch();
             await invalidate({
                 resource: "print-request",
                 invalidates: ["list", "detail"],
@@ -85,7 +61,7 @@ export const PrintRequestShow: React.FC = () => {
             {
                 onSuccess: async () => {
                     message.success("Auftrag angenommen.");
-                    await queryResult?.refetch();
+                    await query?.refetch();
                     await invalidate({
                         resource: "print-request",
                         invalidates: ["list", "detail"],
@@ -114,7 +90,7 @@ export const PrintRequestShow: React.FC = () => {
                     message.success("Auftrag abgelehnt.");
                     setRejectOpen(false);
                     setRejectionReason("");
-                    await queryResult?.refetch();
+                    await query?.refetch();
                     await invalidate({
                         resource: "print-request",
                         invalidates: ["list", "detail"],
@@ -130,14 +106,24 @@ export const PrintRequestShow: React.FC = () => {
     return (
         <>
             <Show
-                isLoading={queryResult?.isLoading}
+                isLoading={query?.isLoading}
                 title="Druckauftrag"
                 headerButtons={() => (
                     <Space>
+                        {record && (
+                            <Button
+                                type="primary"
+                                href={`/costing?print_request_id=${record.id}`}
+                            >
+                                Kostenberechnung erstellen
+                            </Button>
+                        )}
+
                         <Button
                             onClick={doAccept}
                             loading={customLoading}
                             type="primary"
+                            disabled={!record}
                         >
                             Annehmen
                         </Button>
@@ -146,16 +132,18 @@ export const PrintRequestShow: React.FC = () => {
                             danger
                             onClick={() => setRejectOpen(true)}
                             loading={customLoading}
+                            disabled={!record}
                         >
                             Ablehnen
                         </Button>
                     </Space>
                 )}
+
             >
                 {!record ? (
-                    <Alert type="info" showIcon message="Keine Daten geladen." />
+                    <Alert type="info" showIcon message="Keine Daten geladen."/>
                 ) : (
-                    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                    <Space direction="vertical" size="large" style={{width: "100%"}}>
                         <Card title="Status">
                             <Descriptions bordered column={1}>
                                 <Descriptions.Item label="Status">
@@ -279,11 +267,11 @@ export const PrintRequestShow: React.FC = () => {
                                 </Form.Item>
 
                                 <Form.Item label="Interne Notizen" name="internal_notes">
-                                    <TextArea rows={5} />
+                                    <TextArea rows={5}/>
                                 </Form.Item>
 
                                 <Form.Item label="Ablehnungsgrund" name="rejection_reason">
-                                    <TextArea rows={4} />
+                                    <TextArea rows={4}/>
                                 </Form.Item>
 
                                 <Button
