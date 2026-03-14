@@ -26,6 +26,7 @@ router = APIRouter(
     tags=["spool"],
 )
 
+
 # ruff: noqa: D103,B008
 
 
@@ -115,9 +116,9 @@ class SpoolMeasureParameters(BaseModel):
     "",
     name="Find spool",
     description=(
-        "Get a list of spools that matches the search query. "
-        "A websocket is served on the same path to listen for updates to any spool, or added or deleted spools. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a list of spools that matches the search query. "
+            "A websocket is served on the same path to listen for updates to any spool, or added or deleted spools. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={
@@ -126,146 +127,147 @@ class SpoolMeasureParameters(BaseModel):
     },
 )
 async def find(
-    *,
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    filament_name_old: Annotated[
-        Optional[str],
-        Query(alias="filament_name", title="Filament Name", description="See filament.name.", deprecated=True),
-    ] = None,
-    filament_id_old: Annotated[
-        Optional[str],
-        Query(
-            alias="filament_id",
-            title="Filament ID",
-            description="See filament.id.",
-            deprecated=True,
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    filament_material_old: Annotated[
-        Optional[str],
-        Query(
-            alias="filament_material",
-            title="Filament Material",
-            description="See filament.material.",
-            deprecated=True,
-        ),
-    ] = None,
-    vendor_name_old: Annotated[
-        Optional[str],
-        Query(alias="vendor_name", title="Vendor Name", description="See filament.vendor.name.", deprecated=True),
-    ] = None,
-    vendor_id_old: Annotated[
-        Optional[str],
-        Query(
-            alias="vendor_id",
-            title="Vendor ID",
-            description="See filament.vendor.id.",
-            deprecated=True,
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    filament_name: Annotated[
-        Optional[str],
-        Query(
-            alias="filament.name",
-            title="Filament Name",
-            description=(
-                "Partial case-insensitive search term for the filament name. Separate multiple terms with a comma. "
-                "Specify an empty string to match spools with no filament name. "
-                "Surround a term with quotes to search for the exact term."
+        *,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        filament_name_old: Annotated[
+            Optional[str],
+            Query(alias="filament_name", title="Filament Name", description="See filament.name.", deprecated=True),
+        ] = None,
+        filament_id_old: Annotated[
+            Optional[str],
+            Query(
+                alias="filament_id",
+                title="Filament ID",
+                description="See filament.id.",
+                deprecated=True,
+                pattern=r"^-?\d+(,-?\d+)*$",
             ),
-        ),
-    ] = None,
-    filament_id: Annotated[
-        Optional[str],
-        Query(
-            alias="filament.id",
-            title="Filament ID",
-            description="Match an exact filament ID. Separate multiple IDs with a comma.",
-            examples=["1", "1,2"],
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    filament_material: Annotated[
-        Optional[str],
-        Query(
-            alias="filament.material",
-            title="Filament Material",
-            description=(
-                "Partial case-insensitive search term for the filament material. Separate multiple terms with a comma. "
-                "Specify an empty string to match spools with no filament material. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        filament_material_old: Annotated[
+            Optional[str],
+            Query(
+                alias="filament_material",
+                title="Filament Material",
+                description="See filament.material.",
+                deprecated=True,
             ),
-        ),
-    ] = None,
-    filament_vendor_name: Annotated[
-        Optional[str],
-        Query(
-            alias="filament.vendor.name",
-            title="Vendor Name",
-            description=(
-                "Partial case-insensitive search term for the filament vendor name. "
-                "Separate multiple terms with a comma. "
-                "Specify an empty string to match spools with no vendor name. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        vendor_name_old: Annotated[
+            Optional[str],
+            Query(alias="vendor_name", title="Vendor Name", description="See filament.vendor.name.", deprecated=True),
+        ] = None,
+        vendor_id_old: Annotated[
+            Optional[str],
+            Query(
+                alias="vendor_id",
+                title="Vendor ID",
+                description="See filament.vendor.id.",
+                deprecated=True,
+                pattern=r"^-?\d+(,-?\d+)*$",
             ),
-        ),
-    ] = None,
-    filament_vendor_id: Annotated[
-        Optional[str],
-        Query(
-            alias="filament.vendor.id",
-            title="Vendor ID",
-            description=(
-                "Match an exact vendor ID. Separate multiple IDs with a comma. "
-                "Set it to -1 to match spools with filaments with no vendor."
+        ] = None,
+        filament_name: Annotated[
+            Optional[str],
+            Query(
+                alias="filament.name",
+                title="Filament Name",
+                description=(
+                        "Partial case-insensitive search term for the filament name. Separate multiple terms with a comma. "
+                        "Specify an empty string to match spools with no filament name. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-            examples=["1", "1,2"],
-            pattern=r"^-?\d+(,-?\d+)*$",
-        ),
-    ] = None,
-    location: Annotated[
-        Optional[str],
-        Query(
-            title="Location",
-            description=(
-                "Partial case-insensitive search term for the spool location. Separate multiple terms with a comma. "
-                "Specify an empty string to match spools with no location. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        filament_id: Annotated[
+            Optional[str],
+            Query(
+                alias="filament.id",
+                title="Filament ID",
+                description="Match an exact filament ID. Separate multiple IDs with a comma.",
+                examples=["1", "1,2"],
+                pattern=r"^-?\d+(,-?\d+)*$",
             ),
-        ),
-    ] = None,
-    lot_nr: Annotated[
-        Optional[str],
-        Query(
-            title="Lot/Batch Number",
-            description=(
-                "Partial case-insensitive search term for the spool lot number. Separate multiple terms with a comma. "
-                "Specify an empty string to match spools with no lot nr. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        filament_material: Annotated[
+            Optional[str],
+            Query(
+                alias="filament.material",
+                title="Filament Material",
+                description=(
+                        "Partial case-insensitive search term for the filament material. Separate multiple terms with a comma. "
+                        "Specify an empty string to match spools with no filament material. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    allow_archived: Annotated[
-        bool,
-        Query(title="Allow Archived", description="Whether to include archived spools in the search results."),
-    ] = False,
-    sort: Annotated[
-        Optional[str],
-        Query(
-            title="Sort",
-            description=(
-                'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+        ] = None,
+        filament_vendor_name: Annotated[
+            Optional[str],
+            Query(
+                alias="filament.vendor.name",
+                title="Vendor Name",
+                description=(
+                        "Partial case-insensitive search term for the filament vendor name. "
+                        "Separate multiple terms with a comma. "
+                        "Specify an empty string to match spools with no vendor name. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-            example="filament.name:asc,filament.vendor.id:asc,location:desc",
-        ),
-    ] = None,
-    limit: Annotated[
-        Optional[int],
-        Query(title="Limit", description="Maximum number of items in the response."),
-    ] = None,
-    offset: Annotated[int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
+        ] = None,
+        filament_vendor_id: Annotated[
+            Optional[str],
+            Query(
+                alias="filament.vendor.id",
+                title="Vendor ID",
+                description=(
+                        "Match an exact vendor ID. Separate multiple IDs with a comma. "
+                        "Set it to -1 to match spools with filaments with no vendor."
+                ),
+                examples=["1", "1,2"],
+                pattern=r"^-?\d+(,-?\d+)*$",
+            ),
+        ] = None,
+        location: Annotated[
+            Optional[str],
+            Query(
+                title="Location",
+                description=(
+                        "Partial case-insensitive search term for the spool location. Separate multiple terms with a comma. "
+                        "Specify an empty string to match spools with no location. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
+            ),
+        ] = None,
+        lot_nr: Annotated[
+            Optional[str],
+            Query(
+                title="Lot/Batch Number",
+                description=(
+                        "Partial case-insensitive search term for the spool lot number. Separate multiple terms with a comma. "
+                        "Specify an empty string to match spools with no lot nr. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
+            ),
+        ] = None,
+        allow_archived: Annotated[
+            bool,
+            Query(title="Allow Archived", description="Whether to include archived spools in the search results."),
+        ] = False,
+        sort: Annotated[
+            Optional[str],
+            Query(
+                title="Sort",
+                description=(
+                        'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+                ),
+                example="filament.name:asc,filament.vendor.id:asc,location:desc",
+            ),
+        ] = None,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit", description="Maximum number of items in the response."),
+        ] = None,
+        offset: Annotated[
+            int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
 ) -> JSONResponse:
     sort_by: dict[str, SortOrder] = {}
     if sort is not None:
@@ -315,7 +317,7 @@ async def find(
     name="Listen to spool changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("spool",), websocket)
@@ -332,15 +334,15 @@ async def notify_any(
     "/{spool_id}",
     name="Get spool",
     description=(
-        "Get a specific spool. A websocket is served on the same path to listen for changes to the spool. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific spool. A websocket is served on the same path to listen for changes to the spool. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={404: {"model": Message}, 299: {"model": SpoolEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    spool_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        spool_id: int,
 ) -> Spool:
     db_item = await spool.get_by_id(db, spool_id)
     return Spool.from_db(db_item)
@@ -351,8 +353,8 @@ async def get(
     name="Listen to spool changes",
 )
 async def notify(
-    websocket: WebSocket,
-    spool_id: int,
+        websocket: WebSocket,
+        spool_id: int,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("spool", str(spool_id)), websocket)
@@ -369,9 +371,9 @@ async def notify(
     "",
     name="Add spool",
     description=(
-        "Add a new spool to the database. "
-        "Only specify either remaining_weight or used_weight. "
-        "If no weight is set, the spool will be assumed to be full."
+            "Add a new spool to the database. "
+            "Only specify either remaining_weight or used_weight. "
+            "If no weight is set, the spool will be assumed to be full."
     ),
     response_model_exclude_none=True,
     response_model=Spool,
@@ -380,8 +382,8 @@ async def notify(
     },
 )
 async def create(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: SpoolParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: SpoolParameters,
 ):
     if body.remaining_weight is not None and body.used_weight is not None:
         return JSONResponse(
@@ -426,10 +428,10 @@ async def create(  # noqa: ANN201
     "/{spool_id}",
     name="Update spool",
     description=(
-        "Update any attribute of a spool. "
-        "Only fields specified in the request will be affected. "
-        "remaining_weight and used_weight can't be set at the same time. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+            "Update any attribute of a spool. "
+            "Only fields specified in the request will be affected. "
+            "remaining_weight and used_weight can't be set at the same time. "
+            "If extra is set, all existing extra fields will be removed and replaced with the new ones."
     ),
     response_model_exclude_none=True,
     response_model=Spool,
@@ -439,9 +441,9 @@ async def create(  # noqa: ANN201
     },
 )
 async def update(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    spool_id: int,
-    body: SpoolUpdateParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        spool_id: int,
+        body: SpoolUpdateParameters,
 ):
     patch_data = body.model_dump(exclude_unset=True)
 
@@ -481,8 +483,8 @@ async def update(  # noqa: ANN201
     responses={404: {"model": Message}},
 )
 async def delete(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    spool_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        spool_id: int,
 ) -> Message:
     await spool.delete(db, spool_id)
     return Message(message="Success!")
@@ -492,7 +494,7 @@ async def delete(
     "/{spool_id}/use",
     name="Use spool filament",
     description=(
-        "Use some length or weight of filament from the spool. Specify either a length or a weight, not both."
+            "Use some length or weight of filament from the spool. Specify either a length or a weight, not both."
     ),
     response_model_exclude_none=True,
     response_model=Spool,
@@ -502,9 +504,9 @@ async def delete(
     },
 )
 async def use(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    spool_id: int,
-    body: SpoolUseParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        spool_id: int,
+        body: SpoolUseParameters,
 ):
     if body.use_weight is not None and body.use_length is not None:
         return JSONResponse(
@@ -538,9 +540,9 @@ async def use(  # noqa: ANN201
     },
 )
 async def measure(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    spool_id: int,
-    body: SpoolMeasureParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        spool_id: int,
+        body: SpoolMeasureParameters,
 ):
     try:
         db_item = await spool.measure(db, spool_id, body.weight)

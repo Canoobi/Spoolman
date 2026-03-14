@@ -1,17 +1,13 @@
-import { useEffect, useState } from "react";
-import { Alert, Button, Space, Typography } from "antd";
-import { Link } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {Alert, Button, Space, Typography} from "antd";
+import {Link} from "react-router-dom";
 import axios from "axios";
-import { AppLayout } from "../components/AppLayout";
-import { PageCard } from "../components/PageCard";
-import { RequestForm } from "../components/RequestForm";
-import { getFormData, createPrintRequest } from "../api/printRequest";
-import type {
-    PublicFormDataResponse,
-    PublicPrintRequestPayload,
-    PublicPrintRequestResponse,
-} from "../types/api";
-import { buildStatusUrl } from "../utils/format";
+import {AppLayout} from "../components/AppLayout";
+import {PageCard} from "../components/PageCard";
+import {RequestForm} from "../components/RequestForm";
+import {createPrintRequest, getFormData} from "../api/printRequest";
+import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse,} from "../types/api";
+import {buildStatusUrl} from "../utils/format";
 
 export function RequestPage() {
     const [formData, setFormData] = useState<PublicFormDataResponse | null>(null);
@@ -50,7 +46,7 @@ export function RequestPage() {
         try {
             const result = await createPrintRequest(payload);
             setCreatedRequest(result);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            window.scrollTo({top: 0, behavior: "smooth"});
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 const detail =
@@ -76,7 +72,7 @@ export function RequestPage() {
             title="3D-Druckauftrag einreichen"
             subtitle="Fülle das Formular vollständig aus. Nach erfolgreicher Erstellung erhältst du einen individuellen Statuslink."
         >
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space direction="vertical" size={16} style={{width: "100%"}}>
                 {createdRequest && (
                     <PageCard title="Auftrag erfolgreich erstellt">
                         <Typography.Paragraph>
@@ -85,7 +81,7 @@ export function RequestPage() {
 
                         <div className="success-link-box">
                             <Typography.Text strong>Statuslink (bitte speichern):</Typography.Text>
-                            <div style={{ marginTop: 8, wordBreak: "break-all" }}>
+                            <div style={{marginTop: 8, wordBreak: "break-all"}}>
                                 <a
                                     href={buildStatusUrl(createdRequest.public_id)}
                                     target="_blank"
@@ -96,7 +92,7 @@ export function RequestPage() {
                             </div>
                         </div>
 
-                        <div style={{ marginTop: 16 }}>
+                        <div style={{marginTop: 16}}>
                             <Link to={`/request/status/${createdRequest.public_id}`}>
                                 <Button type="primary">Zur Statusseite</Button>
                             </Link>
@@ -104,10 +100,10 @@ export function RequestPage() {
                     </PageCard>
                 )}
 
-                {loading && <Alert type="info" showIcon message="Formulardaten werden geladen ..." />}
+                {loading && <Alert type="info" showIcon message="Formulardaten werden geladen ..."/>}
 
                 {!loading && error && !formData && (
-                    <Alert type="error" showIcon message={error} />
+                    <Alert type="error" showIcon message={error}/>
                 )}
 
                 {!loading && formData && (

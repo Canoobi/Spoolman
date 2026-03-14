@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 async def create(
-    *,
-    db: AsyncSession,
-    name: Optional[str] = None,
-    comment: Optional[str] = None,
-    empty_spool_weight: Optional[float] = None,
-    external_id: Optional[str] = None,
-    extra: Optional[dict[str, str]] = None,
+        *,
+        db: AsyncSession,
+        name: Optional[str] = None,
+        comment: Optional[str] = None,
+        empty_spool_weight: Optional[float] = None,
+        external_id: Optional[str] = None,
+        extra: Optional[dict[str, str]] = None,
 ) -> models.Vendor:
     """Add a new vendor to the database."""
     vendor = models.Vendor(
@@ -50,13 +50,13 @@ async def get_by_id(db: AsyncSession, vendor_id: int) -> models.Vendor:
 
 
 async def find(
-    *,
-    db: AsyncSession,
-    name: Optional[str] = None,
-    external_id: Optional[str] = None,
-    sort_by: Optional[dict[str, SortOrder]] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
+        *,
+        db: AsyncSession,
+        name: Optional[str] = None,
+        external_id: Optional[str] = None,
+        sort_by: Optional[dict[str, SortOrder]] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
 ) -> tuple[list[models.Vendor], int]:
     """Find a list of vendor objects by search criteria.
 
@@ -95,10 +95,10 @@ async def find(
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    vendor_id: int,
-    data: dict,
+        *,
+        db: AsyncSession,
+        vendor_id: int,
+        data: dict,
 ) -> models.Vendor:
     """Update the fields of a vendor object."""
     vendor = await get_by_id(db, vendor_id)

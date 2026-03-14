@@ -1,6 +1,6 @@
-import { Tag, Typography } from "antd";
+import {Tag, Typography} from "antd";
 import dayjs from "dayjs";
-import type { PrintRequestStatus } from "../types/printRequest";
+import type {PrintRequestStatus} from "../types/printRequest";
 
 export function renderPrintRequestStatus(status: PrintRequestStatus | string) {
     switch (status) {
@@ -37,7 +37,7 @@ export function renderMultilineText(value?: string | null) {
     if (!value) return "—";
 
     return (
-        <Typography.Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
+        <Typography.Paragraph style={{whiteSpace: "pre-wrap", marginBottom: 0}}>
             {value}
         </Typography.Paragraph>
     );

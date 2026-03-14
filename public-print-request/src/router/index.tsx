@@ -1,20 +1,20 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import {createBrowserRouter, Navigate} from "react-router-dom";
 import App from "../App";
-import { LoginPage } from "../pages/LoginPage";
-import { RequestPage } from "../pages/RequestPage";
-import { StatusPage } from "../pages/StatusPage";
-import { NotFoundPage } from "../pages/NotFoundPage";
+import {LoginPage} from "../pages/LoginPage";
+import {RequestPage} from "../pages/RequestPage";
+import {StatusPage} from "../pages/StatusPage";
+import {NotFoundPage} from "../pages/NotFoundPage";
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <App />,
+        element: <App/>,
         children: [
-            { index: true, element: <LoginPage /> },
-            { path: "request", element: <RequestPage /> },
-            { path: "request/status/:publicId", element: <StatusPage /> },
-            { path: "404", element: <NotFoundPage /> },
-            { path: "*", element: <Navigate to="/404" replace /> },
+            {index: true, element: <LoginPage/>},
+            {path: "request", element: <RequestPage/>},
+            {path: "request/status/:publicId", element: <StatusPage/>},
+            {path: "404", element: <NotFoundPage/>},
+            {path: "*", element: <Navigate to="/404" replace/>},
         ],
     },
 ]);

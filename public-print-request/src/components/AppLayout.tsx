@@ -1,12 +1,12 @@
 import type {PropsWithChildren} from "react";
-import { Typography } from "antd";
+import {Typography} from "antd";
 
 type Props = PropsWithChildren<{
     title: string;
     subtitle?: string;
 }>;
 
-export function AppLayout({ title, subtitle, children }: Props) {
+export function AppLayout({title, subtitle, children}: Props) {
     return (
         <div className="app-shell">
             <div className="app-shell__inner">

@@ -1,6 +1,6 @@
-import { Button, Result } from "antd";
-import { Link } from "react-router-dom";
-import { AppLayout } from "../components/AppLayout";
+import {Button, Result} from "antd";
+import {Link} from "react-router-dom";
+import {AppLayout} from "../components/AppLayout";
 
 export function NotFoundPage() {
     return (

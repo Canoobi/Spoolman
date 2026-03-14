@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Alert, Button, Form, Input, Typography } from "antd";
-import { LockOutlined } from "@ant-design/icons";
-import { AppLayout } from "../components/AppLayout.tsx";
-import { PageCard } from "../components/PageCard.tsx";
-import { login } from "../api/auth.ts";
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {Alert, Button, Form, Input, Typography} from "antd";
+import {LockOutlined} from "@ant-design/icons";
+import {AppLayout} from "../components/AppLayout.tsx";
+import {PageCard} from "../components/PageCard.tsx";
+import {login} from "../api/auth.ts";
 import axios from "axios";
 
 type LoginValues = {
@@ -49,7 +49,7 @@ export function LoginPage() {
                         type="error"
                         showIcon
                         message={error}
-                        style={{ marginBottom: 16 }}
+                        style={{marginBottom: 16}}
                     />
                 )}
 
@@ -57,10 +57,10 @@ export function LoginPage() {
                     <Form.Item
                         label="Passwort"
                         name="password"
-                        rules={[{ required: true, message: "Bitte Passwort eingeben." }]}
+                        rules={[{required: true, message: "Bitte Passwort eingeben."}]}
                     >
                         <Input.Password
-                            prefix={<LockOutlined />}
+                            prefix={<LockOutlined/>}
                             placeholder="Passwort"
                             autoFocus
                         />

@@ -422,10 +422,10 @@ class CostCalculation(BaseModel):
 
     @staticmethod
     def from_db(
-        item: models.CostCalculation,
-        *,
-        printer: Optional[Printer] = None,
-        filament: Optional[Filament] = None,
+            item: models.CostCalculation,
+            *,
+            printer: Optional[Printer] = None,
+            filament: Optional[Filament] = None,
     ) -> "CostCalculation":
         """Create a new Pydantic cost calculation object from a database cost calculation object."""
         return CostCalculation(

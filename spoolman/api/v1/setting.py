@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
     name="Listen to setting changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("setting",), websocket)
@@ -47,17 +47,17 @@ async def notify_any(
     "/{key}",
     name="Get setting",
     description=(
-        "Get a specific setting. If the setting has not been set, the default value will be returned."
-        "A websocket is served on the same path to listen for changes to the setting. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific setting. If the setting has not been set, the default value will be returned."
+            "A websocket is served on the same path to listen for changes to the setting. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     response_model=SettingResponse,
     responses={404: {"model": Message}, 299: {"model": SettingEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    key: str,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        key: str,
 ) -> Union[SettingResponse, JSONResponse]:
     try:
         definition = parse_setting(key)
@@ -87,7 +87,7 @@ async def get(
     response_model=dict[str, SettingResponse],
 )
 async def find(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Union[dict[str, SettingResponse], JSONResponse]:
     settings: dict[str, SettingResponse] = {}
 
@@ -122,8 +122,8 @@ async def find(
     name="Listen to setting changes",
 )
 async def notify(
-    websocket: WebSocket,
-    key: str,
+        websocket: WebSocket,
+        key: str,
 ) -> None:
     try:
         parse_setting(key)
@@ -146,18 +146,18 @@ async def notify(
     "/{key}",
     name="Set setting",
     description=(
-        "Set the value of a setting. The body must match the JSON type of the setting. "
-        "An empty body or a body containing only 'null' will reset the setting to its default value. "
-        "The new value will be returned."
+            "Set the value of a setting. The body must match the JSON type of the setting. "
+            "An empty body or a body containing only 'null' will reset the setting to its default value. "
+            "The new value will be returned."
     ),
     response_model_exclude_none=True,
     response_model=SettingResponse,
     responses={404: {"model": Message}},
 )
 async def update(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    key: str,
-    body: Annotated[str, Body()],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        key: str,
+        body: Annotated[str, Body()],
 ) -> Union[SettingResponse, JSONResponse]:
     try:
         definition = parse_setting(key)

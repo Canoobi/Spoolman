@@ -3,20 +3,20 @@ import hashlib
 import hmac
 import json
 import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from spoolman import env
 from spoolman.api.v1 import models as api_models
 from spoolman.database import models
-from spoolman.database.database import get_db_session
 from spoolman.database import print_request as print_request_db
-
+from spoolman.database.database import get_db_session
 
 COOKIE_NAME = "spoolman_pr_session"
 
@@ -82,7 +82,8 @@ def _load_json_with_whitespace_escapes(raw_body: bytes):
         try:
             return json.loads(normalized_body)
         except json.JSONDecodeError as second_exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There was an error parsing the body") from second_exc
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="There was an error parsing the body") from second_exc
 
 
 def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:

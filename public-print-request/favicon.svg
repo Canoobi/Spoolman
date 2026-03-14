@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg fill="#FFFFFF" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-	 viewBox="0 0 490 490" xml:space="preserve">
+<svg fill="#FFFFFF" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 490 490" xml:space="preserve">
 <g>
 	<g>
 		<g>
@@ -11,15 +11,15 @@
 				 M220,190v-35h50v35H220z M270,210v15h-50v-15H270z M55,135v-15h380v15H55z M200,155v80c0,5.523,4.477,10,10,10h25v25h20v-25h25
 				c5.522,0,10-4.477,10-10v-80h145v15H305v20h85v180H100V190h85v-20H55v-15H200z M435,190v180h-25V190H435z M80,190v180H55V190H80z
 				 M20,100V20h450l0.002,80H20z"/>
-			<path d="M290,35h-90c-5.523,0-10,4.478-10,10v30c0,5.523,4.477,10,10,10h90c5.522,0,10-4.477,10-10V45
+            <path d="M290,35h-90c-5.523,0-10,4.478-10,10v30c0,5.523,4.477,10,10,10h90c5.522,0,10-4.477,10-10V45
 				C300,39.478,295.522,35,290,35z M280,65h-70V55h70V65z"/>
-			<rect x="315" y="50" width="20" height="20"/>
-			<rect x="355" y="50" width="60" height="20"/>
-			<rect x="75" y="50" width="60" height="20"/>
-			<rect x="155" y="50" width="20" height="20"/>
-			<rect x="215" y="440" width="60" height="20"/>
-			<rect x="425" y="420" width="20" height="20"/>
-			<rect x="45" y="420" width="20" height="20"/>
+            <rect x="315" y="50" width="20" height="20"/>
+            <rect x="355" y="50" width="60" height="20"/>
+            <rect x="75" y="50" width="60" height="20"/>
+            <rect x="155" y="50" width="20" height="20"/>
+            <rect x="215" y="440" width="60" height="20"/>
+            <rect x="425" y="420" width="20" height="20"/>
+            <rect x="45" y="420" width="20" height="20"/>
 		</g>
 	</g>
 </g>

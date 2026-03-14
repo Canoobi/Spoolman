@@ -21,6 +21,7 @@ router = APIRouter(
     tags=["vendor"],
 )
 
+
 # ruff: noqa: D103,B008
 
 
@@ -68,9 +69,9 @@ class VendorUpdateParameters(VendorParameters):
     "",
     name="Find vendor",
     description=(
-        "Get a list of vendors that matches the search query. "
-        "A websocket is served on the same path to listen for updates to any vendor, or added or deleted vendors. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a list of vendors that matches the search query. "
+            "A websocket is served on the same path to listen for updates to any vendor, or added or deleted vendors. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={
@@ -79,44 +80,45 @@ class VendorUpdateParameters(VendorParameters):
     },
 )
 async def find(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    name: Annotated[
-        Optional[str],
-        Query(
-            title="Vendor Name",
-            description=(
-                "Partial case-insensitive search term for the vendor name. Separate multiple terms with a comma. "
-                "Surround a term with quotes to search for the exact term."
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        name: Annotated[
+            Optional[str],
+            Query(
+                title="Vendor Name",
+                description=(
+                        "Partial case-insensitive search term for the vendor name. Separate multiple terms with a comma. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    external_id: Annotated[
-        Optional[str],
-        Query(
-            title="Vendor External ID",
-            description=(
-                "Exact match for the vendor external ID. "
-                "Separate multiple IDs with a comma. "
-                "Specify empty string to match filaments with no external ID. "
-                "Surround a term with quotes to search for the exact term."
+        ] = None,
+        external_id: Annotated[
+            Optional[str],
+            Query(
+                title="Vendor External ID",
+                description=(
+                        "Exact match for the vendor external ID. "
+                        "Separate multiple IDs with a comma. "
+                        "Specify empty string to match filaments with no external ID. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    sort: Annotated[
-        Optional[str],
-        Query(
-            title="Sort",
-            description=(
-                'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+        ] = None,
+        sort: Annotated[
+            Optional[str],
+            Query(
+                title="Sort",
+                description=(
+                        'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+                ),
+                example="name:asc,id:desc",
             ),
-            example="name:asc,id:desc",
-        ),
-    ] = None,
-    limit: Annotated[
-        Optional[int],
-        Query(title="Limit", description="Maximum number of items in the response."),
-    ] = None,
-    offset: Annotated[int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
+        ] = None,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit", description="Maximum number of items in the response."),
+        ] = None,
+        offset: Annotated[
+            int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
 ) -> JSONResponse:
     sort_by: dict[str, SortOrder] = {}
     if sort is not None:
@@ -147,7 +149,7 @@ async def find(
     name="Listen to vendor changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("vendor",), websocket)
@@ -164,15 +166,15 @@ async def notify_any(
     "/{vendor_id}",
     name="Get vendor",
     description=(
-        "Get a specific vendor. A websocket is served on the same path to listen for changes to the vendor. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific vendor. A websocket is served on the same path to listen for changes to the vendor. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={404: {"model": Message}, 299: {"model": VendorEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    vendor_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        vendor_id: int,
 ) -> Vendor:
     db_item = await vendor.get_by_id(db, vendor_id)
     return Vendor.from_db(db_item)
@@ -183,8 +185,8 @@ async def get(
     name="Listen to vendor changes",
 )
 async def notify(
-    websocket: WebSocket,
-    vendor_id: int,
+        websocket: WebSocket,
+        vendor_id: int,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("vendor", str(vendor_id)), websocket)
@@ -206,8 +208,8 @@ async def notify(
     responses={400: {"model": Message}},
 )
 async def create(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: VendorParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: VendorParameters,
 ):
     if body.extra:
         all_fields = await get_extra_fields(db, EntityType.vendor)
@@ -232,8 +234,8 @@ async def create(  # noqa: ANN201
     "/{vendor_id}",
     name="Update vendor",
     description=(
-        "Update any attribute of a vendor. Only fields specified in the request will be affected. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+            "Update any attribute of a vendor. Only fields specified in the request will be affected. "
+            "If extra is set, all existing extra fields will be removed and replaced with the new ones."
     ),
     response_model_exclude_none=True,
     response_model=Vendor,
@@ -243,9 +245,9 @@ async def create(  # noqa: ANN201
     },
 )
 async def update(  # noqa: ANN201
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    vendor_id: int,
-    body: VendorUpdateParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        vendor_id: int,
+        body: VendorUpdateParameters,
 ):
     patch_data = body.model_dump(exclude_unset=True)
 
@@ -269,13 +271,13 @@ async def update(  # noqa: ANN201
     "/{vendor_id}",
     name="Delete vendor",
     description=(
-        "Delete a vendor. The vendor attribute of any filaments who refer to the deleted vendor will be cleared."
+            "Delete a vendor. The vendor attribute of any filaments who refer to the deleted vendor will be cleared."
     ),
     responses={404: {"model": Message}},
 )
 async def delete(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    vendor_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        vendor_id: int,
 ) -> Message:
     await vendor.delete(db, vendor_id)
     return Message(message="Success!")

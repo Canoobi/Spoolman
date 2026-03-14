@@ -35,21 +35,21 @@ def utc_timezone_naive(dt: datetime) -> datetime:
 
 
 async def create(
-    *,
-    db: AsyncSession,
-    filament_id: int,
-    remaining_weight: Optional[float] = None,
-    initial_weight: Optional[float] = None,
-    spool_weight: Optional[float] = None,
-    used_weight: Optional[float] = None,
-    first_used: Optional[datetime] = None,
-    last_used: Optional[datetime] = None,
-    price: Optional[float] = None,
-    location: Optional[str] = None,
-    lot_nr: Optional[str] = None,
-    comment: Optional[str] = None,
-    archived: bool = False,
-    extra: Optional[dict[str, str]] = None,
+        *,
+        db: AsyncSession,
+        filament_id: int,
+        remaining_weight: Optional[float] = None,
+        initial_weight: Optional[float] = None,
+        spool_weight: Optional[float] = None,
+        used_weight: Optional[float] = None,
+        first_used: Optional[datetime] = None,
+        last_used: Optional[datetime] = None,
+        price: Optional[float] = None,
+        location: Optional[str] = None,
+        lot_nr: Optional[str] = None,
+        comment: Optional[str] = None,
+        archived: bool = False,
+        extra: Optional[dict[str, str]] = None,
 ) -> models.Spool:
     """Add a new spool to the database. Leave weight empty to assume full spool."""
     filament_item = await filament.get_by_id(db, filament_id)
@@ -113,19 +113,19 @@ async def get_by_id(db: AsyncSession, spool_id: int) -> models.Spool:
 
 
 async def find(  # noqa: C901, PLR0912
-    *,
-    db: AsyncSession,
-    filament_name: Optional[str] = None,
-    filament_id: Optional[Union[int, Sequence[int]]] = None,
-    filament_material: Optional[str] = None,
-    vendor_name: Optional[str] = None,
-    vendor_id: Optional[Union[int, Sequence[int]]] = None,
-    location: Optional[str] = None,
-    lot_nr: Optional[str] = None,
-    allow_archived: bool = False,
-    sort_by: Optional[dict[str, SortOrder]] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
+        *,
+        db: AsyncSession,
+        filament_name: Optional[str] = None,
+        filament_id: Optional[Union[int, Sequence[int]]] = None,
+        filament_material: Optional[str] = None,
+        vendor_name: Optional[str] = None,
+        vendor_id: Optional[Union[int, Sequence[int]]] = None,
+        location: Optional[str] = None,
+        lot_nr: Optional[str] = None,
+        allow_archived: bool = False,
+        sort_by: Optional[dict[str, SortOrder]] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
 ) -> tuple[list[models.Spool], int]:
     """Find a list of spool objects by search criteria.
 
@@ -215,10 +215,10 @@ async def find(  # noqa: C901, PLR0912
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    spool_id: int,
-    data: dict,
+        *,
+        db: AsyncSession,
+        spool_id: int,
+        data: dict,
 ) -> models.Spool:
     """Update the fields of a spool object."""
     spool = await get_by_id(db, spool_id)
@@ -423,8 +423,8 @@ async def measure(db: AsyncSession, spool_id: int, weight: float) -> models.Spoo
 
 
 async def find_locations(
-    *,
-    db: AsyncSession,
+        *,
+        db: AsyncSession,
 ) -> list[str]:
     """Find a list of spool locations by searching for distinct values in the spool table."""
     stmt = sqlalchemy.select(models.Spool.location).distinct()
@@ -433,8 +433,8 @@ async def find_locations(
 
 
 async def find_lot_numbers(
-    *,
-    db: AsyncSession,
+        *,
+        db: AsyncSession,
 ) -> list[str]:
     """Find a list of spool lot numbers by searching for distinct values in the spool table."""
     stmt = sqlalchemy.select(models.Spool.lot_nr).distinct()
@@ -471,10 +471,10 @@ async def reset_initial_weight(db: AsyncSession, spool_id: int, weight: float) -
 
 
 async def rename_location(
-    *,
-    db: AsyncSession,
-    current_name: str,
-    new_name: str,
+        *,
+        db: AsyncSession,
+        current_name: str,
+        new_name: str,
 ) -> None:
     """Rename all spools with the current location name to the new name."""
     await db.execute(

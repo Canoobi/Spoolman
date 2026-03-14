@@ -84,7 +84,7 @@ def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:
         if len(data) != 2:  # noqa: PLR2004
             raise ValueError("Value list must have exactly two values.")
         if not all(
-            (isinstance(value, (float, int)) or value is None) and not isinstance(value, bool) for value in data
+                (isinstance(value, (float, int)) or value is None) and not isinstance(value, bool) for value in data
         ):
             raise ValueError("Value list must contain only floats or null.")
     elif field.field_type == ExtraFieldType.datetime:
@@ -188,9 +188,9 @@ async def add_or_update_extra_field(db: AsyncSession, entity_type: EntityType, e
 
             # Verify that we have only added new choices, not removed any
             if (
-                existing_field.choices is not None
-                and extra_field.choices is not None
-                and not all(choice in extra_field.choices for choice in existing_field.choices)
+                    existing_field.choices is not None
+                    and extra_field.choices is not None
+                    and not all(choice in extra_field.choices for choice in existing_field.choices)
             ):
                 raise ValueError("Cannot remove existing choices.")
 

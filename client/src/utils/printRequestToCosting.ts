@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { PrintRequestRecord } from "../types/printRequest";
+import type {PrintRequestRecord} from "../types/printRequest";
 
 type Translate = (key: string) => string;
 

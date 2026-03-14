@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ConfigProvider } from "antd";
-import { RouterProvider } from "react-router-dom";
+import {ConfigProvider} from "antd";
+import {RouterProvider} from "react-router-dom";
 import deDE from "antd/locale/de_DE";
-import { router } from "./router";
+import {router} from "./router";
 import "./styles.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -17,7 +17,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 },
             }}
         >
-            <RouterProvider router={router} />
+            <RouterProvider router={router}/>
         </ConfigProvider>
     </React.StrictMode>
 );

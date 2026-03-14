@@ -1,4 +1,4 @@
-import type { PrintRequestStatus } from "../types/api";
+import type {PrintRequestStatus} from "../types/api";
 
 export const EDITABLE_STATUSES: PrintRequestStatus[] = [
     "Angefragt",

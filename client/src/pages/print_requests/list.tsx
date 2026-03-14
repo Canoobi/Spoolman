@@ -1,15 +1,11 @@
 import React from "react";
-import { List, ShowButton, useTable } from "@refinedev/antd";
-import { Space, Table, Typography } from "antd";
-import type { PrintRequestRecord } from "../../types/printRequest";
-import {
-    formatDate,
-    formatDateTime,
-    renderPrintRequestStatus,
-} from "../../utils/printRequest";
+import {List, ShowButton, useTable} from "@refinedev/antd";
+import {Space, Table, Typography} from "antd";
+import type {PrintRequestRecord} from "../../types/printRequest";
+import {formatDate, formatDateTime, renderPrintRequestStatus,} from "../../utils/printRequest";
 
 export const PrintRequestList: React.FC = () => {
-    const { tableProps } = useTable<PrintRequestRecord>({
+    const {tableProps} = useTable<PrintRequestRecord>({
         resource: "print-request",
         syncWithLocation: true,
     });
@@ -63,7 +59,7 @@ export const PrintRequestList: React.FC = () => {
                     title="Aktionen"
                     render={(_, record) => (
                         <Space>
-                            <ShowButton hideText recordItemId={record.id} />
+                            <ShowButton hideText recordItemId={record.id}/>
                         </Space>
                     )}
                 />

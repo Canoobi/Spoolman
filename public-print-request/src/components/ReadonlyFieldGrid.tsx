@@ -9,7 +9,7 @@ type Props = {
     entries: Entry[];
 };
 
-export function ReadonlyFieldGrid({ entries }: Props) {
+export function ReadonlyFieldGrid({entries}: Props) {
     return (
         <div className="readonly-grid">
             {entries.map((entry) => (

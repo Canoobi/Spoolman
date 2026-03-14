@@ -7,14 +7,13 @@ from typing import Optional
 import sqlalchemy
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager, joinedload, selectinload
+from sqlalchemy.orm import contains_eager, joinedload
 
 from spoolman.api.v1.models import CostCalculation as CostCalculationSchema
 from spoolman.api.v1.models import CostEvent, EventType, Filament, Printer
 from spoolman.database import models, printer as printer_db
 from spoolman.database.utils import (
     SortOrder,
-    add_where_clause_int,
     add_where_clause_int_opt,
     parse_nested_field,
 )
@@ -25,28 +24,28 @@ logger = logging.getLogger(__name__)
 
 
 async def create(
-    *,
-    db: AsyncSession,
-    printer_id: Optional[int] = None,
-    filament_id: Optional[int] = None,
-    print_time_hours: Optional[float] = None,
-    labor_time_hours: Optional[float] = None,
-    filament_weight_g: Optional[float] = None,
-    material_cost: Optional[float] = None,
-    energy_cost: Optional[float] = None,
-    energy_cost_per_kwh: Optional[float] = None,
-    depreciation_cost: Optional[float] = None,
-    labor_cost: Optional[float] = None,
-    labor_cost_per_hour: Optional[float] = None,
-    consumables_cost: Optional[float] = None,
-    failure_rate: Optional[float] = None,
-    markup_rate: Optional[float] = None,
-    base_price: Optional[float] = None,
-    uplifted_price: Optional[float] = None,
-    final_price: Optional[float] = None,
-    currency: Optional[str] = None,
-    item_names: Optional[str] = None,
-    notes: Optional[str] = None,
+        *,
+        db: AsyncSession,
+        printer_id: Optional[int] = None,
+        filament_id: Optional[int] = None,
+        print_time_hours: Optional[float] = None,
+        labor_time_hours: Optional[float] = None,
+        filament_weight_g: Optional[float] = None,
+        material_cost: Optional[float] = None,
+        energy_cost: Optional[float] = None,
+        energy_cost_per_kwh: Optional[float] = None,
+        depreciation_cost: Optional[float] = None,
+        labor_cost: Optional[float] = None,
+        labor_cost_per_hour: Optional[float] = None,
+        consumables_cost: Optional[float] = None,
+        failure_rate: Optional[float] = None,
+        markup_rate: Optional[float] = None,
+        base_price: Optional[float] = None,
+        uplifted_price: Optional[float] = None,
+        final_price: Optional[float] = None,
+        currency: Optional[str] = None,
+        item_names: Optional[str] = None,
+        notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Add a new cost calculation entry to the database."""
     printer_obj = None
@@ -104,13 +103,13 @@ async def get_by_id(db: AsyncSession, calculation_id: int) -> models.CostCalcula
 
 
 async def find(
-    *,
-    db: AsyncSession,
-    printer_id: Optional[int | list[int]] = None,
-    filament_id: Optional[int | list[int]] = None,
-    sort_by: Optional[dict[str, SortOrder]] = None,
-    limit: Optional[int] = None,
-    offset: int = 0,
+        *,
+        db: AsyncSession,
+        printer_id: Optional[int | list[int]] = None,
+        filament_id: Optional[int | list[int]] = None,
+        sort_by: Optional[dict[str, SortOrder]] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
 ) -> tuple[list[models.CostCalculation], int]:
     """Find a list of cost calculation objects by search criteria."""
     stmt = (
@@ -119,7 +118,7 @@ async def find(
         .join(models.CostCalculation.filament, isouter=True)
         .options(
             contains_eager(models.CostCalculation.printer),
-            contains_eager(models.CostCalculation.filament).selectinload(models.Filament.vendor),        )
+            contains_eager(models.CostCalculation.filament).selectinload(models.Filament.vendor), )
     )
 
     stmt = add_where_clause_int_opt(stmt, models.CostCalculation.printer_id, printer_id)
@@ -149,29 +148,29 @@ async def find(
 
 
 async def update(
-    *,
-    db: AsyncSession,
-    calculation_id: int,
-    printer_id: Optional[int] = None,
-    filament_id: Optional[int] = None,
-    print_time_hours: Optional[float] = None,
-    labor_time_hours: Optional[float] = None,
-    filament_weight_g: Optional[float] = None,
-    material_cost: Optional[float] = None,
-    energy_cost: Optional[float] = None,
-    energy_cost_per_kwh: Optional[float] = None,
-    depreciation_cost: Optional[float] = None,
-    labor_cost: Optional[float] = None,
-    labor_cost_per_hour: Optional[float] = None,
-    consumables_cost: Optional[float] = None,
-    failure_rate: Optional[float] = None,
-    markup_rate: Optional[float] = None,
-    base_price: Optional[float] = None,
-    uplifted_price: Optional[float] = None,
-    final_price: Optional[float] = None,
-    currency: Optional[str] = None,
-    item_names: Optional[str] = None,
-    notes: Optional[str] = None,
+        *,
+        db: AsyncSession,
+        calculation_id: int,
+        printer_id: Optional[int] = None,
+        filament_id: Optional[int] = None,
+        print_time_hours: Optional[float] = None,
+        labor_time_hours: Optional[float] = None,
+        filament_weight_g: Optional[float] = None,
+        material_cost: Optional[float] = None,
+        energy_cost: Optional[float] = None,
+        energy_cost_per_kwh: Optional[float] = None,
+        depreciation_cost: Optional[float] = None,
+        labor_cost: Optional[float] = None,
+        labor_cost_per_hour: Optional[float] = None,
+        consumables_cost: Optional[float] = None,
+        failure_rate: Optional[float] = None,
+        markup_rate: Optional[float] = None,
+        base_price: Optional[float] = None,
+        uplifted_price: Optional[float] = None,
+        final_price: Optional[float] = None,
+        currency: Optional[str] = None,
+        item_names: Optional[str] = None,
+        notes: Optional[str] = None,
 ) -> models.CostCalculation:
     """Update a cost calculation."""
     calculation = await get_by_id(db, calculation_id)
@@ -241,11 +240,11 @@ async def delete(db: AsyncSession, calculation_id: int) -> None:
 
 
 async def cost_changed(
-    cost_calc: models.CostCalculation,
-    typ: EventType,
-    *,
-    payload: CostCalculationSchema | None = None,
-    cost_calc_id: int | None = None,
+        cost_calc: models.CostCalculation,
+        typ: EventType,
+        *,
+        payload: CostCalculationSchema | None = None,
+        cost_calc_id: int | None = None,
 ) -> None:
     """Notify websocket clients that a cost calculation has changed."""
     try:

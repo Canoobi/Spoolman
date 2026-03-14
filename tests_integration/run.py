@@ -37,8 +37,9 @@ if __name__ == "__main__":
         print(f"Running integration tests against {target}...")
         os.system(f"docker compose -f tests_integration/docker-compose-{target}.yml down -v")
         if (
-            os.system(f"docker compose -f tests_integration/docker-compose-{target}.yml up --abort-on-container-exit")
-            > 0
+                os.system(
+                    f"docker compose -f tests_integration/docker-compose-{target}.yml up --abort-on-container-exit")
+                > 0
         ):
             print(f"Integration tests against {target} failed!")
             sys.exit(1)

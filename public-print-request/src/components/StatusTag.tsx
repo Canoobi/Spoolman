@@ -1,11 +1,11 @@
-import { Tag } from "antd";
-import type { PrintRequestStatus } from "../types/api";
+import {Tag} from "antd";
+import type {PrintRequestStatus} from "../types/api";
 
 type Props = {
     status: PrintRequestStatus;
 };
 
-export function StatusTag({ status }: Props) {
+export function StatusTag({status}: Props) {
     let color:
         | "default"
         | "processing"

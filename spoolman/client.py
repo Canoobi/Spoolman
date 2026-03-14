@@ -43,11 +43,11 @@ class SinglePageApplication(StaticFiles):
         self.html = html.replace('"./', f'"{base_path}')
 
     def file_response(
-        self,
-        full_path: PathLike,
-        stat_result: os.stat_result,
-        scope: Scope,
-        status_code: int = 200,
+            self,
+            full_path: PathLike,
+            stat_result: os.stat_result,
+            scope: Scope,
+            status_code: int = 200,
     ) -> Response:
         """Overriden default file_response.
 

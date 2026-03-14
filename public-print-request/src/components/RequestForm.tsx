@@ -1,26 +1,9 @@
-import { useMemo } from "react";
+import {useMemo} from "react";
 import dayjs from "dayjs";
-import {
-    Alert,
-    Button,
-    Card,
-    Checkbox,
-    Col,
-    DatePicker,
-    Form,
-    Input,
-    Row,
-    Select,
-    Space,
-    Typography,
-} from "antd";
-import type {
-    PublicFormDataResponse,
-    PublicPrintRequestPayload,
-    PublicPrintRequestResponse,
-} from "../types/api";
+import {Alert, Button, Card, Checkbox, Col, DatePicker, Form, Input, Row, Select, Space, Typography,} from "antd";
+import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse,} from "../types/api";
 
-const { TextArea } = Input;
+const {TextArea} = Input;
 
 type Props = {
     formData: PublicFormDataResponse;
@@ -114,10 +97,10 @@ export function RequestForm({
             form={form}
             layout="vertical"
             onFinish={handleFinish}
-            initialValues={mappedInitialValues ?? { other_filament_requested: false, filament_ids: [] }}
+            initialValues={mappedInitialValues ?? {other_filament_requested: false, filament_ids: []}}
         >
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                {error && <Alert type="error" message={error} showIcon />}
+            <Space direction="vertical" size={16} style={{width: "100%"}}>
+                {error && <Alert type="error" message={error} showIcon/>}
 
                 <Card bordered={false}>
                     <Typography.Title level={4} className="section-title">
@@ -129,9 +112,9 @@ export function RequestForm({
                             <Form.Item
                                 name="requester_name"
                                 label="Name des Auftraggebers"
-                                rules={[{ required: true, message: "Bitte Namen eingeben." }]}
+                                rules={[{required: true, message: "Bitte Namen eingeben."}]}
                             >
-                                <Input placeholder="Max Mustermann" />
+                                <Input placeholder="Max Mustermann"/>
                             </Form.Item>
                         </Col>
 
@@ -141,7 +124,7 @@ export function RequestForm({
                                 label="Kontaktinformation"
                                 tooltip="Optional, aber sinnvoll."
                             >
-                                <Input placeholder="E-Mail, Telefon, Discord, ... " />
+                                <Input placeholder="E-Mail, Telefon, Discord, ... "/>
                             </Form.Item>
                         </Col>
                     </Row>
@@ -161,7 +144,7 @@ export function RequestForm({
 
                         <Col xs={24} md={12}>
                             <Form.Item name="delivery_details" label="Lieferbeschreibung">
-                                <Input placeholder="z. B. Versandadresse oder Abholhinweis" />
+                                <Input placeholder="z. B. Versandadresse oder Abholhinweis"/>
                             </Form.Item>
                         </Col>
                     </Row>
@@ -175,18 +158,18 @@ export function RequestForm({
                     <Form.Item
                         name="title"
                         label="Titel des Auftrags"
-                        rules={[{ required: true, message: "Bitte Titel eingeben." }]}
+                        rules={[{required: true, message: "Bitte Titel eingeben."}]}
                     >
-                        <Input placeholder="z. B. Halterung für Sensorboard" />
+                        <Input placeholder="z. B. Halterung für Sensorboard"/>
                     </Form.Item>
 
                     <Form.Item
                         name="description"
                         label="Beschreibung des Auftrags"
-                        rules={[{ required: true, message: "Bitte Beschreibung eingeben." }]}
+                        rules={[{required: true, message: "Bitte Beschreibung eingeben."}]}
                         extra="Beschreibe Zweck, mechanische Anforderungen, Passungen und besondere Eigenschaften."
                     >
-                        <TextArea rows={6} />
+                        <TextArea rows={6}/>
                     </Form.Item>
                 </Card>
 
@@ -196,7 +179,7 @@ export function RequestForm({
                     </Typography.Title>
 
                     <Form.Item name="makerworld_url" label="MakerWorld Link">
-                        <Input placeholder="https://makerworld.com/..." />
+                        <Input placeholder="https://makerworld.com/..."/>
                     </Form.Item>
 
                     <Form.Item
@@ -303,7 +286,7 @@ export function RequestForm({
                     <Row gutter={16}>
                         <Col xs={24} md={12}>
                             <Form.Item name="wanted_date" label="Gewünschter Termin">
-                                <DatePicker style={{ width: "100%" }} format="DD.MM.YYYY" />
+                                <DatePicker style={{width: "100%"}} format="DD.MM.YYYY"/>
                             </Form.Item>
                         </Col>
 
@@ -327,11 +310,11 @@ export function RequestForm({
                     </Typography.Title>
 
                     <Form.Item name="comment" label="Zusätzliche Informationen">
-                        <TextArea rows={4} />
+                        <TextArea rows={4}/>
                     </Form.Item>
                 </Card>
 
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{display: "flex", justifyContent: "flex-end"}}>
                     <Button type="primary" htmlType="submit" loading={loading} size="large">
                         {submitText}
                     </Button>

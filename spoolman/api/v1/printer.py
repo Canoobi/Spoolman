@@ -65,9 +65,9 @@ class PrinterUpdateParameters(PrinterParameters):
     "",
     name="Find printer",
     description=(
-        "Get a list of printers that matches the search query. "
-        "A websocket is served on the same path to listen for updates to any printer, or added or deleted printers. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a list of printers that matches the search query. "
+            "A websocket is served on the same path to listen for updates to any printer, or added or deleted printers. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={
@@ -76,32 +76,33 @@ class PrinterUpdateParameters(PrinterParameters):
     },
 )
 async def find(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    name: Annotated[
-        Optional[str],
-        Query(
-            title="Printer Name",
-            description=(
-                "Partial case-insensitive search term for the printer name. Separate multiple terms with a comma. "
-                "Surround a term with quotes to search for the exact term."
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        name: Annotated[
+            Optional[str],
+            Query(
+                title="Printer Name",
+                description=(
+                        "Partial case-insensitive search term for the printer name. Separate multiple terms with a comma. "
+                        "Surround a term with quotes to search for the exact term."
+                ),
             ),
-        ),
-    ] = None,
-    sort: Annotated[
-        Optional[str],
-        Query(
-            title="Sort",
-            description=(
-                'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+        ] = None,
+        sort: Annotated[
+            Optional[str],
+            Query(
+                title="Sort",
+                description=(
+                        'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
+                ),
+                example="name:asc,id:desc",
             ),
-            example="name:asc,id:desc",
-        ),
-    ] = None,
-    limit: Annotated[
-        Optional[int],
-        Query(title="Limit", description="Maximum number of items in the response."),
-    ] = None,
-    offset: Annotated[int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
+        ] = None,
+        limit: Annotated[
+            Optional[int],
+            Query(title="Limit", description="Maximum number of items in the response."),
+        ] = None,
+        offset: Annotated[
+            int, Query(title="Offset", description="Offset in the full result set if a limit is set.")] = 0,
 ) -> JSONResponse:
     sort_by: dict[str, SortOrder] = {}
     if sort is not None:
@@ -130,7 +131,7 @@ async def find(
     name="Listen to printer changes",
 )
 async def notify_any(
-    websocket: WebSocket,
+        websocket: WebSocket,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("printer",), websocket)
@@ -147,15 +148,15 @@ async def notify_any(
     "/{printer_id}",
     name="Get printer",
     description=(
-        "Get a specific printer. A websocket is served on the same path to listen for changes to the printer. "
-        "See the HTTP Response code 299 for the content of the websocket messages."
+            "Get a specific printer. A websocket is served on the same path to listen for changes to the printer. "
+            "See the HTTP Response code 299 for the content of the websocket messages."
     ),
     response_model_exclude_none=True,
     responses={299: {"model": PrinterEvent, "description": "Websocket message"}},
 )
 async def get(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    printer_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        printer_id: int,
 ) -> JSONResponse:
     try:
         db_item = await printer_db.get_by_id(db, printer_id)
@@ -174,8 +175,8 @@ async def get(
     name="Listen to printer changes",
 )
 async def notify(
-    websocket: WebSocket,
-    printer_id: str,
+        websocket: WebSocket,
+        printer_id: str,
 ) -> None:
     await websocket.accept()
     websocket_manager.connect(("printer", str(printer_id)), websocket)
@@ -196,8 +197,8 @@ async def notify(
     responses={201: {"model": Printer}, 400: {"model": Message}},
 )
 async def create(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    body: PrinterParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        body: PrinterParameters,
 ) -> JSONResponse:
     printer = await printer_db.create(
         db=db,
@@ -223,9 +224,9 @@ async def create(
     responses={404: {"model": Message}},
 )
 async def update(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    printer_id: int,
-    body: PrinterUpdateParameters,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        printer_id: int,
+        body: PrinterUpdateParameters,
 ) -> JSONResponse:
     try:
         printer = await printer_db.update(
@@ -254,8 +255,8 @@ async def update(
     responses={404: {"model": Message}},
 )
 async def delete(
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    printer_id: int,
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        printer_id: int,
 ) -> JSONResponse:
     try:
         await printer_db.delete(db, printer_id)

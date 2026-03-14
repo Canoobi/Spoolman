@@ -18,7 +18,6 @@ from spoolman.env import get_cache_dir
 
 logger = logging.getLogger(__name__)
 
-
 DEFAULT_EXTERNAL_DB_URL = "https://donkie.github.io/SpoolmanDB/"
 DEFAULT_SYNC_INTERVAL = 3600
 

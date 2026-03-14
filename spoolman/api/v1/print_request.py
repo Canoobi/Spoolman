@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1 import models as api_models
-from spoolman.database.database import get_db_session
 from spoolman.database import print_request as print_request_db
+from spoolman.database.database import get_db_session
 
 router = APIRouter(prefix="/print-request", tags=["print-request"])
 
