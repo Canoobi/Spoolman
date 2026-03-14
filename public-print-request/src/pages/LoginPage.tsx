@@ -41,7 +41,7 @@ export function LoginPage() {
         >
             <PageCard title="Zugriffsschutz">
                 <Typography.Paragraph>
-                    Diese Seite ist nicht öffentlich frei nutzbar. Der Zugriff erfolgt über ein gemeinsames Passwort.
+                    Diese Seite ist nicht öffentlich frei nutzbar. Der Zugriff erfolgt ausschließlich über ein Passwort.
                 </Typography.Paragraph>
 
                 {error && (
