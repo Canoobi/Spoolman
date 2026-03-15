@@ -304,6 +304,9 @@
       "empty_spool_weight": "Das Gewicht einer leeren Spule von diesem Hersteller."
     }
   },
+  "print_request": {
+    "print_request": "Druckaufträge"
+  },
   "table": {
     "actions": "Aktionen"
   },

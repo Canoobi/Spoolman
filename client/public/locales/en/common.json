@@ -293,6 +293,9 @@
       "vendor_updated": "This manufacturer has been updated by someone/something else since you opened this page. Saving will overwrite those changes!"
     }
   },
+  "print_request": {
+    "print_request": "Print requests"
+  },
   "printer": {
     "printer": "Printers",
     "fields": {

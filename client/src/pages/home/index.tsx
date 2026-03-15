@@ -1,4 +1,4 @@
-import {FileOutlined, HighlightOutlined, PlusOutlined, UnorderedListOutlined, UserOutlined} from "@ant-design/icons";
+import {HighlightOutlined, PlusOutlined, UnorderedListOutlined} from "@ant-design/icons";
 import {IResourceComponentsProps, useList, useTranslate} from "@refinedev/core";
 import {Card, Col, Row, Statistic, theme} from "antd";
 import {Content} from "antd/es/layout/layout";
@@ -10,6 +10,7 @@ import {Link} from "react-router";
 import {Trans} from "react-i18next";
 import Logo from "../../icon.svg?react";
 import {ISpool} from "../spools/model";
+import type {PrintRequestRecord} from "../../types/printRequest";
 
 dayjs.extend(utc);
 
@@ -27,6 +28,10 @@ export const Home: React.FC<IResourceComponentsProps> = () => {
         resource: "filament",
         pagination: {pageSize: 1},
     });
+    const printRequests = useList<PrintRequestRecord>({
+        resource: "print-request",
+        pagination: {pageSize: 1},
+    });
     const vendors = useList<ISpool>({
         resource: "vendor",
         pagination: {pageSize: 1},
@@ -34,7 +39,14 @@ export const Home: React.FC<IResourceComponentsProps> = () => {
 
     const hasSpools = !spools.data || spools.data.data.length > 0;
 
-    const ResourceStatsCard = (props: { loading: boolean; value: number; resource: string; icon: ReactNode }) => (
+    const ResourceStatsCard = (props: {
+        loading: boolean;
+        value: number;
+        resource: string;
+        icon: ReactNode;
+        title?: string;
+        showCreateAction?: boolean;
+    }) => (
         <Col xs={12} md={6}>
             <Card
                 loading={props.loading}
@@ -42,12 +54,14 @@ export const Home: React.FC<IResourceComponentsProps> = () => {
                     <Link to={`/${props.resource}`}>
                         <UnorderedListOutlined/>
                     </Link>,
-                    <Link to={`/${props.resource}/create`}>
-                        <PlusOutlined/>
-                    </Link>,
+                    ...(props.showCreateAction === false ? [] : [
+                        <Link to={`/${props.resource}/create`}>
+                            <PlusOutlined/>
+                        </Link>,
+                    ]),
                 ]}
             >
-                <Statistic title={t(`${props.resource}.${props.resource}`)} value={props.value} prefix={props.icon}/>
+                <Statistic title={props.title || t(`${props.resource}.${props.resource}`)} value={props.value} prefix={props.icon}/>
             </Card>
         </Col>
     );
@@ -91,7 +105,7 @@ export const Home: React.FC<IResourceComponentsProps> = () => {
                     resource="spool"
                     value={spools.data?.total || 0}
                     loading={spools.isLoading}
-                    icon={<FileOutlined/>}
+                    icon={<img src="/spool.png" width={23} height={23} alt="spool"/>}
                 />
                 <ResourceStatsCard
                     resource="filament"
@@ -100,10 +114,19 @@ export const Home: React.FC<IResourceComponentsProps> = () => {
                     icon={<HighlightOutlined/>}
                 />
                 <ResourceStatsCard
+                    resource="print-request"
+                    value={printRequests.data?.total || 0}
+                    loading={printRequests.isLoading}
+                    icon={<img src="/order.png" width={23} height={23} alt="order"/>}
+                    title={t("print_request.print_request")}
+                    showCreateAction={false}
+                />
+                <ResourceStatsCard
                     resource="vendor"
                     value={vendors.data?.total || 0}
                     loading={vendors.isLoading}
-                    icon={<UserOutlined/>}
+                    icon={<img src="/vendor.png" width={23} height={23} alt="vendor"/>}
+                    showCreateAction={false}
                 />
             </Row>
             {!hasSpools && (
