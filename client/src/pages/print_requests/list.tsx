@@ -1,12 +1,14 @@
 import React, {useMemo, useState} from "react";
 import {List, ShowButton, useTable} from "@refinedev/antd";
 import {Space, Table, Typography} from "antd";
+import type {FilterValue, SorterResult} from "antd/es/table/interface";
 import type {PrintRequestRecord, PrintRequestStatus} from "../../types/printRequest";
 import {PRINT_REQUEST_STATUSES} from "../../types/printRequest";
 import {formatDate, formatDateTime, renderPrintRequestStatus,} from "../../utils/printRequest";
 
 export const PrintRequestList: React.FC = () => {
     const [visibleStatuses, setVisibleStatuses] = useState<PrintRequestStatus[]>(PRINT_REQUEST_STATUSES);
+    const [createdAtSortOrder, setCreatedAtSortOrder] = useState<"ascend" | "descend" | null>(null);
 
     const {tableProps} = useTable<PrintRequestRecord>({
         resource: "print-request",
@@ -19,9 +21,18 @@ export const PrintRequestList: React.FC = () => {
     });
 
     const dataSource = useMemo(() => {
-        const records = tableProps.dataSource || [];
-        return records.filter((record) => visibleStatuses.includes(record.status));
-    }, [tableProps.dataSource, visibleStatuses]);
+        const records = (tableProps.dataSource || []).filter((record) => visibleStatuses.includes(record.status));
+
+        if (!createdAtSortOrder) {
+            return records;
+        }
+
+        return [...records].sort((a, b) => {
+            const left = new Date(a.created_at).getTime();
+            const right = new Date(b.created_at).getTime();
+            return createdAtSortOrder === "ascend" ? left - right : right - left;
+        });
+    }, [tableProps.dataSource, visibleStatuses, createdAtSortOrder]);
 
     if (tableProps.pagination) {
         tableProps.pagination.showSizeChanger = true;
@@ -29,13 +40,21 @@ export const PrintRequestList: React.FC = () => {
 
     const originalOnChange = tableProps.onChange;
     tableProps.onChange = (pagination, filters, sorter, extra) => {
-        const statusFilter = filters.status;
+        const statusFilter = filters.status as FilterValue | undefined;
         if (statusFilter !== undefined) {
             if (Array.isArray(statusFilter) && statusFilter.length > 0) {
                 setVisibleStatuses(statusFilter as PrintRequestStatus[]);
             } else {
                 setVisibleStatuses(PRINT_REQUEST_STATUSES);
             }
+        }
+
+        if (extra.action === "sort") {
+            const typedSorter = sorter as SorterResult<PrintRequestRecord>;
+            if (typedSorter.field === "created_at") {
+                setCreatedAtSortOrder(typedSorter.order ?? null);
+            }
+            return;
         }
 
         const nextFilters = {...filters};
@@ -51,6 +70,7 @@ export const PrintRequestList: React.FC = () => {
                     title="Erstellt"
                     render={(value) => formatDateTime(value)}
                     sorter
+                    sortOrder={createdAtSortOrder || undefined}
                 />
 
                 <Table.Column<PrintRequestRecord>
