@@ -47,7 +47,6 @@ if access_handlers:
 # Get logger instance for this module
 logger = logging.getLogger(__name__)
 
-
 # Setup FastAPI
 app = FastAPI(
     debug=env.is_debug_mode(),
@@ -64,7 +63,7 @@ app.mount(env.get_base_path() + "/api/v1", v1_app)
     response_class=PlainTextResponse,
     name="Get metrics for prometheus",
     description=(
-        "Get app metrics for prometheusIf enabled SPOOLMAN_METRICS_ENABLED returned metrics by Spools and Filaments"
+            "Get app metrics for prometheusIf enabled SPOOLMAN_METRICS_ENABLED returned metrics by Spools and Filaments"
     ),
 )
 def get_metrics() -> bytes:
@@ -75,6 +74,7 @@ def get_metrics() -> bytes:
 base_path = env.get_base_path()
 if base_path != "":
     logger.info("Base path is: %s", base_path)
+
 
     # If base path is set, add a redirect from non-slash suffix to slash
     # suffix. Otherwise it won't work.
@@ -106,10 +106,14 @@ app.mount(base_path, app=SinglePageApplication(directory="client/dist", base_pat
 
 def add_cors_middleware() -> None:
     """Add CORS middleware to the FastAPI app based on environment settings."""
-    origins = []
+    origins: list[str] = []
+
     if env.is_debug_mode():
-        logger.warning("Running in debug mode, allowing all origins.")
-        origins = ["*"]
+        logger.warning("Running in debug mode, allowing local frontend origins.")
+        origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
     elif env.is_cors_defined():
         cors_origins = env.get_cors_origin()
         if cors_origins:
@@ -117,6 +121,12 @@ def add_cors_middleware() -> None:
             origins = cors_origins
         else:
             logger.warning("CORS origins are not defined, no CORS will be applied.")
+    else:
+        logger.warning(
+            "SPOOLMAN_CORS_ORIGIN is not set, allowing all origins by default. "
+            "Set SPOOLMAN_CORS_ORIGIN to a comma-separated allowlist to restrict CORS.",
+        )
+        origins = ["*"]
 
     if not origins:
         return

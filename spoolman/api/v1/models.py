@@ -570,6 +570,7 @@ PRINT_REQUEST_PRIORITY_VALUES = [
 class PrintRequestFilamentInfo(BaseModel):
     id: int
     display_name: str
+    color_hex: Optional[str] = None
 
 
 class PrintRequestBase(BaseModel):

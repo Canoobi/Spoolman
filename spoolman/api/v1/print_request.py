@@ -21,6 +21,7 @@ def _to_filament_info(filament_link) -> api_models.PrintRequestFilamentInfo:
     return api_models.PrintRequestFilamentInfo(
         id=filament.id,
         display_name=display_name,
+        color_hex=filament.color_hex,
     )
 
 

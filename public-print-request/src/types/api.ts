@@ -13,6 +13,7 @@ export type PrintRequestStatus =
 export interface FilamentInfo {
     id: number;
     display_name: string;
+    color_hex?: string | null;
 }
 
 export interface PublicFormDataResponse {
