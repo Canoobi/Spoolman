@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 from urllib import parse
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from platformdirs import user_data_dir
 
@@ -477,3 +478,19 @@ def get_print_request_public_password() -> Optional[str]:
 def get_print_request_cookie_secret() -> Optional[str]:
     """Get the secret used to sign the public print request session cookie."""
     return os.getenv("SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET")
+
+
+def get_print_request_timezone() -> ZoneInfo:
+    """Get the timezone used for print-request timestamps.
+
+    Returns UTC if no environment variable was set.
+    """
+    timezone_name = os.getenv("SPOOLMAN_PRINT_REQUEST_TIMEZONE", "UTC")
+
+    try:
+        return ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError as exc:
+        raise ValueError(
+            "Failed to parse SPOOLMAN_PRINT_REQUEST_TIMEZONE variable: "
+            f"Unknown timezone '{timezone_name}'."
+        ) from exc

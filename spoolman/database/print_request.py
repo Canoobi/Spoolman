@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import delete, func, select
@@ -9,10 +9,11 @@ from sqlalchemy.orm import selectinload
 from spoolman.api.v1 import models as api_models
 from spoolman.database import models
 from spoolman.exceptions import ItemNotFoundError
+from spoolman import env
 
 
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+def now_for_print_requests() -> datetime:
+    return datetime.now(env.get_print_request_timezone()).replace(tzinfo=None)
 
 
 def _validate_filament_selection(
@@ -53,7 +54,7 @@ async def _set_filaments(
         delete(models.PrintRequestFilament).where(models.PrintRequestFilament.request_id == request_obj.id)
     )
 
-    now = utcnow()
+    now = now_for_print_requests()
     for filament_id in sorted(set(filament_ids)):
         db.add(
             models.PrintRequestFilament(
@@ -75,7 +76,7 @@ async def create_print_request(
     )
     await _get_filaments_by_ids(db, data.filament_ids)
 
-    now = utcnow()
+    now = now_for_print_requests()
     request_obj = models.PrintRequest(
         public_id=secrets.token_urlsafe(24),
         created_at=now,
@@ -195,7 +196,7 @@ async def update_print_request_public(
     )
     await _get_filaments_by_ids(db, data.filament_ids)
 
-    obj.updated_at = utcnow()
+    obj.updated_at = now_for_print_requests()
 
     obj.requester_name = data.requester_name
     obj.requester_contact = data.requester_contact
@@ -232,7 +233,7 @@ async def update_print_request_internal(
 ) -> models.PrintRequest:
     obj = await get_print_request(db, request_id)
 
-    obj.updated_at = utcnow()
+    obj.updated_at = now_for_print_requests()
 
     if data.requester_name is not None:
         obj.requester_name = data.requester_name
@@ -294,7 +295,7 @@ async def update_print_request_internal(
     if data.status is not None:
         obj.status = data.status
         if data.status == "Abgeschlossen" and obj.completed_at is None:
-            obj.completed_at = utcnow()
+            obj.completed_at = now_for_print_requests()
 
     await db.commit()
     await db.refresh(obj)
@@ -304,10 +305,10 @@ async def update_print_request_internal(
 async def accept_print_request(db: AsyncSession, request_id: int) -> models.PrintRequest:
     obj = await get_print_request(db, request_id)
 
-    obj.updated_at = utcnow()
+    obj.updated_at = now_for_print_requests()
     obj.status = "Offen"
     if obj.accepted_at is None:
-        obj.accepted_at = utcnow()
+        obj.accepted_at = now_for_print_requests()
 
     await db.commit()
     await db.refresh(obj)
@@ -321,10 +322,10 @@ async def reject_print_request(
 ) -> models.PrintRequest:
     obj = await get_print_request(db, request_id)
 
-    obj.updated_at = utcnow()
+    obj.updated_at = now_for_print_requests()
     obj.status = "Abgelehnt"
     if obj.rejected_at is None:
-        obj.rejected_at = utcnow()
+        obj.rejected_at = now_for_print_requests()
     if rejection_reason is not None:
         obj.rejection_reason = rejection_reason
 
