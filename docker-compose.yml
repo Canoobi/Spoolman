@@ -38,7 +38,7 @@ services:
     ports:
       - 30169:4000
     environment:
-      - SPOOLMAN_ENDPOINT=http://192.168.1.99:30168
+      - SPOOLMAN_ENDPOINT=http://192.168.10.99:30168
       - UPDATE_INTERVAL=120000
       - MODE=manual
     volumes:
