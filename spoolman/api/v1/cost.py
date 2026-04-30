@@ -101,7 +101,7 @@ async def find(
                 description=(
                         'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
                 ),
-                example="created:desc,id:desc",
+                examples="created:desc,id:desc",
             ),
         ] = None,
         limit: Annotated[
