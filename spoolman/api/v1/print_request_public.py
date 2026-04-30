@@ -38,9 +38,12 @@ def _get_cookie_secret() -> str:
     return secret
 
 
-def _make_cookie_token() -> str:
+def _make_cookie_token(requester_name: str | None = None) -> str:
     secret = _get_cookie_secret()
-    payload = _b64u(secrets.token_bytes(32))
+    payload_obj = {"nonce": _b64u(secrets.token_bytes(32))}
+    if requester_name:
+        payload_obj["requester_name"] = requester_name
+    payload = _b64u(json.dumps(payload_obj, separators=(",", ":")).encode("utf-8"))
     signature = _sign(secret, payload)
     return f"{payload}.{signature}"
 
@@ -55,10 +58,26 @@ def _verify_cookie_token(token: str) -> bool:
     return hmac.compare_digest(signature, expected)
 
 
-def require_public_session(request: Request) -> None:
+def _get_public_session(request: Request) -> dict:
     token = request.cookies.get(COOKIE_NAME)
     if not token or not _verify_cookie_token(token):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    payload, _signature = token.rsplit(".", 1)
+    try:
+        payload_bytes = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
+        data = json.loads(payload_bytes.decode("utf-8"))
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    return data
+
+
+def require_public_session(request: Request) -> None:
+    _get_public_session(request)
 
 
 def _load_json_with_whitespace_escapes(raw_body: bytes):
@@ -141,18 +160,27 @@ def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
 
 @router.post("/login")
 async def login(request: Request, body: api_models.PublicPrintRequestLoginRequest):
-    expected_password = env.get_print_request_public_password()
-    if not expected_password:
-        raise HTTPException(status_code=500, detail="Public print request password is not configured.")
+    password_value = body.password.get_secret_value()
+    named_passwords = env.get_print_request_user_passwords()
 
-    if body.password.get_secret_value() != expected_password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    requester_name = None
+    for candidate_name, candidate_password in named_passwords.items():
+        if password_value == candidate_password:
+            requester_name = candidate_name
+            break
+
+    if requester_name is None:
+        expected_password = env.get_print_request_public_password()
+        if not expected_password:
+            raise HTTPException(status_code=500, detail="Public print request password is not configured.")
+        if password_value != expected_password:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     response = JSONResponse(content={"message": "OK"})
     is_https_request = request.url.scheme == "https"
     response.set_cookie(
         key=COOKIE_NAME,
-        value=_make_cookie_token(),
+        value=_make_cookie_token(requester_name=requester_name),
         httponly=True,
         secure=is_https_request,
         samesite="lax",
@@ -171,6 +199,7 @@ async def logout():
 @router.get("/form-data")
 async def get_form_data(
         _session: None = Depends(require_public_session),
+        request: Request = None,
         db: AsyncSession = Depends(get_db_session),
 ):
     result = await db.execute(
@@ -182,12 +211,18 @@ async def get_form_data(
     )
     filaments = list(result.unique().scalars().all())
 
+    session_data = _get_public_session(request)
+
     return JSONResponse(
         content=jsonable_encoder(
             api_models.PublicPrintRequestFormDataResponse(
                 delivery_types=api_models.PRINT_REQUEST_DELIVERY_VALUES,
                 priorities=api_models.PRINT_REQUEST_PRIORITY_VALUES,
                 filaments=[_to_filament_info(f) for f in filaments],
+                session=api_models.PublicPrintRequestSessionInfo(
+                    requester_name=session_data.get("requester_name"),
+                    requester_name_locked=bool(session_data.get("requester_name")),
+                ),
             )
         )
     )

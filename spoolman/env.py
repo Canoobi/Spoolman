@@ -1,5 +1,6 @@
 """Utilities for grabbing config from environment variables."""
 
+import json
 import logging
 import os
 import subprocess
@@ -473,6 +474,35 @@ def get_base_path() -> str:
 def get_print_request_public_password() -> Optional[str]:
     """Get the password required for the public print request pages."""
     return os.getenv("SPOOLMAN_PRINT_REQUEST_PASSWORD")
+
+
+def get_print_request_user_passwords() -> dict[str, str]:
+    """Get named passwords for the public print request pages.
+
+    The expected format is a JSON object mapping requester name to password, e.g.
+    {"Alice":"secret1","Bob":"secret2"}.
+    """
+    raw = os.getenv("SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS")
+    if not raw:
+        return {}
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Failed to parse SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS variable: Invalid JSON object.") from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError("Failed to parse SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS variable: Expected JSON object.")
+
+    mapping: dict[str, str] = {}
+    for name, password in parsed.items():
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Failed to parse SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS variable: Names must be non-empty strings.")
+        if not isinstance(password, str) or not password:
+            raise ValueError("Failed to parse SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS variable: Passwords must be non-empty strings.")
+        mapping[name.strip()] = password
+
+    return mapping
 
 
 def get_print_request_cookie_secret() -> Optional[str]:

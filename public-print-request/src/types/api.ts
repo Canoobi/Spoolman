@@ -20,6 +20,10 @@ export interface PublicFormDataResponse {
     delivery_types: DeliveryType[];
     priorities: Priority[];
     filaments: FilamentInfo[];
+    session: {
+        requester_name?: string | null;
+        requester_name_locked: boolean;
+    };
 }
 
 export interface PublicPrintRequestPayload {

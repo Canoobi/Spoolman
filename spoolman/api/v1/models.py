@@ -752,10 +752,16 @@ class PublicPrintRequestResponse(BaseModel):
     filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
 
 
+class PublicPrintRequestSessionInfo(BaseModel):
+    requester_name: Optional[str] = None
+    requester_name_locked: bool = False
+
+
 class PublicPrintRequestFormDataResponse(BaseModel):
     delivery_types: list[str]
     priorities: list[str]
     filaments: list[PrintRequestFilamentInfo]
+    session: PublicPrintRequestSessionInfo
 
 
 class PublicPrintRequestLoginRequest(BaseModel):
