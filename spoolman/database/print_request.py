@@ -16,6 +16,18 @@ def now_for_print_requests() -> datetime:
     return datetime.now(env.get_print_request_timezone()).replace(tzinfo=None)
 
 
+def _print_request_load_options():
+    return [
+        selectinload(models.PrintRequest.filaments)
+        .selectinload(models.PrintRequestFilament.filament)
+        .selectinload(models.Filament.vendor),
+        selectinload(models.PrintRequest.cost_calculation).selectinload(models.CostCalculation.printer),
+        selectinload(models.PrintRequest.cost_calculation)
+        .selectinload(models.CostCalculation.filament)
+        .selectinload(models.Filament.vendor),
+    ]
+
+
 def _validate_filament_selection(
         filament_ids: list[int],
         other_filament_requested: bool,
@@ -128,11 +140,7 @@ async def get_print_request(db: AsyncSession, request_id: int) -> models.PrintRe
     result = await db.execute(
         select(models.PrintRequest)
         .where(models.PrintRequest.id == request_id)
-        .options(
-            selectinload(models.PrintRequest.filaments)
-            .selectinload(models.PrintRequestFilament.filament)
-            .selectinload(models.Filament.vendor)
-        )
+        .options(*_print_request_load_options())
     )
     obj = result.scalar_one_or_none()
     if obj is None:
@@ -144,16 +152,26 @@ async def get_print_request_by_public_id(db: AsyncSession, public_id: str) -> mo
     result = await db.execute(
         select(models.PrintRequest)
         .where(models.PrintRequest.public_id == public_id)
-        .options(
-            selectinload(models.PrintRequest.filaments)
-            .selectinload(models.PrintRequestFilament.filament)
-            .selectinload(models.Filament.vendor)
-        )
+        .options(*_print_request_load_options())
     )
     obj = result.scalar_one_or_none()
     if obj is None:
         raise ItemNotFoundError(f"Print request with public ID {public_id} was not found.")
     return obj
+
+
+async def list_open_print_requests_for_requester(
+        db: AsyncSession,
+        requester_name: str,
+) -> list[models.PrintRequest]:
+    result = await db.execute(
+        select(models.PrintRequest)
+        .where(models.PrintRequest.requester_name == requester_name)
+        .where(models.PrintRequest.status.notin_(["Abgeschlossen", "Abgelehnt"]))
+        .options(*_print_request_load_options())
+        .order_by(models.PrintRequest.created_at.desc())
+    )
+    return list(result.scalars().unique().all())
 
 
 async def list_print_requests(
@@ -166,16 +184,12 @@ async def list_print_requests(
 
     result = await db.execute(
         select(models.PrintRequest)
-        .options(
-            selectinload(models.PrintRequest.filaments)
-            .selectinload(models.PrintRequestFilament.filament)
-            .selectinload(models.Filament.vendor)
-        )
+        .options(*_print_request_load_options())
         .order_by(models.PrintRequest.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
-    items = list(result.scalars().all())
+    items = list(result.scalars().unique().all())
     return items, total
 
 

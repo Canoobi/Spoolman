@@ -1,13 +1,44 @@
 import {useEffect, useState} from "react";
-import {Alert, Button, Space, Typography} from "antd";
+import {Alert, Button, Divider, Space, Typography} from "antd";
 import {Link} from "react-router-dom";
 import axios from "axios";
 import {AppLayout} from "../components/AppLayout";
 import {PageCard} from "../components/PageCard";
 import {RequestForm} from "../components/RequestForm";
 import {createPrintRequest, getFormData} from "../api/printRequest";
-import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse,} from "../types/api";
-import {buildStatusUrl} from "../utils/format";
+import type {
+    PublicFormDataResponse,
+    PublicPrintRequestListItem,
+    PublicPrintRequestPayload,
+    PublicPrintRequestResponse,
+} from "../types/api";
+import {buildStatusUrl, formatDateTime} from "../utils/format";
+
+function formatCurrency(value?: number | null, currency?: string | null): string {
+    if (value == null) return "Noch nicht verfügbar";
+
+    try {
+        return new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: currency || "EUR",
+        }).format(value);
+    } catch {
+        return `${value.toFixed(2)} ${currency || ""}`.trim();
+    }
+}
+
+function buildListItemFromRequest(request: PublicPrintRequestResponse): PublicPrintRequestListItem {
+    return {
+        public_id: request.public_id,
+        title: request.title,
+        status: request.status,
+        created_at: request.created_at,
+        updated_at: request.updated_at,
+        wanted_date: request.wanted_date,
+        final_price: request.cost_calculation?.final_price ?? null,
+        currency: request.cost_calculation?.currency ?? null,
+    };
+}
 
 export function RequestPage() {
     const [formData, setFormData] = useState<PublicFormDataResponse | null>(null);
@@ -46,6 +77,19 @@ export function RequestPage() {
         try {
             const result = await createPrintRequest(payload);
             setCreatedRequest(result);
+            setFormData((previous) => {
+                if (!previous || !previous.session.requester_name_locked) {
+                    return previous;
+                }
+
+                return {
+                    ...previous,
+                    active_requests: [
+                        buildListItemFromRequest(result),
+                        ...previous.active_requests.filter((item) => item.public_id !== result.public_id),
+                    ],
+                };
+            });
             window.scrollTo({top: 0, behavior: "smooth"});
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -80,7 +124,7 @@ export function RequestPage() {
                         </Typography.Paragraph>
 
                         <div className="success-link-box">
-                            <Typography.Text strong>Statuslink (bitte speichern):</Typography.Text>
+                            <Typography.Text strong>Statuslink:</Typography.Text>
                             <div style={{marginTop: 8, wordBreak: "break-all"}}>
                                 <a
                                     href={buildStatusUrl(createdRequest.public_id)}
@@ -104,6 +148,40 @@ export function RequestPage() {
 
                 {!loading && error && !formData && (
                     <Alert type="error" showIcon message={error}/>
+                )}
+
+                {!loading && formData?.session.requester_name_locked && (
+                    <PageCard title="Deine offenen Aufträge">
+                        {formData.active_requests.length > 0 ? (
+                            <Space direction="vertical" size={12} style={{width: "100%"}}>
+                                {formData.active_requests.map((request) => (
+                                    <div key={request.public_id}>
+                                        <Typography.Text strong>{request.title}</Typography.Text>
+                                        <div>Status: {request.status}</div>
+                                        <div>Erstellt: {formatDateTime(request.created_at)}</div>
+                                        <div>Letztes Update: {formatDateTime(request.updated_at)}</div>
+                                        <div>Gesamtpreis: {formatCurrency(request.final_price, request.currency)}</div>
+                                        <div style={{marginTop: 6}}>
+                                            <a
+                                                href={buildStatusUrl(request.public_id)}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Tracking-Link öffnen
+                                            </a>
+                                        </div>
+                                        <Divider style={{margin: "12px 0"}}/>
+                                    </div>
+                                ))}
+                            </Space>
+                        ) : (
+                            <Alert
+                                type="info"
+                                showIcon
+                                message="Aktuell sind keine offenen Aufträge für dein Benutzerkonto vorhanden."
+                            />
+                        )}
+                    </PageCard>
                 )}
 
                 {!loading && formData && (

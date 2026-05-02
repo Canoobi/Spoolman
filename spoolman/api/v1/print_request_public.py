@@ -101,8 +101,10 @@ def _load_json_with_whitespace_escapes(raw_body: bytes):
         try:
             return json.loads(normalized_body)
         except json.JSONDecodeError as second_exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="There was an error parsing the body") from second_exc
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="There was an error parsing the body",
+            ) from second_exc
 
 
 def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
@@ -130,6 +132,12 @@ def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
     )
 
 
+def _to_cost_calculation_response(cost_calculation: models.CostCalculation | None) -> api_models.CostCalculation | None:
+    if cost_calculation is None:
+        return None
+    return api_models.CostCalculation.from_db(cost_calculation)
+
+
 def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
     return api_models.PublicPrintRequestResponse(
         public_id=obj.public_id,
@@ -155,7 +163,27 @@ def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
         completed_at=obj.completed_at,
         rejection_reason=obj.rejection_reason,
         filaments=[_to_filament_info(item.filament) for item in obj.filaments],
+        cost_calculation=_to_cost_calculation_response(obj.cost_calculation),
     )
+
+
+def _to_public_list_item(obj: models.PrintRequest) -> api_models.PublicPrintRequestListItem:
+    return api_models.PublicPrintRequestListItem(
+        public_id=obj.public_id,
+        title=obj.title,
+        status=obj.status,
+        created_at=obj.created_at,
+        updated_at=obj.updated_at,
+        wanted_date=obj.wanted_date,
+        final_price=obj.cost_calculation.final_price if obj.cost_calculation else None,
+        currency=obj.cost_calculation.currency if obj.cost_calculation else None,
+    )
+
+
+def _ensure_request_access(session_data: dict, obj: models.PrintRequest) -> None:
+    requester_name = session_data.get("requester_name")
+    if requester_name and obj.requester_name != requester_name:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
 @router.post("/login")
@@ -212,6 +240,13 @@ async def get_form_data(
     filaments = list(result.unique().scalars().all())
 
     session_data = _get_public_session(request)
+    requester_name = session_data.get("requester_name")
+    active_requests = []
+    if requester_name:
+        active_requests = [
+            _to_public_list_item(item)
+            for item in await print_request_db.list_open_print_requests_for_requester(db, requester_name)
+        ]
 
     return JSONResponse(
         content=jsonable_encoder(
@@ -220,9 +255,10 @@ async def get_form_data(
                 priorities=api_models.PRINT_REQUEST_PRIORITY_VALUES,
                 filaments=[_to_filament_info(f) for f in filaments],
                 session=api_models.PublicPrintRequestSessionInfo(
-                    requester_name=session_data.get("requester_name"),
-                    requester_name_locked=bool(session_data.get("requester_name")),
+                    requester_name=requester_name,
+                    requester_name_locked=bool(requester_name),
                 ),
+                active_requests=active_requests,
             )
         )
     )
@@ -234,11 +270,16 @@ async def create_print_request(
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
     payload = _load_json_with_whitespace_escapes(await request.body())
     try:
         body = api_models.PublicPrintRequestCreate.model_validate(payload)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
+    requester_name = session_data.get("requester_name")
+    if requester_name:
+        body = body.model_copy(update={"requester_name": requester_name})
 
     obj = await print_request_db.create_print_request(db, body)
     return JSONResponse(
@@ -250,10 +291,13 @@ async def create_print_request(
 @router.get("/{public_id}")
 async def get_print_request(
         public_id: str,
+        request: Request,
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
     obj = await print_request_db.get_print_request_by_public_id(db, public_id)
+    _ensure_request_access(session_data, obj)
     return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
 
 
@@ -264,11 +308,19 @@ async def update_print_request(
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
+    existing = await print_request_db.get_print_request_by_public_id(db, public_id)
+    _ensure_request_access(session_data, existing)
+
     payload = _load_json_with_whitespace_escapes(await request.body())
     try:
         body = api_models.PublicPrintRequestUpdate.model_validate(payload)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
+
+    requester_name = session_data.get("requester_name")
+    if requester_name:
+        body = body.model_copy(update={"requester_name": requester_name})
 
     try:
         obj = await print_request_db.update_print_request_public(db, public_id, body)

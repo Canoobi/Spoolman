@@ -24,4 +24,5 @@ export interface ICostCalculation {
     currency?: string;
     item_names?: string;
     notes?: string;
+    print_request_id?: number;
 }

@@ -52,6 +52,11 @@ def _to_response(obj) -> api_models.PrintRequestResponse:
         rejection_reason=obj.rejection_reason,
         internal_notes=obj.internal_notes,
         filaments=[_to_filament_info(item) for item in obj.filaments],
+        cost_calculation=(
+            api_models.CostCalculation.from_db(obj.cost_calculation)
+            if obj.cost_calculation is not None
+            else None
+        ),
     )
 
 

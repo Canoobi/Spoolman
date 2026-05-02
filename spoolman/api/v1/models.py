@@ -419,6 +419,7 @@ class CostCalculation(BaseModel):
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
     item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
+    print_request_id: Optional[int] = Field(None, description="Linked print request ID.")
 
     @staticmethod
     def from_db(
@@ -451,6 +452,7 @@ class CostCalculation(BaseModel):
             currency=item.currency,
             item_names=item.item_names,
             notes=item.notes,
+            print_request_id=item.print_request_id,
         )
 
 
@@ -712,6 +714,7 @@ class PrintRequestResponse(BaseModel):
     internal_notes: Optional[str]
 
     filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+    cost_calculation: Optional[CostCalculation] = None
 
 
 class PublicPrintRequestResponse(BaseModel):
@@ -750,6 +753,7 @@ class PublicPrintRequestResponse(BaseModel):
     rejection_reason: Optional[str]
 
     filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+    cost_calculation: Optional[CostCalculation] = None
 
 
 class PublicPrintRequestSessionInfo(BaseModel):
@@ -757,11 +761,23 @@ class PublicPrintRequestSessionInfo(BaseModel):
     requester_name_locked: bool = False
 
 
+class PublicPrintRequestListItem(BaseModel):
+    public_id: str
+    title: str
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+    wanted_date: Optional[datetime]
+    final_price: Optional[float] = None
+    currency: Optional[str] = None
+
+
 class PublicPrintRequestFormDataResponse(BaseModel):
     delivery_types: list[str]
     priorities: list[str]
     filaments: list[PrintRequestFilamentInfo]
     session: PublicPrintRequestSessionInfo
+    active_requests: list[PublicPrintRequestListItem] = Field(default_factory=list)
 
 
 class PublicPrintRequestLoginRequest(BaseModel):

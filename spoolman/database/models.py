@@ -157,6 +157,8 @@ class CostCalculation(Base):
     currency: Mapped[Optional[str]] = mapped_column(String(8))
     item_names: Mapped[Optional[str]] = mapped_column(String(512))
     notes: Mapped[Optional[str]] = mapped_column(String(1024))
+    print_request_id: Mapped[Optional[int]] = mapped_column(ForeignKey("print_request.id"), unique=True, index=True)
+    print_request: Mapped[Optional["PrintRequest"]] = relationship("PrintRequest", back_populates="cost_calculation")
 
 
 class PrintRequest(Base):
@@ -203,6 +205,11 @@ class PrintRequest(Base):
         back_populates="request",
         cascade="all, delete-orphan",
         lazy="selectin",
+    )
+    cost_calculation: Mapped[Optional["CostCalculation"]] = relationship(
+        "CostCalculation",
+        back_populates="print_request",
+        uselist=False,
     )
 
 

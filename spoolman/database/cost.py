@@ -22,12 +22,33 @@ from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
 
+async def _get_print_request_for_link(
+        db: AsyncSession,
+        print_request_id: int,
+        *,
+        calculation_id: Optional[int] = None,
+) -> models.PrintRequest:
+    print_request = await db.get(models.PrintRequest, print_request_id)
+    if print_request is None:
+        raise ItemNotFoundError(f"No print request with ID {print_request_id} found.")
+
+    stmt = sqlalchemy.select(models.CostCalculation).where(models.CostCalculation.print_request_id == print_request_id)
+    if calculation_id is not None:
+        stmt = stmt.where(models.CostCalculation.id != calculation_id)
+
+    existing = (await db.execute(stmt.limit(1))).scalar_one_or_none()
+    if existing is not None:
+        raise ValueError(f"Print request {print_request_id} is already linked to cost calculation {existing.id}.")
+
+    return print_request
+
 
 async def create(
         *,
         db: AsyncSession,
         printer_id: Optional[int] = None,
         filament_id: Optional[int] = None,
+        print_request_id: Optional[int] = None,
         print_time_hours: Optional[float] = None,
         labor_time_hours: Optional[float] = None,
         filament_weight_g: Optional[float] = None,
@@ -50,17 +71,21 @@ async def create(
     """Add a new cost calculation entry to the database."""
     printer_obj = None
     filament_obj = None
+    print_request_obj = None
     if printer_id is not None:
         printer_obj = await printer_db.get_by_id(db, printer_id)
     if filament_id is not None:
         filament_obj = await db.get(models.Filament, filament_id)
         if filament_obj is None:
             raise ItemNotFoundError(f"No filament with ID {filament_id} found.")
+    if print_request_id is not None:
+        print_request_obj = await _get_print_request_for_link(db, print_request_id)
 
     calculation = models.CostCalculation(
         created=datetime.utcnow().replace(microsecond=0),
         printer=printer_obj,
         filament=filament_obj,
+        print_request=print_request_obj,
         print_time_hours=print_time_hours,
         labor_time_hours=labor_time_hours,
         filament_weight_g=filament_weight_g,
@@ -82,9 +107,9 @@ async def create(
     )
     db.add(calculation)
     await db.commit()
-    await db.refresh(calculation)
-    await cost_changed(calculation, EventType.ADDED)
-    return calculation
+    loaded_calculation = await get_by_id(db, calculation.id)
+    await cost_changed(loaded_calculation, EventType.ADDED)
+    return loaded_calculation
 
 
 async def get_by_id(db: AsyncSession, calculation_id: int) -> models.CostCalculation:
@@ -107,6 +132,7 @@ async def find(
         db: AsyncSession,
         printer_id: Optional[int | list[int]] = None,
         filament_id: Optional[int | list[int]] = None,
+        print_request_id: Optional[int | list[int]] = None,
         sort_by: Optional[dict[str, SortOrder]] = None,
         limit: Optional[int] = None,
         offset: int = 0,
@@ -123,6 +149,7 @@ async def find(
 
     stmt = add_where_clause_int_opt(stmt, models.CostCalculation.printer_id, printer_id)
     stmt = add_where_clause_int_opt(stmt, models.CostCalculation.filament_id, filament_id)
+    stmt = add_where_clause_int_opt(stmt, models.CostCalculation.print_request_id, print_request_id)
 
     total_count = None
     if limit is not None:
@@ -153,6 +180,7 @@ async def update(
         calculation_id: int,
         printer_id: Optional[int] = None,
         filament_id: Optional[int] = None,
+        print_request_id: Optional[int] = None,
         print_time_hours: Optional[float] = None,
         labor_time_hours: Optional[float] = None,
         filament_weight_g: Optional[float] = None,
@@ -181,6 +209,12 @@ async def update(
         if filament_obj is None:
             raise ItemNotFoundError(f"No filament with ID {filament_id} found.")
         calculation.filament = filament_obj
+    if print_request_id is not None:
+        calculation.print_request = await _get_print_request_for_link(
+            db,
+            print_request_id,
+            calculation_id=calculation_id,
+        )
 
     calculation.print_time_hours = print_time_hours if print_time_hours is not None else calculation.print_time_hours
     calculation.labor_time_hours = labor_time_hours if labor_time_hours is not None else calculation.labor_time_hours
@@ -209,8 +243,9 @@ async def update(
     calculation.item_names = item_names if item_names is not None else calculation.item_names
     calculation.notes = notes if notes is not None else calculation.notes
     await db.commit()
-    await cost_changed(calculation, EventType.UPDATED)
-    return calculation
+    loaded_calculation = await get_by_id(db, calculation.id)
+    await cost_changed(loaded_calculation, EventType.UPDATED)
+    return loaded_calculation
 
 
 async def delete(db: AsyncSession, calculation_id: int) -> None:

@@ -1,3 +1,5 @@
+import type {ICostCalculation} from "../pages/costing/model";
+
 export type PrintRequestStatus =
     | "Angefragt"
     | "In Klärung"
@@ -50,6 +52,7 @@ export interface PrintRequestRecord {
     internal_notes?: string | null;
 
     filaments: PrintRequestFilamentInfo[];
+    cost_calculation?: ICostCalculation | null;
 }
 
 export interface PrintRequestInternalPatch {

@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {Link, useParams} from "react-router-dom";
-import {Alert, Button, Divider, Space, Typography,} from "antd";
+import {Alert, Button, Divider, Space, Typography} from "antd";
 import axios from "axios";
 import {AppLayout} from "../components/AppLayout";
 import {PageCard} from "../components/PageCard";
@@ -8,9 +8,22 @@ import {RequestForm} from "../components/RequestForm";
 import {ReadonlyFieldGrid} from "../components/ReadonlyFieldGrid";
 import {StatusTag} from "../components/StatusTag";
 import {getFormData, getPrintRequest, updatePrintRequest} from "../api/printRequest";
-import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse,} from "../types/api";
+import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse} from "../types/api";
 import {EDITABLE_STATUSES} from "../utils/constants";
 import {formatDate, formatDateTime} from "../utils/format";
+
+function formatCurrency(value?: number | null, currency?: string | null): string {
+    if (value == null) return "Noch nicht verfügbar";
+
+    try {
+        return new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: currency || "EUR",
+        }).format(value);
+    } catch {
+        return `${value.toFixed(2)} ${currency || ""}`.trim();
+    }
+}
 
 export function StatusPage() {
     const {publicId} = useParams<{ publicId: string }>();
@@ -50,6 +63,8 @@ export function StatusPage() {
                 if (axios.isAxiosError(err)) {
                     if (err.response?.status === 401) {
                         setError("Nicht angemeldet. Bitte zuerst Passwort eingeben.");
+                    } else if (err.response?.status === 403) {
+                        setError("Dieser Auftrag gehört nicht zu deinem Benutzerkonto.");
                     } else if (err.response?.status === 404) {
                         setError("Auftrag nicht gefunden.");
                     } else {
@@ -138,8 +153,23 @@ export function StatusPage() {
                                     {label: "Abgelehnt am", value: formatDateTime(request.rejected_at)},
                                     {label: "Abgeschlossen am", value: formatDateTime(request.completed_at)},
                                     {label: "Ablehnungsgrund", value: request.rejection_reason || "—"},
+                                    {
+                                        label: "Gesamtpreis",
+                                        value: formatCurrency(
+                                            request.cost_calculation?.final_price,
+                                            request.cost_calculation?.currency,
+                                        ),
+                                    },
                                 ]}
                             />
+
+                            {request.cost_calculation && (
+                                <div style={{marginTop: 16}}>
+                                    <Link to={`/request/status/${request.public_id}/invoice`}>
+                                        <Button type="primary">Rechnung öffnen</Button>
+                                    </Link>
+                                </div>
+                            )}
                         </PageCard>
 
                         <PageCard title="Auftragsübersicht">

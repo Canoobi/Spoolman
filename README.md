@@ -9,6 +9,7 @@ Diese Anleitung beschreibt, wie das Spoolman Backend sowie das Frontend lokal ge
 ### 1. Environment vorbereiten
 
 ```export SPOOLMAN_DEBUG_MODE=TRUE```\
+```export SPOOLMAN_PRINT_REQUEST_TIMEZONE=Europe/Berlin```\
 ```export SPOOLMAN_PRINT_REQUEST_PASSWORD=mein_test_passwort```\
 ```export SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET=stricken-moisten-carving-exonerate-crazed-wasting-bankbook-granola-detector-drainable```
 
