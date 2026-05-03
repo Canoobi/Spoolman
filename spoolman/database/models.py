@@ -154,6 +154,7 @@ class CostCalculation(Base):
     base_price: Mapped[Optional[float]] = mapped_column(Float)
     uplifted_price: Mapped[Optional[float]] = mapped_column(Float)
     final_price: Mapped[Optional[float]] = mapped_column(Float)
+    paid: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     currency: Mapped[Optional[str]] = mapped_column(String(8))
     item_names: Mapped[Optional[str]] = mapped_column(String(512))
     notes: Mapped[Optional[str]] = mapped_column(String(1024))

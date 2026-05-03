@@ -18,6 +18,7 @@ import {buildCostingNotesFromPrintRequest} from "../../utils/printRequestToCosti
 import {
     Alert,
     Button,
+    Checkbox,
     Card,
     Col,
     Descriptions,
@@ -70,6 +71,7 @@ interface CostFormValues {
     failure_rate?: number;
     markup_rate?: number;
     final_price?: number;
+    paid?: boolean;
     item_names?: string;
     notes?: string;
 }
@@ -393,6 +395,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             base_price: computedBreakdown.base,
             uplifted_price: computedBreakdown.uplifted,
             final_price: computedBreakdown.final,
+            paid: values.paid ?? false,
             currency,
             item_names: values.item_names,
             notes: values.notes,
@@ -482,6 +485,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             failure_rate: calculation.failure_rate ?? defaultFailure,
             markup_rate: calculation.markup_rate ?? defaultMarkup,
             final_price: calculation.final_price,
+            paid: calculation.paid ?? false,
             item_names: calculation.item_names,
             notes: calculation.notes,
         });
@@ -521,6 +525,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             failure_rate: linkedCostCalculation.failure_rate ?? defaultFailure,
             markup_rate: linkedCostCalculation.markup_rate ?? defaultMarkup,
             final_price: linkedCostCalculation.final_price,
+            paid: linkedCostCalculation.paid ?? false,
             item_names: linkedCostCalculation.item_names,
             notes: linkedCostCalculation.notes,
         });
@@ -783,6 +788,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             failure_rate: defaultFailure,
             markup_rate: defaultMarkup,
             consumables_cost: defaultConsumables,
+            paid: false,
         });
         setBreakdown({
             material: 0,
@@ -1054,6 +1060,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             </Form.Item>
                         </Col>
                     </Row>
+                    <Form.Item name="paid" valuePropName="checked">
+                        <Checkbox>Bezahlt</Checkbox>
+                    </Form.Item>
                     <Form.Item label={t("cost.fields.notes")} name="notes">
                         <Input.TextArea rows={3}/>
                     </Form.Item>
@@ -1211,6 +1220,11 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             dataIndex: "final_price",
                             sorter: true,
                             render: (value?: number) => formatter.format(value ?? 0),
+                        },
+                        {
+                            title: "Bezahlt",
+                            dataIndex: "paid",
+                            render: (value?: boolean) => value ? <Tag color="green">Ja</Tag> : <Tag color="orange">Nein</Tag>,
                         },
                         {
                             title: t("cost.fields.notes"),

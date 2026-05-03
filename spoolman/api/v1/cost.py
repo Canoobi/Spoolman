@@ -46,6 +46,7 @@ class CostCalculationParameters(BaseModel):
     base_price: Optional[float] = Field(None, ge=0, description="Price before uplifts or markup.")
     uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
     final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
+    paid: Optional[bool] = Field(None, description="Whether the invoice has been paid.")
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
     item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
@@ -249,6 +250,7 @@ async def create(
             base_price=body.base_price,
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
+            paid=body.paid,
             currency=body.currency,
             item_names=body.item_names,
             notes=body.notes,
@@ -301,6 +303,7 @@ async def update(
             base_price=body.base_price,
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
+            paid=body.paid,
             currency=body.currency,
             item_names=body.item_names,
             notes=body.notes,

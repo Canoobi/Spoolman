@@ -160,6 +160,9 @@ export function StatusPage() {
                                             request.cost_calculation?.currency,
                                         ),
                                     },
+                                    ...(formData?.session.requester_name_locked && request.cost_calculation?.paid !== undefined
+                                        ? [{label: "Bezahlt", value: request.cost_calculation.paid ? "Ja" : "Nein"}]
+                                        : []),
                                 ]}
                             />
 

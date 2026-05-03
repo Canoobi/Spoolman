@@ -21,6 +21,7 @@ export interface ICostCalculation {
     base_price?: number;
     uplifted_price?: number;
     final_price?: number;
+    paid?: boolean;
     currency?: string;
     item_names?: string;
     notes?: string;

@@ -8,6 +8,7 @@ import {RequestForm} from "../components/RequestForm";
 import {createPrintRequest, getFormData} from "../api/printRequest";
 import type {
     PublicFormDataResponse,
+    PublicCostCalculationListItem,
     PublicPrintRequestListItem,
     PublicPrintRequestPayload,
     PublicPrintRequestResponse,
@@ -38,6 +39,10 @@ function buildListItemFromRequest(request: PublicPrintRequestResponse): PublicPr
         final_price: request.cost_calculation?.final_price ?? null,
         currency: request.cost_calculation?.currency ?? null,
     };
+}
+
+function getBillingItemLabel(item: PublicCostCalculationListItem): string {
+    return item.item_names?.trim() || item.title;
 }
 
 export function RequestPage() {
@@ -161,14 +166,10 @@ export function RequestPage() {
                                         <div>Erstellt: {formatDateTime(request.created_at)}</div>
                                         <div>Letztes Update: {formatDateTime(request.updated_at)}</div>
                                         <div>Gesamtpreis: {formatCurrency(request.final_price, request.currency)}</div>
-                                        <div style={{marginTop: 6}}>
-                                            <a
-                                                href={buildStatusUrl(request.public_id)}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                Tracking-Link öffnen
-                                            </a>
+                                        <div style={{marginTop: 8}}>
+                                            <Link to={buildStatusUrl(request.public_id)}>
+                                                <Button type="primary" size="small">Tracking-Link</Button>
+                                            </Link>
                                         </div>
                                         <Divider style={{margin: "12px 0"}}/>
                                     </div>
@@ -183,6 +184,45 @@ export function RequestPage() {
                         )}
                     </PageCard>
                 )}
+
+                {!loading && formData?.session.requester_name_locked && (
+                    <PageCard title="Zahlungen & Rechnungen">
+                        <Space direction="vertical" size={12} style={{width: "100%"}}>
+                            <Typography.Text strong>
+                                Offener Gesamtbetrag: {formatCurrency(formData.outstanding_balance, formData.outstanding_currency)}
+                            </Typography.Text>
+
+                            {formData.billing_items.length > 0 ? (
+                                <>
+                                    {formData.billing_items.map((item) => (
+                                        <div key={item.cost_calculation_id}>
+                                            <Typography.Text strong>{getBillingItemLabel(item)}</Typography.Text>
+                                            {item.item_names && item.item_names !== item.title && (
+                                                <div>Auftrag: {item.title}</div>
+                                            )}
+                                            <div>Rechnungsdatum: {formatDateTime(item.created)}</div>
+                                            <div>Summe: {formatCurrency(item.final_price, item.currency)}</div>
+                                            <div>Status: {item.paid ? "Bezahlt" : "Offen"}</div>
+                                            <div style={{marginTop: 8}}>
+                                                <Link to={`/request/status/${item.public_id}/invoice`}>
+                                                    <Button type="primary" size="small">Zur Rechnung</Button>
+                                                </Link>
+                                            </div>
+                                            <Divider style={{margin: "12px 0"}}/>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <Alert
+                                    type="info"
+                                    showIcon
+                                    message="Aktuell liegen noch keine Kostenberechnungen für dein Benutzerkonto vor."
+                                />
+                            )}
+                        </Space>
+                    </PageCard>
+                )}
+
 
                 {!loading && formData && (
                     <RequestForm

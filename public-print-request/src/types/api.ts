@@ -34,6 +34,7 @@ export interface PublicCostCalculation {
     base_price?: number;
     uplifted_price?: number;
     final_price?: number;
+    paid?: boolean;
     currency?: string;
     item_names?: string;
     notes?: string;
@@ -64,6 +65,17 @@ export interface PublicPrintRequestListItem {
     currency?: string | null;
 }
 
+export interface PublicCostCalculationListItem {
+    cost_calculation_id: number;
+    public_id: string;
+    title: string;
+    item_names?: string | null;
+    created: string;
+    final_price?: number | null;
+    currency?: string | null;
+    paid: boolean;
+}
+
 export interface PublicFormDataResponse {
     delivery_types: DeliveryType[];
     priorities: Priority[];
@@ -73,6 +85,9 @@ export interface PublicFormDataResponse {
         requester_name_locked: boolean;
     };
     active_requests: PublicPrintRequestListItem[];
+    billing_items: PublicCostCalculationListItem[];
+    outstanding_balance: number;
+    outstanding_currency?: string | null;
 }
 
 export interface PublicPrintRequestPayload {

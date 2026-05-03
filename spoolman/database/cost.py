@@ -64,6 +64,7 @@ async def create(
         base_price: Optional[float] = None,
         uplifted_price: Optional[float] = None,
         final_price: Optional[float] = None,
+        paid: Optional[bool] = None,
         currency: Optional[str] = None,
         item_names: Optional[str] = None,
         notes: Optional[str] = None,
@@ -101,6 +102,7 @@ async def create(
         base_price=base_price,
         uplifted_price=uplifted_price,
         final_price=final_price,
+        paid=False if paid is None else paid,
         currency=currency,
         item_names=item_names,
         notes=notes,
@@ -196,6 +198,7 @@ async def update(
         base_price: Optional[float] = None,
         uplifted_price: Optional[float] = None,
         final_price: Optional[float] = None,
+        paid: Optional[bool] = None,
         currency: Optional[str] = None,
         item_names: Optional[str] = None,
         notes: Optional[str] = None,
@@ -239,6 +242,7 @@ async def update(
     calculation.base_price = base_price if base_price is not None else calculation.base_price
     calculation.uplifted_price = uplifted_price if uplifted_price is not None else calculation.uplifted_price
     calculation.final_price = final_price if final_price is not None else calculation.final_price
+    calculation.paid = paid if paid is not None else calculation.paid
     calculation.currency = currency if currency is not None else calculation.currency
     calculation.item_names = item_names if item_names is not None else calculation.item_names
     calculation.notes = notes if notes is not None else calculation.notes
@@ -301,3 +305,5 @@ async def cost_changed(
         )
     except Exception:
         logger.exception("Failed to send websocket message")
+
+

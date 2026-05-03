@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 import hashlib
 import hmac
 import json
@@ -123,7 +123,7 @@ def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
         material_name = getattr(material, "name", None)
 
     display_parts = [part for part in [vendor_name, material_name, filament_name] if part]
-    display_name = " – ".join(display_parts) if display_parts else str(filament.id)
+    display_name = " - ".join(display_parts) if display_parts else str(filament.id)
 
     return api_models.PrintRequestFilamentInfo(
         id=filament.id,
@@ -132,13 +132,20 @@ def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
     )
 
 
-def _to_cost_calculation_response(cost_calculation: models.CostCalculation | None) -> api_models.CostCalculation | None:
+def _to_cost_calculation_response(
+        cost_calculation: models.CostCalculation | None,
+        *,
+        include_paid: bool = False,
+) -> api_models.CostCalculation | None:
     if cost_calculation is None:
         return None
-    return api_models.CostCalculation.from_db(cost_calculation)
+    response = api_models.CostCalculation.from_db(cost_calculation)
+    if not include_paid:
+        response.paid = None
+    return response
 
 
-def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
+def _to_public_response(obj, *, include_paid: bool = False) -> api_models.PublicPrintRequestResponse:
     return api_models.PublicPrintRequestResponse(
         public_id=obj.public_id,
         created_at=obj.created_at,
@@ -163,7 +170,7 @@ def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
         completed_at=obj.completed_at,
         rejection_reason=obj.rejection_reason,
         filaments=[_to_filament_info(item.filament) for item in obj.filaments],
-        cost_calculation=_to_cost_calculation_response(obj.cost_calculation),
+        cost_calculation=_to_cost_calculation_response(obj.cost_calculation, include_paid=include_paid),
     )
 
 
@@ -177,6 +184,22 @@ def _to_public_list_item(obj: models.PrintRequest) -> api_models.PublicPrintRequ
         wanted_date=obj.wanted_date,
         final_price=obj.cost_calculation.final_price if obj.cost_calculation else None,
         currency=obj.cost_calculation.currency if obj.cost_calculation else None,
+    )
+
+
+def _to_billing_list_item(obj: models.PrintRequest) -> api_models.PublicCostCalculationListItem:
+    cost_calculation = obj.cost_calculation
+    if cost_calculation is None:
+        raise ValueError("Print request has no cost calculation.")
+    return api_models.PublicCostCalculationListItem(
+        cost_calculation_id=cost_calculation.id,
+        public_id=obj.public_id,
+        title=obj.title,
+        item_names=cost_calculation.item_names,
+        created=cost_calculation.created,
+        final_price=cost_calculation.final_price,
+        currency=cost_calculation.currency,
+        paid=cost_calculation.paid,
     )
 
 
@@ -242,12 +265,21 @@ async def get_form_data(
     session_data = _get_public_session(request)
     requester_name = session_data.get("requester_name")
     active_requests = []
+    billing_items = []
+    outstanding_balance = 0.0
+    outstanding_currency = None
     if requester_name:
         active_requests = [
             _to_public_list_item(item)
             for item in await print_request_db.list_open_print_requests_for_requester(db, requester_name)
         ]
-
+        billed_requests = await print_request_db.list_billed_print_requests_for_requester(db, requester_name)
+        billing_items = [_to_billing_list_item(item) for item in billed_requests]
+        for item in billing_items:
+            if outstanding_currency is None and item.currency:
+                outstanding_currency = item.currency
+            if not item.paid and item.final_price is not None:
+                outstanding_balance += item.final_price
     return JSONResponse(
         content=jsonable_encoder(
             api_models.PublicPrintRequestFormDataResponse(
@@ -259,6 +291,9 @@ async def get_form_data(
                     requester_name_locked=bool(requester_name),
                 ),
                 active_requests=active_requests,
+                billing_items=billing_items,
+                outstanding_balance=outstanding_balance,
+                outstanding_currency=outstanding_currency,
             )
         )
     )
@@ -284,7 +319,7 @@ async def create_print_request(
     obj = await print_request_db.create_print_request(db, body)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content=jsonable_encoder(_to_public_response(obj)),
+        content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))),
     )
 
 
@@ -296,9 +331,10 @@ async def get_print_request(
         db: AsyncSession = Depends(get_db_session),
 ):
     session_data = _get_public_session(request)
+    requester_name = session_data.get("requester_name")
     obj = await print_request_db.get_print_request_by_public_id(db, public_id)
     _ensure_request_access(session_data, obj)
-    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))))
 
 
 @router.patch("/{public_id}")
@@ -327,4 +363,4 @@ async def update_print_request(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))))

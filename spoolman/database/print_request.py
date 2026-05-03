@@ -174,6 +174,20 @@ async def list_open_print_requests_for_requester(
     return list(result.scalars().unique().all())
 
 
+async def list_billed_print_requests_for_requester(
+        db: AsyncSession,
+        requester_name: str,
+) -> list[models.PrintRequest]:
+    result = await db.execute(
+        select(models.PrintRequest)
+        .where(models.PrintRequest.requester_name == requester_name)
+        .where(models.PrintRequest.cost_calculation.has())
+        .options(*_print_request_load_options())
+        .order_by(models.PrintRequest.updated_at.desc().nullslast(), models.PrintRequest.created_at.desc())
+    )
+    return list(result.scalars().unique().all())
+
+
 async def list_print_requests(
         db: AsyncSession,
         skip: int = 0,
