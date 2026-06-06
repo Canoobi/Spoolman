@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 class CostCalculationParameters(BaseModel):
     printer_id: Optional[int] = Field(None, description="ID of the printer used for this calculation.")
     filament_id: Optional[int] = Field(None, description="ID of the filament used for this calculation.")
+    print_request_id: Optional[int] = Field(None, description="ID of the linked print request.")
     print_time_hours: Optional[float] = Field(None, ge=0, description="Total print time in hours.")
     labor_time_hours: Optional[float] = Field(None, ge=0, description="Total labor time in hours.")
     filament_weight_g: Optional[float] = Field(None, ge=0, description="Filament weight used in grams.")
@@ -45,6 +46,7 @@ class CostCalculationParameters(BaseModel):
     base_price: Optional[float] = Field(None, ge=0, description="Price before uplifts or markup.")
     uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
     final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
+    paid: Optional[bool] = Field(None, description="Whether the invoice has been paid.")
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
     item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
@@ -94,6 +96,15 @@ async def find(
                 pattern=r"^-?\d+(,-?\d+)*$",
             ),
         ] = None,
+        print_request_id: Annotated[
+            Optional[str],
+            Query(
+                title="Print Request ID",
+                description="Match an exact print request ID. Separate multiple IDs with a comma. Set it to -1 to match empty.",
+                examples=["1", "1,2"],
+                pattern=r"^-?\d+(,-?\d+)*$",
+            ),
+        ] = None,
         sort: Annotated[
             Optional[str],
             Query(
@@ -101,7 +112,7 @@ async def find(
                 description=(
                         'Sort the results by the given field. Should be a comma-separate string with "field:direction" items.'
                 ),
-                example="created:desc,id:desc",
+                examples="created:desc,id:desc",
             ),
         ] = None,
         limit: Annotated[
@@ -119,11 +130,13 @@ async def find(
 
     printer_ids = _parse_int_csv(printer_id)
     filament_ids = _parse_int_csv(filament_id)
+    print_request_ids = _parse_int_csv(print_request_id)
 
     db_items, total_count = await cost_db.find(
         db=db,
         printer_id=printer_ids,
         filament_id=filament_ids,
+        print_request_id=print_request_ids,
         sort_by=sort_by,
         limit=limit,
         offset=offset,
@@ -221,6 +234,7 @@ async def create(
             db=db,
             printer_id=body.printer_id,
             filament_id=body.filament_id,
+            print_request_id=body.print_request_id,
             print_time_hours=body.print_time_hours,
             labor_time_hours=body.labor_time_hours,
             filament_weight_g=body.filament_weight_g,
@@ -236,12 +250,15 @@ async def create(
             base_price=body.base_price,
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
+            paid=body.paid,
             currency=body.currency,
             item_names=body.item_names,
             notes=body.notes,
         )
     except ItemNotFoundError as e:
         return JSONResponse(status_code=404, content=Message(message=e.args[0]).dict())
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=e.args[0]).dict())
 
     return JSONResponse(
         status_code=201,
@@ -270,6 +287,7 @@ async def update(
             calculation_id=calculation_id,
             printer_id=body.printer_id,
             filament_id=body.filament_id,
+            print_request_id=body.print_request_id,
             print_time_hours=body.print_time_hours,
             labor_time_hours=body.labor_time_hours,
             filament_weight_g=body.filament_weight_g,
@@ -285,12 +303,15 @@ async def update(
             base_price=body.base_price,
             uplifted_price=body.uplifted_price,
             final_price=body.final_price,
+            paid=body.paid,
             currency=body.currency,
             item_names=body.item_names,
             notes=body.notes,
         )
     except ItemNotFoundError as e:
         return JSONResponse(status_code=404, content=Message(message=e.args[0]).dict())
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=e.args[0]).dict())
 
     return JSONResponse(
         content=jsonable_encoder(

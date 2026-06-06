@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 import hashlib
 import hmac
 import json
@@ -38,9 +38,12 @@ def _get_cookie_secret() -> str:
     return secret
 
 
-def _make_cookie_token() -> str:
+def _make_cookie_token(requester_name: str | None = None) -> str:
     secret = _get_cookie_secret()
-    payload = _b64u(secrets.token_bytes(32))
+    payload_obj = {"nonce": _b64u(secrets.token_bytes(32))}
+    if requester_name:
+        payload_obj["requester_name"] = requester_name
+    payload = _b64u(json.dumps(payload_obj, separators=(",", ":")).encode("utf-8"))
     signature = _sign(secret, payload)
     return f"{payload}.{signature}"
 
@@ -55,10 +58,26 @@ def _verify_cookie_token(token: str) -> bool:
     return hmac.compare_digest(signature, expected)
 
 
-def require_public_session(request: Request) -> None:
+def _get_public_session(request: Request) -> dict:
     token = request.cookies.get(COOKIE_NAME)
     if not token or not _verify_cookie_token(token):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    payload, _signature = token.rsplit(".", 1)
+    try:
+        payload_bytes = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
+        data = json.loads(payload_bytes.decode("utf-8"))
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    return data
+
+
+def require_public_session(request: Request) -> None:
+    _get_public_session(request)
 
 
 def _load_json_with_whitespace_escapes(raw_body: bytes):
@@ -82,8 +101,10 @@ def _load_json_with_whitespace_escapes(raw_body: bytes):
         try:
             return json.loads(normalized_body)
         except json.JSONDecodeError as second_exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="There was an error parsing the body") from second_exc
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="There was an error parsing the body",
+            ) from second_exc
 
 
 def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
@@ -102,15 +123,29 @@ def _to_filament_info(filament) -> api_models.PrintRequestFilamentInfo:
         material_name = getattr(material, "name", None)
 
     display_parts = [part for part in [vendor_name, material_name, filament_name] if part]
-    display_name = " – ".join(display_parts) if display_parts else str(filament.id)
+    display_name = " - ".join(display_parts) if display_parts else str(filament.id)
 
     return api_models.PrintRequestFilamentInfo(
         id=filament.id,
         display_name=display_name,
+        color_hex=filament.color_hex,
     )
 
 
-def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
+def _to_cost_calculation_response(
+        cost_calculation: models.CostCalculation | None,
+        *,
+        include_paid: bool = False,
+) -> api_models.CostCalculation | None:
+    if cost_calculation is None:
+        return None
+    response = api_models.CostCalculation.from_db(cost_calculation)
+    if not include_paid:
+        response.paid = None
+    return response
+
+
+def _to_public_response(obj, *, include_paid: bool = False) -> api_models.PublicPrintRequestResponse:
     return api_models.PublicPrintRequestResponse(
         public_id=obj.public_id,
         created_at=obj.created_at,
@@ -135,23 +170,68 @@ def _to_public_response(obj) -> api_models.PublicPrintRequestResponse:
         completed_at=obj.completed_at,
         rejection_reason=obj.rejection_reason,
         filaments=[_to_filament_info(item.filament) for item in obj.filaments],
+        cost_calculation=_to_cost_calculation_response(obj.cost_calculation, include_paid=include_paid),
     )
+
+
+def _to_public_list_item(obj: models.PrintRequest) -> api_models.PublicPrintRequestListItem:
+    return api_models.PublicPrintRequestListItem(
+        public_id=obj.public_id,
+        title=obj.title,
+        status=obj.status,
+        created_at=obj.created_at,
+        updated_at=obj.updated_at,
+        wanted_date=obj.wanted_date,
+        final_price=obj.cost_calculation.final_price if obj.cost_calculation else None,
+        currency=obj.cost_calculation.currency if obj.cost_calculation else None,
+    )
+
+
+def _to_billing_list_item(obj: models.PrintRequest) -> api_models.PublicCostCalculationListItem:
+    cost_calculation = obj.cost_calculation
+    if cost_calculation is None:
+        raise ValueError("Print request has no cost calculation.")
+    return api_models.PublicCostCalculationListItem(
+        cost_calculation_id=cost_calculation.id,
+        public_id=obj.public_id,
+        title=obj.title,
+        item_names=cost_calculation.item_names,
+        created=cost_calculation.created,
+        final_price=cost_calculation.final_price,
+        currency=cost_calculation.currency,
+        paid=cost_calculation.paid,
+    )
+
+
+def _ensure_request_access(session_data: dict, obj: models.PrintRequest) -> None:
+    requester_name = session_data.get("requester_name")
+    if requester_name and obj.requester_name != requester_name:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
 @router.post("/login")
 async def login(request: Request, body: api_models.PublicPrintRequestLoginRequest):
-    expected_password = env.get_print_request_public_password()
-    if not expected_password:
-        raise HTTPException(status_code=500, detail="Public print request password is not configured.")
+    password_value = body.password.get_secret_value()
+    named_passwords = env.get_print_request_user_passwords()
 
-    if body.password.get_secret_value() != expected_password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    requester_name = None
+    for candidate_name, candidate_password in named_passwords.items():
+        if password_value == candidate_password:
+            requester_name = candidate_name
+            break
+
+    if requester_name is None:
+        expected_password = env.get_print_request_public_password()
+        if not expected_password:
+            raise HTTPException(status_code=500, detail="Public print request password is not configured.")
+        if password_value != expected_password:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     response = JSONResponse(content={"message": "OK"})
     is_https_request = request.url.scheme == "https"
     response.set_cookie(
         key=COOKIE_NAME,
-        value=_make_cookie_token(),
+        value=_make_cookie_token(requester_name=requester_name),
         httponly=True,
         secure=is_https_request,
         samesite="lax",
@@ -170,6 +250,7 @@ async def logout():
 @router.get("/form-data")
 async def get_form_data(
         _session: None = Depends(require_public_session),
+        request: Request = None,
         db: AsyncSession = Depends(get_db_session),
 ):
     result = await db.execute(
@@ -181,12 +262,38 @@ async def get_form_data(
     )
     filaments = list(result.unique().scalars().all())
 
+    session_data = _get_public_session(request)
+    requester_name = session_data.get("requester_name")
+    active_requests = []
+    billing_items = []
+    outstanding_balance = 0.0
+    outstanding_currency = None
+    if requester_name:
+        active_requests = [
+            _to_public_list_item(item)
+            for item in await print_request_db.list_open_print_requests_for_requester(db, requester_name)
+        ]
+        billed_requests = await print_request_db.list_billed_print_requests_for_requester(db, requester_name)
+        billing_items = [_to_billing_list_item(item) for item in billed_requests]
+        for item in billing_items:
+            if outstanding_currency is None and item.currency:
+                outstanding_currency = item.currency
+            if not item.paid and item.final_price is not None:
+                outstanding_balance += item.final_price
     return JSONResponse(
         content=jsonable_encoder(
             api_models.PublicPrintRequestFormDataResponse(
                 delivery_types=api_models.PRINT_REQUEST_DELIVERY_VALUES,
                 priorities=api_models.PRINT_REQUEST_PRIORITY_VALUES,
                 filaments=[_to_filament_info(f) for f in filaments],
+                session=api_models.PublicPrintRequestSessionInfo(
+                    requester_name=requester_name,
+                    requester_name_locked=bool(requester_name),
+                ),
+                active_requests=active_requests,
+                billing_items=billing_items,
+                outstanding_balance=outstanding_balance,
+                outstanding_currency=outstanding_currency,
             )
         )
     )
@@ -198,27 +305,36 @@ async def create_print_request(
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
     payload = _load_json_with_whitespace_escapes(await request.body())
     try:
         body = api_models.PublicPrintRequestCreate.model_validate(payload)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
 
+    requester_name = session_data.get("requester_name")
+    if requester_name:
+        body = body.model_copy(update={"requester_name": requester_name})
+
     obj = await print_request_db.create_print_request(db, body)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content=jsonable_encoder(_to_public_response(obj)),
+        content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))),
     )
 
 
 @router.get("/{public_id}")
 async def get_print_request(
         public_id: str,
+        request: Request,
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
+    requester_name = session_data.get("requester_name")
     obj = await print_request_db.get_print_request_by_public_id(db, public_id)
-    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
+    _ensure_request_access(session_data, obj)
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))))
 
 
 @router.patch("/{public_id}")
@@ -228,15 +344,23 @@ async def update_print_request(
         _session: None = Depends(require_public_session),
         db: AsyncSession = Depends(get_db_session),
 ):
+    session_data = _get_public_session(request)
+    existing = await print_request_db.get_print_request_by_public_id(db, public_id)
+    _ensure_request_access(session_data, existing)
+
     payload = _load_json_with_whitespace_escapes(await request.body())
     try:
         body = api_models.PublicPrintRequestUpdate.model_validate(payload)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
 
+    requester_name = session_data.get("requester_name")
+    if requester_name:
+        body = body.model_copy(update={"requester_name": requester_name})
+
     try:
         obj = await print_request_db.update_print_request_public(db, public_id, body)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return JSONResponse(content=jsonable_encoder(_to_public_response(obj)))
+    return JSONResponse(content=jsonable_encoder(_to_public_response(obj, include_paid=bool(requester_name))))

@@ -416,9 +416,11 @@ class CostCalculation(BaseModel):
     base_price: Optional[float] = Field(None, ge=0, description="Price before uplifts or markup.")
     uplifted_price: Optional[float] = Field(None, ge=0, description="Price after failure uplift and markup.")
     final_price: Optional[float] = Field(None, ge=0, description="Final quoted price (overrides computed).")
+    paid: Optional[bool] = Field(None, description="Whether the calculation has already been paid.")
     currency: Optional[str] = Field(None, max_length=8, description="Currency used for the calculation.")
     item_names: Optional[str] = Field(None, max_length=512, description="Item names for the calculation.")
     notes: Optional[str] = Field(None, max_length=1024, description="Notes attached to the calculation.")
+    print_request_id: Optional[int] = Field(None, description="Linked print request ID.")
 
     @staticmethod
     def from_db(
@@ -448,9 +450,11 @@ class CostCalculation(BaseModel):
             base_price=item.base_price,
             uplifted_price=item.uplifted_price,
             final_price=item.final_price,
+            paid=item.paid,
             currency=item.currency,
             item_names=item.item_names,
             notes=item.notes,
+            print_request_id=item.print_request_id,
         )
 
 
@@ -570,6 +574,7 @@ PRINT_REQUEST_PRIORITY_VALUES = [
 class PrintRequestFilamentInfo(BaseModel):
     id: int
     display_name: str
+    color_hex: Optional[str] = None
 
 
 class PrintRequestBase(BaseModel):
@@ -711,6 +716,7 @@ class PrintRequestResponse(BaseModel):
     internal_notes: Optional[str]
 
     filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+    cost_calculation: Optional[CostCalculation] = None
 
 
 class PublicPrintRequestResponse(BaseModel):
@@ -749,12 +755,45 @@ class PublicPrintRequestResponse(BaseModel):
     rejection_reason: Optional[str]
 
     filaments: list[PrintRequestFilamentInfo] = Field(default_factory=list)
+    cost_calculation: Optional[CostCalculation] = None
+
+
+class PublicPrintRequestSessionInfo(BaseModel):
+    requester_name: Optional[str] = None
+    requester_name_locked: bool = False
+
+
+class PublicPrintRequestListItem(BaseModel):
+    public_id: str
+    title: str
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+    wanted_date: Optional[datetime]
+    final_price: Optional[float] = None
+    currency: Optional[str] = None
+
+
+class PublicCostCalculationListItem(BaseModel):
+    cost_calculation_id: int
+    public_id: str
+    title: str
+    item_names: Optional[str] = None
+    created: datetime
+    final_price: Optional[float] = None
+    currency: Optional[str] = None
+    paid: bool = False
 
 
 class PublicPrintRequestFormDataResponse(BaseModel):
     delivery_types: list[str]
     priorities: list[str]
     filaments: list[PrintRequestFilamentInfo]
+    session: PublicPrintRequestSessionInfo
+    active_requests: list[PublicPrintRequestListItem] = Field(default_factory=list)
+    billing_items: list[PublicCostCalculationListItem] = Field(default_factory=list)
+    outstanding_balance: float = 0
+    outstanding_currency: Optional[str] = None
 
 
 class PublicPrintRequestLoginRequest(BaseModel):

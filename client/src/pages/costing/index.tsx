@@ -4,6 +4,7 @@ import {useSearchParams} from "react-router-dom";
 import {
     CrudFilter,
     CrudFilters,
+    HttpError,
     IResourceComponentsProps,
     useCreate,
     useDelete,
@@ -17,6 +18,7 @@ import {buildCostingNotesFromPrintRequest} from "../../utils/printRequestToCosti
 import {
     Alert,
     Button,
+    Checkbox,
     Card,
     Col,
     Descriptions,
@@ -27,6 +29,7 @@ import {
     Popconfirm,
     Row,
     Select,
+    message as antMessage,
     Space,
     Table,
     Tag,
@@ -68,6 +71,7 @@ interface CostFormValues {
     failure_rate?: number;
     markup_rate?: number;
     final_price?: number;
+    paid?: boolean;
     item_names?: string;
     notes?: string;
 }
@@ -86,6 +90,7 @@ interface CostingInvoiceData {
     markupRate?: number;
     itemNames?: string;
     notes?: string;
+    printRequestId?: number;
     breakdown: Breakdown;
     currency: string;
 }
@@ -101,7 +106,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     const [searchParams] = useSearchParams();
     const printRequestId = searchParams.get("print_request_id");
 
-    const {data: printRequestData} = useOne<PrintRequestRecord>({
+    const printRequestQuery = useOne<PrintRequestRecord>({
         resource: "print-request",
         id: printRequestId ?? "",
         queryOptions: {
@@ -109,10 +114,12 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         },
     });
 
+    const printRequestData = printRequestQuery.data;
     const printRequest = printRequestData?.data;
+    const linkedCostCalculation = printRequest?.cost_calculation ?? null;
 
     const [form] = Form.useForm<CostFormValues>();
-    const [message, setMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [editingCalculation, setEditingCalculation] = useState<ICostCalculation | null>(null);
     const [isFinalPriceManuallySet, setIsFinalPriceManuallySet] = useState(false);
     const isUpdatingFinalPriceRef = useRef(false);
@@ -334,7 +341,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     }, [exportData, printHandler]);
 
     useEffect(() => {
-        if (!printRequest) return;
+        if (!printRequest || printRequest.cost_calculation) return;
 
         form.setFieldsValue({
             item_names: printRequest.title,
@@ -362,11 +369,17 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     }, [printers.length, filaments.length]);
 
     const handleSubmit = async () => {
+        if (printRequestId && printRequestQuery.isLoading) {
+            antMessage.warning("Auftrag wird noch geladen.");
+            return;
+        }
+
         const values = await form.validateFields();
         const computedBreakdown = applyComputedBreakdown(values);
         const payload = {
             printer_id: values.printer_id,
             filament_id: values.filament_id,
+            print_request_id: printRequestId ? Number(printRequestId) : undefined,
             print_time_hours: values.print_time_hours,
             labor_time_hours: values.labor_time_hours,
             filament_weight_g: values.filament_weight_g,
@@ -382,7 +395,8 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             base_price: computedBreakdown.base,
             uplifted_price: computedBreakdown.uplifted,
             final_price: computedBreakdown.final,
-            currency: currency,
+            paid: values.paid ?? false,
+            currency,
             item_names: values.item_names,
             notes: values.notes,
         };
@@ -395,13 +409,21 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                     values: payload,
                 },
                 {
-                    onSuccess: () => {
-                        setMessage(t("notifications.editSuccess", {resource: t("cost.title")}));
+                    onSuccess: (response) => {
+                        setEditingCalculation(response.data);
+                        setSuccessMessage(t("notifications.editSuccess", {resource: t("cost.title")}));
                         invalidate({
                             resource: "cost",
                             invalidates: ["list"],
                         });
-                        setEditingCalculation(null);
+                        invalidate({
+                            resource: "print-request",
+                            invalidates: ["list", "detail"],
+                        });
+                        void printRequestQuery.refetch();
+                    },
+                    onError: (error: HttpError) => {
+                        antMessage.error(error.message || "Kostenberechnung konnte nicht aktualisiert werden.");
                     },
                 }
             );
@@ -414,12 +436,33 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 values: payload,
             },
             {
-                onSuccess: () => {
-                    setMessage(t("notifications.createSuccess", {resource: t("cost.title")}));
+                onSuccess: (response) => {
+                    setEditingCalculation(response.data);
+                    setSuccessMessage(t("notifications.createSuccess", {resource: t("cost.title")}));
                     invalidate({
                         resource: "cost",
                         invalidates: ["list"],
                     });
+                    invalidate({
+                        resource: "print-request",
+                        invalidates: ["list", "detail"],
+                    });
+                    void printRequestQuery.refetch();
+                },
+                onError: async (error: HttpError) => {
+                    antMessage.error(error.message || "Kostenberechnung konnte nicht erstellt werden.");
+
+                    if (!printRequestId) {
+                        return;
+                    }
+
+                    const result = await printRequestQuery.refetch();
+                    const existingCalculation = result.data?.data?.cost_calculation;
+
+                    if (existingCalculation) {
+                        handleEdit(existingCalculation);
+                        antMessage.info("Vorhandene Kostenberechnung wurde geladen.");
+                    }
                 },
             }
         );
@@ -427,7 +470,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
 
     const handleEdit = (calculation: ICostCalculation) => {
         setEditingCalculation(calculation);
-        setMessage(null);
+        setSuccessMessage(null);
         setIsFinalPriceManuallySet(calculation.final_price !== undefined && calculation.final_price !== null);
         isHydratingCalculationRef.current = true;
         form.setFieldsValue({
@@ -442,6 +485,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             failure_rate: calculation.failure_rate ?? defaultFailure,
             markup_rate: calculation.markup_rate ?? defaultMarkup,
             final_price: calculation.final_price,
+            paid: calculation.paid ?? false,
             item_names: calculation.item_names,
             notes: calculation.notes,
         });
@@ -457,6 +501,54 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         });
         isHydratingCalculationRef.current = false;
     };
+
+    useEffect(() => {
+        if (!linkedCostCalculation) {
+            return;
+        }
+
+        setEditingCalculation(linkedCostCalculation);
+        setSuccessMessage(null);
+        setIsFinalPriceManuallySet(
+            linkedCostCalculation.final_price !== undefined && linkedCostCalculation.final_price !== null
+        );
+        isHydratingCalculationRef.current = true;
+        form.setFieldsValue({
+            printer_id: linkedCostCalculation.printer?.id,
+            filament_id: linkedCostCalculation.filament?.id,
+            print_time_hours: linkedCostCalculation.print_time_hours,
+            labor_time_hours: linkedCostCalculation.labor_time_hours,
+            filament_weight_g: linkedCostCalculation.filament_weight_g,
+            energy_cost_per_kwh: linkedCostCalculation.energy_cost_per_kwh ?? defaultEnergy,
+            labor_cost_per_hour: linkedCostCalculation.labor_cost_per_hour ?? defaultLabor,
+            consumables_cost: linkedCostCalculation.consumables_cost ?? defaultConsumables,
+            failure_rate: linkedCostCalculation.failure_rate ?? defaultFailure,
+            markup_rate: linkedCostCalculation.markup_rate ?? defaultMarkup,
+            final_price: linkedCostCalculation.final_price,
+            paid: linkedCostCalculation.paid ?? false,
+            item_names: linkedCostCalculation.item_names,
+            notes: linkedCostCalculation.notes,
+        });
+        setBreakdown({
+            material: linkedCostCalculation.material_cost ?? 0,
+            energy: linkedCostCalculation.energy_cost ?? 0,
+            depreciation: linkedCostCalculation.depreciation_cost ?? 0,
+            labor: linkedCostCalculation.labor_cost ?? 0,
+            consumables: linkedCostCalculation.consumables_cost ?? 0,
+            base: linkedCostCalculation.base_price ?? 0,
+            uplifted: linkedCostCalculation.uplifted_price ?? 0,
+            final: linkedCostCalculation.final_price ?? 0,
+        });
+        isHydratingCalculationRef.current = false;
+    }, [
+        linkedCostCalculation,
+        form,
+        defaultConsumables,
+        defaultEnergy,
+        defaultFailure,
+        defaultLabor,
+        defaultMarkup,
+    ]);
 
     const handleExportPdfFromForm = async () => {
         try {
@@ -483,6 +575,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 markupRate: values.markup_rate ?? defaultMarkup,
                 itemNames: values.item_names,
                 notes: values.notes,
+                printRequestId: printRequestId ? Number(printRequestId) : undefined,
                 breakdown: computedBreakdown,
                 currency,
             });
@@ -506,6 +599,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             markupRate: calculation.markup_rate ?? defaultMarkup,
             itemNames: calculation.item_names,
             notes: calculation.notes,
+            printRequestId: calculation.print_request_id,
             breakdown: {
                 material: calculation.material_cost ?? 0,
                 energy: calculation.energy_cost ?? 0,
@@ -559,6 +653,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 <div style={{textAlign: "right"}}>
                     <div style={{fontSize: "14px", color: "#555"}}>{t("cost.pdf.issued_at")}</div>
                     <div style={{fontWeight: 600}}>{data.issuedAt}</div>
+                    {data.printRequestId != null && (
+                        <div style={{marginTop: "8px", fontWeight: 600}}>Auftrag #{data.printRequestId}</div>
+                    )}
                     <div style={{marginTop: "8px", fontSize: "13px", color: "#555"}}>{data.currency}</div>
                 </div>
             </div>
@@ -677,8 +774,12 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
     ));
 
     const resetEditing = () => {
+        if (linkedCostCalculation) {
+            handleEdit(linkedCostCalculation);
+            return;
+        }
         setEditingCalculation(null);
-        setMessage(null);
+        setSuccessMessage(null);
         setIsFinalPriceManuallySet(false);
         form.resetFields();
         form.setFieldsValue({
@@ -687,6 +788,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             failure_rate: defaultFailure,
             markup_rate: defaultMarkup,
             consumables_cost: defaultConsumables,
+            paid: false,
         });
         setBreakdown({
             material: 0,
@@ -707,12 +809,17 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                 id: calculation.id,
             },
             {
-                onSuccess: () => {
+                onSuccess: (response) => {
                     invalidate({
                         resource: "cost",
                         invalidates: ["list"],
                     });
-                    setMessage(t("notifications.deleteSuccess", {resource: t("cost.title")}));
+                    invalidate({
+                        resource: "print-request",
+                        invalidates: ["list", "detail"],
+                    });
+                    void printRequestQuery.refetch();
+                    setSuccessMessage(t("notifications.deleteSuccess", {resource: t("cost.title")}));
                     if (editingCalculation?.id === calculation.id) {
                         resetEditing();
                     }
@@ -754,6 +861,21 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
         },
     });
 
+    useEffect(() => {
+        if (!printRequestId) {
+            return;
+        }
+
+        setFilters([
+            {
+                field: "print_request_id",
+                operator: "eq",
+                value: Number(printRequestId),
+            },
+        ], "replace");
+        setCurrent(1);
+    }, [printRequestId, setCurrent, setFilters]);
+
     const currentFilters = (filters as CrudFilters) ?? [];
     const selectedPrinterFilters =
         ((currentFilters.find((filter) => "field" in filter && filter.field === "printer_id") as CrudFilter | undefined)
@@ -791,6 +913,15 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
             <Card>
                 <Title level={3}>{t("cost.title")}</Title>
                 <Paragraph type="secondary">{t("cost.description")}</Paragraph>
+                {printRequest && (
+                    <Alert
+                        type="info"
+                        showIcon
+                        message={`Verknüpft mit Auftrag #${printRequest.id}: ${printRequest.title}`}
+                        description={`Tracking-ID: ${printRequest.public_id}`}
+                        style={{marginBottom: 16}}
+                    />
+                )}
                 <Form
                     form={form}
                     layout="vertical"
@@ -929,6 +1060,9 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             </Form.Item>
                         </Col>
                     </Row>
+                    <Form.Item name="paid" valuePropName="checked">
+                        <Checkbox>Bezahlt</Checkbox>
+                    </Form.Item>
                     <Form.Item label={t("cost.fields.notes")} name="notes">
                         <Input.TextArea rows={3}/>
                     </Form.Item>
@@ -992,7 +1126,7 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                                 <Button icon={<FilePdfOutlined/>} onClick={handleExportPdfFromForm}>
                                     {t("cost.actions.export_pdf")}
                                 </Button>
-                                {message && <Alert type="success" message={message} showIcon/>}
+                                {successMessage && <Alert type="success" message={successMessage} showIcon/>}
                             </Space>
                         </Col>
                     </Row>
@@ -1086,6 +1220,11 @@ export const CostingPage: React.FC<IResourceComponentsProps> = () => {
                             dataIndex: "final_price",
                             sorter: true,
                             render: (value?: number) => formatter.format(value ?? 0),
+                        },
+                        {
+                            title: "Bezahlt",
+                            dataIndex: "paid",
+                            render: (value?: boolean) => value ? <Tag color="green">Ja</Tag> : <Tag color="orange">Nein</Tag>,
                         },
                         {
                             title: t("cost.fields.notes"),

@@ -46,7 +46,7 @@ export function RequestForm({
         if (!initialValues) return undefined;
 
         return {
-            requester_name: initialValues.requester_name,
+            requester_name: initialValues.requester_name || formData.session.requester_name || "",
             requester_contact: initialValues.requester_contact,
             delivery_type: initialValues.delivery_type,
             delivery_details: initialValues.delivery_details,
@@ -64,10 +64,15 @@ export function RequestForm({
             comment: initialValues.comment,
             filament_ids: initialValues.filaments.map((f) => f.id),
         };
-    }, [initialValues]);
+    }, [formData.session.requester_name, initialValues]);
 
     const otherFilamentRequested = Form.useWatch("other_filament_requested", form);
     const selectedFilaments = Form.useWatch("filament_ids", form) ?? [];
+
+    const normalizeColorHex = (value?: string | null): string | null => {
+        if (!value) return null;
+        return value.startsWith("#") ? value : `#${value}`;
+    };
 
     const handleFinish = async (values: FormValues) => {
         const payload: PublicPrintRequestPayload = {
@@ -97,7 +102,7 @@ export function RequestForm({
             form={form}
             layout="vertical"
             onFinish={handleFinish}
-            initialValues={mappedInitialValues ?? {other_filament_requested: false, filament_ids: []}}
+            initialValues={mappedInitialValues ?? {requester_name: formData.session.requester_name ?? "", other_filament_requested: false, filament_ids: []}}
         >
             <Space direction="vertical" size={16} style={{width: "100%"}}>
                 {error && <Alert type="error" message={error} showIcon/>}
@@ -114,7 +119,7 @@ export function RequestForm({
                                 label="Name des Auftraggebers"
                                 rules={[{required: true, message: "Bitte Namen eingeben."}]}
                             >
-                                <Input placeholder="Max Mustermann"/>
+                                <Input placeholder="Max Mustermann" disabled={formData.session.requester_name_locked}/>
                             </Form.Item>
                         </Col>
 
@@ -199,6 +204,11 @@ export function RequestForm({
                         Filamente
                     </Typography.Title>
 
+                    <Typography.Title level={5} className="warning">
+                        Bitte beachte bei der Auswahl mehrerer Filamente die Materialkompatibilität.
+                        Nicht alle Materialien lassen sich gemeinsam in einem Druckvorgang verwenden.
+                    </Typography.Title>
+
                     <Form.Item
                         name="filament_ids"
                         label="Vorhandene Filamente"
@@ -217,11 +227,32 @@ export function RequestForm({
                         <Select
                             mode="multiple"
                             placeholder="Filamente auswählen"
-                            optionFilterProp="label"
-                            options={formData.filaments.map((filament) => ({
-                                label: filament.display_name,
-                                value: filament.id,
-                            }))}
+                            optionFilterProp="searchLabel"
+                            options={formData.filaments.map((filament) => {
+                                const normalizedColor = normalizeColorHex(filament.color_hex);
+
+                                return {
+                                    label: (
+                                        <Space size={8}>
+                                            {normalizedColor ? (
+                                                <span
+                                                    style={{
+                                                        width: 12,
+                                                        height: 12,
+                                                        borderRadius: "50%",
+                                                        border: "1px solid rgba(0,0,0,0.2)",
+                                                        backgroundColor: normalizedColor,
+                                                        display: "inline-block",
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <span>{filament.display_name}</span>
+                                        </Space>
+                                    ),
+                                    searchLabel: `${filament.display_name} ${normalizedColor ?? ""}`,
+                                    value: filament.id,
+                                };
+                            })}
                         />
                     </Form.Item>
 

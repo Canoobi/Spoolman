@@ -56,7 +56,7 @@ async def get(
 async def update(
         db: Annotated[AsyncSession, Depends(get_db_session)],
         entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
-        key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
+        key: Annotated[str, Path(min_length=1, max_length=64, pattern="^[a-z0-9_]+$")],
         body: ExtraFieldParameters,
 ) -> Union[list[ExtraField], JSONResponse]:
     dict_body = body.model_dump()
@@ -86,7 +86,7 @@ async def update(
 async def delete(
         db: Annotated[AsyncSession, Depends(get_db_session)],
         entity_type: Annotated[EntityType, Path(description="Entity type this field is for")],
-        key: Annotated[str, Path(min_length=1, max_length=64, regex="^[a-z0-9_]+$")],
+        key: Annotated[str, Path(min_length=1, max_length=64, pattern="^[a-z0-9_]+$")],
 ) -> Union[list[ExtraField], JSONResponse]:
     try:
         await delete_extra_field(db, entity_type, key)

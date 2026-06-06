@@ -16,6 +16,7 @@ services:
       - TZ=Europe/Berlin
       - SPOOLMAN_PRINT_REQUEST_PASSWORD=${SPOOLMAN_PRINT_REQUEST_PASSWORD}
       - SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET=${SPOOLMAN_PRINT_REQUEST_COOKIE_SECRET}
+      - SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS=${SPOOLMAN_PRINT_REQUEST_USER_PASSWORDS}
     container_name: Spoolman
 
   public-print-request:
@@ -38,7 +39,7 @@ services:
     ports:
       - 30169:4000
     environment:
-      - SPOOLMAN_ENDPOINT=http://192.168.1.99:30168
+      - SPOOLMAN_ENDPOINT=http://192.168.10.99:30168
       - UPDATE_INTERVAL=120000
       - MODE=manual
     volumes:

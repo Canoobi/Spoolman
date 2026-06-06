@@ -1,13 +1,49 @@
 import {useEffect, useState} from "react";
-import {Alert, Button, Space, Typography} from "antd";
+import {Alert, Button, Divider, Space, Typography} from "antd";
 import {Link} from "react-router-dom";
 import axios from "axios";
 import {AppLayout} from "../components/AppLayout";
 import {PageCard} from "../components/PageCard";
 import {RequestForm} from "../components/RequestForm";
 import {createPrintRequest, getFormData} from "../api/printRequest";
-import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse,} from "../types/api";
-import {buildStatusUrl} from "../utils/format";
+import type {
+    PublicFormDataResponse,
+    PublicCostCalculationListItem,
+    PublicPrintRequestListItem,
+    PublicPrintRequestPayload,
+    PublicPrintRequestResponse,
+} from "../types/api";
+import {buildStatusUrl, formatDateTime} from "../utils/format";
+
+function formatCurrency(value?: number | null, currency?: string | null): string {
+    if (value == null) return "Noch nicht verfügbar";
+
+    try {
+        return new Intl.NumberFormat("de-DE", {
+            style: "currency",
+            currency: currency || "EUR",
+        }).format(value);
+    } catch {
+        return `${value.toFixed(2)} ${currency || ""}`.trim();
+    }
+}
+
+function buildListItemFromRequest(request: PublicPrintRequestResponse): PublicPrintRequestListItem {
+    return {
+        public_id: request.public_id,
+        title: request.title,
+        status: request.status,
+        created_at: request.created_at,
+        updated_at: request.updated_at,
+        wanted_date: request.wanted_date,
+        final_price: request.cost_calculation?.final_price ?? null,
+        currency: request.cost_calculation?.currency ?? null,
+    };
+}
+
+function getBillingItemLabel(item: PublicCostCalculationListItem): string {
+    return item.item_names?.trim() || item.title;
+}
 
 export function RequestPage() {
     const [formData, setFormData] = useState<PublicFormDataResponse | null>(null);
@@ -46,6 +82,19 @@ export function RequestPage() {
         try {
             const result = await createPrintRequest(payload);
             setCreatedRequest(result);
+            setFormData((previous) => {
+                if (!previous || !previous.session.requester_name_locked) {
+                    return previous;
+                }
+
+                return {
+                    ...previous,
+                    active_requests: [
+                        buildListItemFromRequest(result),
+                        ...previous.active_requests.filter((item) => item.public_id !== result.public_id),
+                    ],
+                };
+            });
             window.scrollTo({top: 0, behavior: "smooth"});
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -80,7 +129,7 @@ export function RequestPage() {
                         </Typography.Paragraph>
 
                         <div className="success-link-box">
-                            <Typography.Text strong>Statuslink (bitte speichern):</Typography.Text>
+                            <Typography.Text strong>Statuslink:</Typography.Text>
                             <div style={{marginTop: 8, wordBreak: "break-all"}}>
                                 <a
                                     href={buildStatusUrl(createdRequest.public_id)}
@@ -105,6 +154,75 @@ export function RequestPage() {
                 {!loading && error && !formData && (
                     <Alert type="error" showIcon message={error}/>
                 )}
+
+                {!loading && formData?.session.requester_name_locked && (
+                    <PageCard title="Deine offenen Aufträge">
+                        {formData.active_requests.length > 0 ? (
+                            <Space direction="vertical" size={12} style={{width: "100%"}}>
+                                {formData.active_requests.map((request) => (
+                                    <div key={request.public_id}>
+                                        <Typography.Text strong>{request.title}</Typography.Text>
+                                        <div>Status: {request.status}</div>
+                                        <div>Erstellt: {formatDateTime(request.created_at)}</div>
+                                        <div>Letztes Update: {formatDateTime(request.updated_at)}</div>
+                                        <div>Gesamtpreis: {formatCurrency(request.final_price, request.currency)}</div>
+                                        <div style={{marginTop: 8}}>
+                                            <Link to={buildStatusUrl(request.public_id)}>
+                                                <Button type="primary" size="small">Tracking-Link</Button>
+                                            </Link>
+                                        </div>
+                                        <Divider style={{margin: "12px 0"}}/>
+                                    </div>
+                                ))}
+                            </Space>
+                        ) : (
+                            <Alert
+                                type="info"
+                                showIcon
+                                message="Aktuell sind keine offenen Aufträge für dein Benutzerkonto vorhanden."
+                            />
+                        )}
+                    </PageCard>
+                )}
+
+                {!loading && formData?.session.requester_name_locked && (
+                    <PageCard title="Zahlungen & Rechnungen">
+                        <Space direction="vertical" size={12} style={{width: "100%"}}>
+                            <Typography.Text strong>
+                                Offener Gesamtbetrag: {formatCurrency(formData.outstanding_balance, formData.outstanding_currency)}
+                            </Typography.Text>
+
+                            {formData.billing_items.length > 0 ? (
+                                <>
+                                    {formData.billing_items.map((item) => (
+                                        <div key={item.cost_calculation_id}>
+                                            <Typography.Text strong>{getBillingItemLabel(item)}</Typography.Text>
+                                            {item.item_names && item.item_names !== item.title && (
+                                                <div>Auftrag: {item.title}</div>
+                                            )}
+                                            <div>Rechnungsdatum: {formatDateTime(item.created)}</div>
+                                            <div>Summe: {formatCurrency(item.final_price, item.currency)}</div>
+                                            <div>Status: {item.paid ? "Bezahlt" : "Offen"}</div>
+                                            <div style={{marginTop: 8}}>
+                                                <Link to={`/request/status/${item.public_id}/invoice`}>
+                                                    <Button type="primary" size="small">Zur Rechnung</Button>
+                                                </Link>
+                                            </div>
+                                            <Divider style={{margin: "12px 0"}}/>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <Alert
+                                    type="info"
+                                    showIcon
+                                    message="Aktuell liegen noch keine Kostenberechnungen für dein Benutzerkonto vor."
+                                />
+                            )}
+                        </Space>
+                    </PageCard>
+                )}
+
 
                 {!loading && formData && (
                     <RequestForm
