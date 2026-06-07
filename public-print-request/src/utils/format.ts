@@ -14,6 +14,11 @@ export function buildStatusUrl(publicId: string): string {
     return `${window.location.origin}/request/status/${publicId}`;
 }
 
+export function buildLoginUrl(ref?: string | null): string {
+    if (!ref) return "/";
+    return `/?ref=${encodeURIComponent(ref)}`;
+}
+
 export function normalizeTextareaUrls(value?: string): string | undefined {
     if (!value) return undefined;
     return value

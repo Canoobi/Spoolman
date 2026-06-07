@@ -6,7 +6,7 @@ import {AppLayout} from "../components/AppLayout";
 import {PageCard} from "../components/PageCard";
 import {getPrintRequest} from "../api/printRequest";
 import type {PublicCostCalculation, PublicPrintRequestResponse} from "../types/api";
-import {formatDateTime} from "../utils/format";
+import {buildLoginUrl, formatDateTime} from "../utils/format";
 
 function formatCurrency(value?: number | null, currency?: string | null): string {
     if (value == null) return "—";
@@ -93,7 +93,22 @@ export function InvoicePage() {
         >
             <Space direction="vertical" size={16} style={{width: "100%"}}>
                 {loading && <Alert type="info" showIcon message="Rechnung wird geladen ..."/>}
-                {error && <Alert type="error" showIcon message={error}/>}
+                {error && (
+                    <Alert
+                        type="error"
+                        showIcon
+                        message={error}
+                        action={
+                            error.includes("Nicht angemeldet") ? (
+                                <Link to={buildLoginUrl(publicId ? `/request/status/${publicId}/invoice` : null)}>
+                                    <Button type="primary" size="small">
+                                        Zur Anmeldung
+                                    </Button>
+                                </Link>
+                            ) : undefined
+                        }
+                    />
+                )}
 
                 {!loading && request && !cost && (
                     <Alert type="info" showIcon message="Für diesen Auftrag ist noch keine Rechnung verfügbar."/>
