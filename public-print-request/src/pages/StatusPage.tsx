@@ -10,7 +10,7 @@ import {StatusTag} from "../components/StatusTag";
 import {getFormData, getPrintRequest, updatePrintRequest} from "../api/printRequest";
 import type {PublicFormDataResponse, PublicPrintRequestPayload, PublicPrintRequestResponse} from "../types/api";
 import {EDITABLE_STATUSES} from "../utils/constants";
-import {formatDate, formatDateTime} from "../utils/format";
+import {buildLoginUrl, formatDate, formatDateTime} from "../utils/format";
 
 function formatCurrency(value?: number | null, currency?: string | null): string {
     if (value == null) return "Noch nicht verfügbar";
@@ -126,7 +126,7 @@ export function StatusPage() {
                         message={error}
                         action={
                             error.includes("Nicht angemeldet") ? (
-                                <Link to="/">
+                                <Link to={buildLoginUrl(publicId)}>
                                     <Button type="primary" size="small">
                                         Zur Anmeldung
                                     </Button>
