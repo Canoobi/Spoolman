@@ -62,6 +62,8 @@ Spoolman ist ein Webservice zur Verwaltung von 3D-Druck-Filamentspulen. Die Anwe
 | `prometheus-client` | Prometheus-Metriken |
 | `httpx` | HTTP-Client für externe Anfragen |
 | `hishel` | HTTP-Caching |
+| `Pillow` | Bildgenerierung (Label-Erstellung) |
+| `qrcode` | QR-Code-Generierung für Labels |
 | `scheduler` | Hintergrund-Aufgabenplanung |
 | `platformdirs` | Plattformspezifische Verzeichnisse |
 | `WebSockets` | WebSocket-Unterstützung |
@@ -312,6 +314,7 @@ Client (Browser) ──HTTP/WS──► FastAPI ──► SQLAlchemy ──► D
 | Mehrere Datenbanken | SQLite, PostgreSQL, MySQL, CockroachDB | Fertig |
 | Internationalisierung | Frontend mit i18next | Fertig |
 | QR-Code-Scanner | Spulen per QR-Code identifizieren | Fertig |
+| NIIMBOT-Label-Druck | Druckfertiges Label (50×30 mm) für NIIMBOT B1 Pro Etikettendrucker | Fertig |
 
 ## API-Endpunkte
 
@@ -398,6 +401,7 @@ Basis-Pfad: `/api/v1`
 | PATCH | `/api/v1/print-request/{request_id}` | Auftrag intern bearbeiten | Nein |
 | POST | `/api/v1/print-request/{request_id}/accept` | Auftrag annehmen | Nein |
 | POST | `/api/v1/print-request/{request_id}/reject` | Auftrag ablehnen | Nein |
+| GET | `/api/v1/print-request/{request_id}/label` | NIIMBOT-Label als PNG generieren | Nein |
 
 ### Print Request Public (Öffentliches Portal)
 
@@ -409,6 +413,59 @@ Basis-Pfad: `/api/v1`
 | POST | `/api/v1/print-request-public/` | Druckauftrag einreichen | Ja (Session) |
 | GET | `/api/v1/print-request-public/{public_id}` | Eigenen Auftrag abrufen | Ja (Session) |
 | PATCH | `/api/v1/print-request-public/{public_id}` | Eigenen Auftrag bearbeiten | Ja (Session) |
+#### Label-Endpunkt Details
+
+**GET** `/api/v1/print-request/{request_id}/label`
+
+Generiert ein druckfertiges PNG-Label für NIIMBOT B1 Pro Etikettendrucker. Interner Endpunkt, erreichbar über die Admin-Oberfläche.
+
+**Parameter:**
+
+| Parameter | Typ | In | Pflicht | Beschreibung |
+|-----------|-----|-----|---------|--------------|
+| `request_id` | integer | path | Ja | Interne ID des Druckauftrags |
+| `base_url` | string | query | Nein | Basis-URL für den QR-Code (Standard: `https://canoob.de`) |
+
+**Label-Spezifikation:**
+
+| Eigenschaft | Wert |
+|-------------|------|
+| Größe | 50 mm × 30 mm |
+| Auflösung | 300 DPI (~591 × 354 px) |
+| Farbmodus | Schwarz-Weiß (1-bit, als Grayscale-PNG gespeichert) |
+| Format | PNG |
+
+**Label-Layout:**
+
+```text
+┌──────────────────────┬─────────────────────┐
+│ #42                  │                     │
+│ ─────────────────────│                     │
+│ Mein langer Titel    │                     │
+│ über mehrere Zeilen  │      QR-Code        │
+│ Bestelldatum         │                     │
+│ 10.06.2026           │                     │
+│ Fertigstellung       │                     │
+│ 15.06.2026           │                     │
+│ Preis                │                     │
+│ 12.50 EUR            │                     │
+└──────────────────────┴─────────────────────┘
+        50 %                    50 %
+```
+
+- Linke Hälfte: Request-ID, Titel (1–4 Zeilen, Wortumbruch bei Leerzeichen/Bindestrich), Bestelldatum, Fertigstellung, Preis (unten)
+- Rechte Hälfte: QR-Code zur öffentlichen Request-URL (vertikal zentriert)
+- Trennlinie unter der ID geht bis zur halben Labelbreite
+- Preis zeigt „Kostenlos" wenn 0 oder nicht vorhanden
+
+**Response:** `200 OK` mit `Content-Type: image/png` und `Content-Disposition: attachment; filename="request-{request_id}-label.png"`
+
+**Fehlerfälle:**
+
+| Status | Beschreibung |
+|--------|--------------|
+| 404 | Auftrag nicht gefunden |
+| 500 | Pillow oder qrcode nicht installiert |
 
 ### Setting (Einstellungen)
 
@@ -758,4 +815,6 @@ services:
 
 | Datum | Änderung |
 |-------|----------|
+| 2026-06-21 | NIIMBOT-Label-Download-Funktion dokumentiert |
+| 2026-06-15 | Dokumentation aktualisiert |
 | 2025-07-18 | README vollständig nach Dokumentationsrichtlinie erstellt |

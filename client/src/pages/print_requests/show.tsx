@@ -5,6 +5,7 @@ import {Alert, Button, Card, Descriptions, Form, Input, message, Modal, Select, 
 import type {PrintRequestInternalPatch, PrintRequestRecord,} from "../../types/printRequest";
 import {PRINT_REQUEST_STATUSES} from "../../types/printRequest";
 import {formatDate, formatDateTime, renderMultilineText, renderPrintRequestStatus,} from "../../utils/printRequest";
+import {getAPIURL} from "../../utils/url";
 
 const {TextArea} = Input;
 
@@ -20,6 +21,7 @@ export const PrintRequestShow: React.FC = () => {
 
     const [rejectOpen, setRejectOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState("");
+    const [labelLoading, setLabelLoading] = useState(false);
 
     const {
         formProps,
@@ -103,6 +105,31 @@ export const PrintRequestShow: React.FC = () => {
         );
     };
 
+    const doDownloadLabel = async () => {
+        if (!record) return;
+
+        setLabelLoading(true);
+        try {
+            const response = await fetch(`${getAPIURL()}/print-request/${record.id}/label`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `request-${record.id}-label.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch {
+            message.error("Label konnte nicht heruntergeladen werden.");
+        } finally {
+            setLabelLoading(false);
+        }
+    };
+
     return (
         <>
             <Show
@@ -113,29 +140,47 @@ export const PrintRequestShow: React.FC = () => {
                         {record && (
                             <Button
                                 type="primary"
+                                hidden={record.status !== "Abgeschlossen"}
+                                loading={labelLoading}
+                                onClick={doDownloadLabel}
+                            >
+                                Label herunterladen
+                            </Button>
+                        )}
+
+                        {record && (
+                            <Button
+                                type="primary"
+                                hidden={record.status === "Angefragt" || record.status === "Abgelehnt"}
                                 href={`/costing?print_request_id=${record.id}`}
                             >
                                 Kostenberechnung erstellen
                             </Button>
                         )}
 
-                        <Button
-                            onClick={doAccept}
-                            loading={customLoading}
-                            type="primary"
-                            disabled={!record}
-                        >
-                            Annehmen
-                        </Button>
+                        {record && (
+                            <Button
+                                onClick={doAccept}
+                                loading={customLoading}
+                                type="primary"
+                                hidden={!(record.status === "Angefragt" || record.status === "In Klärung" || record.status === "Abgelehnt")}
+                                disabled={!record}
+                            >
+                                Annehmen
+                            </Button>
+                        )}
 
-                        <Button
-                            danger
-                            onClick={() => setRejectOpen(true)}
-                            loading={customLoading}
-                            disabled={!record}
-                        >
-                            Ablehnen
-                        </Button>
+                        {record && (
+                            <Button
+                                danger
+                                onClick={() => setRejectOpen(true)}
+                                loading={customLoading}
+                                hidden={!(record.status === "Angefragt" || record.status === "In Klärung" || record.status === "Offen")}
+                                disabled={!record}
+                            >
+                                Ablehnen
+                            </Button>
+                        )}
                     </Space>
                 )}
 
