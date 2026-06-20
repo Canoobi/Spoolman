@@ -8,18 +8,16 @@ RUN npm run build
 
 FROM python:3.12-bookworm AS python-builder
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
-    python3-dev \
+    build-essential \
     libpq-dev \
     libffi-dev \
-    python3-pip \
-    python3-setuptools \
-    python3-wheel \
-    python3-pdm \
+    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN python -m pip install --no-cache-dir -U "pdm>=2.25,<3"
 
 # Add local user so we don't run as root
 RUN groupmod -g 1000 users \
@@ -27,11 +25,14 @@ RUN groupmod -g 1000 users \
     && usermod -G users app
 
 ENV PATH="/home/app/.local/bin:${PATH}"
+ENV PDM_CHECK_UPDATE=false
 
 # Copy and install dependencies
 COPY --chown=app:app pyproject.toml /home/app/spoolman/
 COPY --chown=app:app pdm.lock /home/app/spoolman/
 WORKDIR /home/app/spoolman
+
+RUN pdm lock --check
 RUN pdm sync --prod --no-editable
 
 # Copy and install app
