@@ -140,7 +140,7 @@ export const PrintRequestShow: React.FC = () => {
                         {record && (
                             <Button
                                 type="primary"
-                                hidden={record.status !== "Abgeschlossen"}
+                                hidden={record.status !== "Hergestellt"}
                                 loading={labelLoading}
                                 onClick={doDownloadLabel}
                             >
