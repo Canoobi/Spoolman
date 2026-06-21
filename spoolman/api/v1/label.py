@@ -349,7 +349,7 @@ async def generate_label(
         price=price,
         currency=currency,
         created_at=obj.created_at,
-        completed_at=obj.completed_at,
+        completed_at=obj.updated_at,
         public_url=public_url,
     )
 
