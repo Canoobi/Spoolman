@@ -12,6 +12,9 @@ jobs:
       run_build_docker_compose_file: true
       run_start_compose_containers: true
       run_restart_non_compose_containers: false
+      health_url: http://192.168.10.99:30168/health
+      health_timeout_seconds: 180
+      health_expected_status: 200
     secrets:
       WORKFLOWS_REPO_TOKEN: ${{ secrets.WORKFLOWS_REPO_TOKEN }}
       REPO_PATH: ${{ secrets.REPO_PATH }}
