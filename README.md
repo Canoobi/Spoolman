@@ -837,7 +837,7 @@ Hinweise zu `/data/`:
 
 | Datum | Änderung |
 |-------|----------|
-| 2026-08-11 | Pfad-Routing des Public-Print-Request-Nginx inklusive `/data`-Weiterleitung dokumentiert |
+| 2026-08-11 | Pfad-Routing des Public-Print-Request-Nginx inklusive `/data`-Weiterleitung dokumentiert; Upstream-Schema auf `https` korrigiert und Hinweise zu TLS, Zertifikatsprüfung und SNI ergänzt |
 | 2026-06-21 | NIIMBOT-Label-Download-Funktion dokumentiert |
 | 2026-06-15 | Dokumentation aktualisiert |
 | 2025-07-18 | README vollständig nach Dokumentationsrichtlinie erstellt |
