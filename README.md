@@ -11,8 +11,8 @@ Spoolman ist ein Webservice zur Verwaltung von 3D-Druck-Filamentspulen. Die Anwe
 | Status | Aktiv |
 | Stabilität | Stabil |
 | Produktiv nutzbar | Ja |
-| Letzte bekannte Änderung | Noch nicht dokumentiert |
-| Offene Hauptaufgaben | Noch nicht dokumentiert |
+| Letzte bekannte Änderung | 2026-08-11 (Pfad-Weiterleitung `/data` im Public-Print-Request-Nginx) |
+| Offene Hauptaufgaben | Upstream-Merges, Pflege der Custom-Erweiterungen |
 
 ## Metadaten
 
@@ -570,6 +570,7 @@ Der Docker-Container verwendet Port 8000 intern und kann über `SPOOLMAN_PORT` u
 |-------|-------|----------------------|
 | `.env.example` | Beispiel-Umgebungsvariablen | Ja (als `.env` kopieren) |
 | `docker-compose.yml` | Container-Definition | Ja (Volumes, Ports) |
+| `public-print-request/nginx.conf` | Nginx-Routing des öffentlichen Portals | Ja (bei zusätzlichen Pfad-Weiterleitungen) |
 | `alembic.ini` | Alembic-Migrationskonfiguration | Nein |
 | `pyproject.toml` | Projektdefinition, Dependencies, Linting | Nein |
 | `.pre-commit-config.yaml` | Pre-Commit-Hook-Konfiguration | Nein |
@@ -740,6 +741,24 @@ services:
 | Spoolman Backend | 8000 | REST-API + Frontend |
 | Public Print Request | 80 | Nginx-basiertes Portal |
 
+### Routing im Public-Print-Request-Nginx
+
+Der Nginx des Public-Print-Request-Containers bedient die gesamte Domain und verteilt die Anfragen nach Pfad. Das ist notwendig, weil vorgelagerte Reverse-Proxys wie das Synology-Anmeldeportal nur nach Hostname und Port weiterleiten können und keine pfadbasierten Regeln unterstützen.
+
+| Pfad | Ziel | Beschreibung |
+|------|------|--------------|
+| `/api/v1/print-request/public/` | `http://spoolman:8000` | Öffentliche Print-Request-API |
+| `/api/` | – | Übrige API-Pfade werden mit 404 blockiert |
+| `/data/` | `http://host.docker.internal:10321` | Dienst auf dem Docker-Host außerhalb dieses Stacks |
+| `/` | Statische Dateien | React-SPA mit `try_files`-Fallback auf `index.html` |
+
+Hinweise zu `/data/`:
+
+- Die Weiterleitung nutzt `host.docker.internal`. Damit dieser Name im Container auflösbar ist, enthält der Service `public-print-request` in der `docker-compose.yml` das Mapping `extra_hosts: host.docker.internal:host-gateway`. Ohne dieses Mapping startet Nginx nicht.
+- Der abschließende Schrägstrich in `proxy_pass` entfernt das Präfix `/data` aus der weitergeleiteten Anfrage. Der Zieldienst erhält die Anfrage also auf `/`.
+- Der Zieldienst muss unter einem Unterpfad auslieferbar sein. Verwendet er absolute Pfade für statische Dateien, muss dort ein Base-Path von `/data` konfiguriert werden. Zur Unterstützung wird der Header `X-Forwarded-Prefix: /data` gesetzt.
+- `/data` ohne abschließenden Schrägstrich wird per HTTP 301 auf `/data/` umgeleitet.
+
 ## CI/CD
 
 --
@@ -815,6 +834,7 @@ services:
 
 | Datum | Änderung |
 |-------|----------|
+| 2026-08-11 | Pfad-Routing des Public-Print-Request-Nginx inklusive `/data`-Weiterleitung dokumentiert |
 | 2026-06-21 | NIIMBOT-Label-Download-Funktion dokumentiert |
 | 2026-06-15 | Dokumentation aktualisiert |
 | 2025-07-18 | README vollständig nach Dokumentationsrichtlinie erstellt |

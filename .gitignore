@@ -209,3 +209,4 @@ data/
 /public-print-request/.env
 /.env
 /public-print-request/config/
+/graphify-out/

@@ -29,6 +29,9 @@ services:
       - spoolman
     ports:
       - "30170:80"
+    extra_hosts:
+      # Required so nginx can reach the /data upstream on the Docker host.
+      - "host.docker.internal:host-gateway"
 
   bambulab-ams-filamentstatus:
     depends_on:
