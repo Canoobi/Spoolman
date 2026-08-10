@@ -11,8 +11,8 @@ Spoolman ist ein Webservice zur Verwaltung von 3D-Druck-Filamentspulen. Die Anwe
 | Status | Aktiv |
 | Stabilität | Stabil |
 | Produktiv nutzbar | Ja |
-| Letzte bekannte Änderung | Noch nicht dokumentiert |
-| Offene Hauptaufgaben | Noch nicht dokumentiert |
+| Letzte bekannte Änderung | 2026-08-11 (Pfad-Weiterleitung `/data` im Public-Print-Request-Nginx) |
+| Offene Hauptaufgaben | Upstream-Merges, Pflege der Custom-Erweiterungen |
 
 ## Metadaten
 
