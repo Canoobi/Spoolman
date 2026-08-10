@@ -749,7 +749,7 @@ Der Nginx des Public-Print-Request-Containers bedient die gesamte Domain und ver
 |------|------|--------------|
 | `/api/v1/print-request/public/` | `http://spoolman:8000` | Öffentliche Print-Request-API |
 | `/api/` | – | Übrige API-Pfade werden mit 404 blockiert |
-| `/data/` | `http://host.docker.internal:10321` | Dienst auf dem Docker-Host außerhalb dieses Stacks |
+| `/data/` | `https://host.docker.internal:10321` | Dienst auf dem Docker-Host außerhalb dieses Stacks |
 | `/` | Statische Dateien | React-SPA mit `try_files`-Fallback auf `index.html` |
 
 Hinweise zu `/data/`:
@@ -758,6 +758,9 @@ Hinweise zu `/data/`:
 - Der abschließende Schrägstrich in `proxy_pass` entfernt das Präfix `/data` aus der weitergeleiteten Anfrage. Der Zieldienst erhält die Anfrage also auf `/`.
 - Der Zieldienst muss unter einem Unterpfad auslieferbar sein. Verwendet er absolute Pfade für statische Dateien, muss dort ein Base-Path von `/data` konfiguriert werden. Zur Unterstützung wird der Header `X-Forwarded-Prefix: /data` gesetzt.
 - `/data` ohne abschließenden Schrägstrich wird per HTTP 301 auf `/data/` umgeleitet.
+- Der Zieldienst terminiert TLS selbst, deshalb verwendet `proxy_pass` das Schema `https`. Bei `http` antwortet der Zieldienst mit `400 Bad Request – The plain HTTP request was sent to HTTPS port`.
+- Das Upstream-Zertifikat wird nicht geprüft (`proxy_ssl_verify` ist standardmäßig aus). Ein selbstsigniertes Zertifikat oder ein Zertifikat, das nicht auf `host.docker.internal` ausgestellt ist, ist damit unproblematisch.
+- Es wird keine SNI-Erweiterung gesendet. Verteilt der Zieldienst Anfragen anhand des SNI-Namens auf mehrere virtuelle Hosts, muss zusätzlich `proxy_ssl_server_name on;` und `proxy_ssl_name <hostname>;` gesetzt werden.
 
 ## CI/CD
 
@@ -834,7 +837,7 @@ Hinweise zu `/data/`:
 
 | Datum | Änderung |
 |-------|----------|
-| 2026-08-11 | Pfad-Routing des Public-Print-Request-Nginx inklusive `/data`-Weiterleitung dokumentiert |
+| 2026-08-11 | Pfad-Routing des Public-Print-Request-Nginx inklusive `/data`-Weiterleitung dokumentiert; Upstream-Schema auf `https` korrigiert und Hinweise zu TLS, Zertifikatsprüfung und SNI ergänzt |
 | 2026-06-21 | NIIMBOT-Label-Download-Funktion dokumentiert |
 | 2026-06-15 | Dokumentation aktualisiert |
 | 2025-07-18 | README vollständig nach Dokumentationsrichtlinie erstellt |
